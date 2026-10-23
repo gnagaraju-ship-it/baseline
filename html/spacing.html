@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omni by Canvs — Spacing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}input{font:inherit}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.rl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#52525B;text-decoration:none;border:1px solid transparent;background:transparent}
+.rl:hover{background:#F4F4F5}
+.rl.on{background:#FFFFFF;border-color:#E4E4E7;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.sep{width:28px;height:1px;background:#E4E4E7;margin:4px 0}
+.h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#52525B}
+.ck{width:18px;height:18px;accent-color:#E2531B;margin:0;flex:none}
+:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<template id="tpl">
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span></div>
+      <button class="rl" aria-label="Projects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div class="sep"></div>
+      <a class="rl" href="index.html" aria-label="Color"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></a>
+      <a class="rl" href="typography.html" aria-label="Typography"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="rl" href="grids.html" aria-label="Grids"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="rl on" href="spacing.html" aria-label="Spacing" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="rl" href="elevation.html" aria-label="Elevation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div class="sep"></div>
+      <a class="rl" href="preview.html" aria-label="UI preview"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="rl" aria-label="Documentation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="rl" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <aside aria-label="Spacing settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #E4E4E7">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span></div>
+        <div style="font-size: 16px; font-weight: 600">Spacing</div>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 24px">
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Presets</h3>
+          <div role="group" aria-label="Base unit" style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{presets}}" as="p" hint-placeholder-count="4">
+              <button onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.color}}; font-size: 12px; font-weight: 500">{{p.label}}</button>
+            </sc-for>
+          </div>
+        </section>
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between"><h3 class="h3">Breakpoints</h3><span style="font-size: 11px; color: #52525B">{{onCount}} ON</span></div>
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <span id="same-grid" style="font-size: 13px; font-weight: 500">Same as Grid</span>
+            <button role="switch" aria-checked="{{sameChecked}}" aria-labelledby="same-grid" onClick="{{flipSame}}" style="width: 36px; height: 20px; border: 0; border-radius: 999px; background: {{sameTrack}}; padding: 2px; display: flex; justify-content: {{sameJustify}}"><span style="width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,.2)"></span></button>
+          </div>
+          <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #52525B">{{sameHelp}}</p>
+          <sc-for list="{{bps}}" as="b" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 10px; min-height: 34px">
+              <input class="ck" type="checkbox" id="{{b.cid}}" checked="{{b.on}}" disabled="{{b.locked}}" onChange="{{b.toggle}}">
+              <label for="{{b.cid}}" style="flex: 1; font-size: 13px; font-weight: 500">{{b.label}}</label>
+              <span class="mono" style="font-size: 12px; color: #52525B">{{b.w}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <nav aria-label="Views"><a href="spacing.html" aria-current="page" style="display: flex; align-items: center; height: 64px; padding: 0 14px; text-decoration: none; color: #18181B; font-weight: 600; box-shadow: inset 0 -2px 0 #E2531B">Spacing</a></nav>
+      <div style="display: flex; gap: 8px; padding: 10px 0; align-items: center">
+        <div role="group" aria-label="Unit" style="display: inline-flex; padding: 3px; border: 1px solid #E4E4E7; border-radius: 9px; gap: 2px">
+          <sc-for list="{{units}}" as="u" hint-placeholder-count="3">
+            <button onClick="{{u.pick}}" aria-pressed="{{u.pressed}}" class="mono" style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: {{u.bg}}; color: {{u.color}}; font-size: 12px">{{u.label}}</button>
+          </sc-for>
+        </div>
+        <button style="height: 40px; padding: 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600">Export</button>
+      </div>
+    </div>
+
+    <div style="padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 20px">
+      <section style="border: 1px solid #E4E4E7; border-radius: 14px; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px">
+        <div>
+          <h2 style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Scale</h2>
+          <p style="margin: 0; font-size: 13px; color: #52525B">Toggle a value on or off — the token name on the right is what it exports as. {{onSteps}} of {{allSteps}} on.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); column-gap: 32px; row-gap: 4px">
+          <sc-for list="{{scale}}" as="v" hint-placeholder-count="21">
+            <div style="display: flex; align-items: center; gap: 10px; min-height: 40px; border-bottom: 1px solid #F4F4F5">
+              <input class="ck" type="checkbox" id="{{v.cid}}" checked="{{v.on}}" onChange="{{v.toggle}}">
+              <label for="{{v.cid}}" class="mono" style="font-size: 14px; font-weight: {{v.weight}}; color: {{v.color}}; flex: 1">{{v.label}}</label>
+              <span style="height: 8px; width: {{v.bar}}; max-width: 60px; background: {{v.barColor}}; border-radius: 2px"></span>
+              <span class="mono" style="font-size: 11px; color: {{v.tokColor}}; width: 76px; text-align: right">{{v.token}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <label for="custom-px" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Custom value in px</label>
+          <input id="custom-px" class="mono" type="number" min="0" max="400" placeholder="+ custom px" value="{{draft}}" onChange="{{setDraft}}" style="width: 150px; height: 36px; box-sizing: border-box; border: 1px solid #E4E4E7; border-radius: 8px; padding: 0 10px; font-size: 13px">
+          <button onClick="{{addCustom}}" style="height: 36px; padding: 0 12px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; font-size: 13px">Add</button>
+        </div>
+      </section>
+
+      <section style="border: 1px solid #E4E4E7; border-radius: 14px; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <h2 style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Tokens</h2>
+          <p style="margin: 0; font-size: 13px; color: #52525B">Grouped the way Figma Variables groups by name. Values not on the scale are flagged.</p>
+        </div>
+        <div style="overflow-x: auto">
+          <div style="min-width: 600px">
+            <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); font-size: 11px; font-weight: 600; letter-spacing: .08em; color: #52525B; padding: 8px 0; border-bottom: 1px solid #E4E4E7">
+              <span>TOKEN</span><span style="text-align: center">XXL</span><span style="text-align: center">MD</span><span style="text-align: center">XS</span>
+            </div>
+            <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+              <div style="padding: 14px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; color: #52525B">{{g.name}}</div>
+              <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+                <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); align-items: center; min-height: 38px; border-bottom: 1px solid #F4F4F5">
+                  <span class="mono" style="font-size: 13px">{{r.name}}</span>
+                  <sc-for list="{{r.vals}}" as="c" hint-placeholder-count="3">
+                    <span style="display: flex; justify-content: center; align-items: center; gap: 6px">
+                      <span class="mono" style="font-size: 13px; color: {{c.color}}">{{c.v}}</span>
+                      <sc-if value="{{c.off}}" hint-placeholder-val="{{ false }}"><span style="font-size: 10px; font-weight: 600; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px">off-scale</span></sc-if>
+                    </span>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</template>
+<script id="logic" type="text/plain">
+var BASES = {
+  b2: { label: "2px base", steps: [0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64], off: [14, 36] },
+  b4: { label: "4px base", steps: [0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120], off: [6, 10, 28, 72, 88, 104] },
+  b8: { label: "8px base", steps: [0, 4, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160], off: [56, 112] },
+  custom: { label: "Custom", steps: [0, 4, 8, 12, 16, 24, 32, 48, 64, 96], off: [] }
+};
+var TOKENS = [
+  ["GRID", [["grid-margin", 16, 16, 16], ["grid-gutter", 24, 16, 16]]],
+  ["SECTION", [["section-y", 96, 64, 48], ["section-x", 64, 32, 16]]],
+  ["STACK", [["stack-xs", 4, 4, 4], ["stack-sm", 8, 8, 8], ["stack-md", 16, 16, 12], ["stack-lg", 24, 20, 16], ["stack-xl", 40, 32, 24]]],
+  ["INSET", [["inset-sm", 12, 12, 8], ["inset-md", 16, 16, 12], ["inset-lg", 24, 20, 16]]]
+];
+var BPS = [["xxl", "XXL", 1400], ["md", "MD", 768], ["xs", "XS", 390]];
+function fmt(px, u) { if (u === "rem") return +(px / 16).toFixed(3) + "rem"; if (u === "pt") return +(px * 0.75).toFixed(1) + "pt"; return px + "px"; }
+function initOn(k) { var o = {}; BASES[k].steps.forEach(function (v) { o[v] = BASES[k].off.indexOf(v) < 0; }); return o; }
+
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { base: "b4", on: initOn("b4"), extra: [], draft: "", unit: "px", same: true, bp: { xxl: true, md: true, xs: true } }; }
+  renderVals() {
+    var self = this, s = this.state, u = s.unit;
+    var steps = BASES[s.base].steps.concat(s.extra).filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    var onList = steps.filter(function (v) { return s.on[v]; });
+    function pill(on) { return { bg: on ? "#18181B" : "#FFFFFF", color: on ? "#FFFFFF" : "#3F3F46", border: on ? "#18181B" : "#E4E4E7", pressed: on ? "true" : "false" }; }
+    return {
+      presets: Object.keys(BASES).map(function (k) { return Object.assign(pill(s.base === k), { label: BASES[k].label, pick: function () { self.setState({ base: k, on: initOn(k), extra: [] }); } }); }),
+      units: ["rem", "px", "pt"].map(function (x) { var on = u === x; return { label: x, pressed: on ? "true" : "false", bg: on ? "#F4F4F5" : "transparent", color: on ? "#18181B" : "#52525B", pick: function () { self.setState({ unit: x }); } }; }),
+      sameChecked: s.same ? "true" : "false", sameTrack: s.same ? "#E2531B" : "#D4D4D8", sameJustify: s.same ? "flex-end" : "flex-start",
+      flipSame: function () { self.setState({ same: !self.state.same }); },
+      sameHelp: s.same ? "Reusing Grid’s breakpoints — turn this off to set independent ones." : "Independent breakpoints — choose which ones get spacing values.",
+      onCount: BPS.filter(function (b) { return s.same || s.bp[b[0]]; }).length,
+      bps: BPS.map(function (b) { return { cid: "sbp-" + b[0], label: b[1], w: b[2] + "px", on: s.same ? true : !!s.bp[b[0]], locked: s.same, toggle: function () { var o = Object.assign({}, self.state.bp); o[b[0]] = !o[b[0]]; self.setState({ bp: o }); } }; }),
+      onSteps: onList.length, allSteps: steps.length,
+      scale: steps.map(function (v) {
+        var on = !!s.on[v];
+        return { cid: "sp-" + v, label: fmt(v, u), on: on, weight: on ? 700 : 400, color: on ? "#18181B" : "#71717A", tokColor: on ? "#52525B" : "#A1A1AA",
+          token: "space-" + v, bar: Math.max(2, v / 2) + "px", barColor: on ? "#FDBA9A" : "#E4E4E7",
+          toggle: function () { var o = Object.assign({}, self.state.on); o[v] = !o[v]; self.setState({ on: o }); } };
+      }),
+      draft: s.draft, setDraft: function (e) { self.setState({ draft: e.target.value }); },
+      addCustom: function () { var v = parseInt(self.state.draft, 10); if (isNaN(v) || v < 0) return; var o = Object.assign({}, self.state.on); o[v] = true; self.setState({ extra: self.state.extra.concat([v]), on: o, draft: "" }); },
+      groups: TOKENS.map(function (g) {
+        return { name: g[0], rows: g[1].map(function (r) {
+          return { name: r[0], vals: [1, 2, 3].map(function (i) { var v = r[i], off = onList.indexOf(v) < 0; return { v: fmt(v, u), off: off, color: off ? "#B45309" : "#18181B" }; }) };
+        }) };
+      })
+    };
+  }
+}
+</script>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var tpl = document.getElementById('tpl').content;
+  var code = document.getElementById('logic').textContent;
+  var queued = false, comp;
+  function DCLogic(props) { this.props = props || {}; this.state = {}; }
+  DCLogic.prototype.setState = function (p) {
+    var n = typeof p === 'function' ? p(this.state, this.props) : p;
+    this.state = Object.assign({}, this.state, n);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+  function schedule() { if (queued) return; queued = true; Promise.resolve().then(function () { queued = false; render(); }); }
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g, WHOLE = /^\s*\{\{\s*([^}]+?)\s*\}\}\s*$/;
+  function get(scope, path) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (path === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    var m = /^'(.*)'$|^"(.*)"$/.exec(path); if (m) return m[1] != null ? m[1] : m[2];
+    return path.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, scope);
+  }
+  function interp(str, scope) { return str.replace(HOLE, function (_, p) { var v = get(scope, p); return v == null || v === false ? '' : String(v); }); }
+  function evType(el, name) {
+    var ev = name.slice(2);
+    if (ev === 'change') {
+      var t = (el.getAttribute('type') || '').toLowerCase(), tag = el.localName;
+      if (tag === 'select' || t === 'checkbox' || t === 'radio') return 'change';
+      return 'input';
+    }
+    return ev === 'doubleclick' ? 'dblclick' : ev;
+  }
+  function build(node, scope, out) {
+    if (node.nodeType === 3) { out.push(document.createTextNode(node.data.indexOf('{{') >= 0 ? interp(node.data, scope) : node.data)); return; }
+    if (node.nodeType !== 1) return;
+    var tag = node.localName;
+    if (tag === 'sc-for') {
+      var list = get(scope, (node.getAttribute('list') || '').replace(/^\s*\{\{|\}\}\s*$/g, '')) || [];
+      var as = node.getAttribute('as') || 'item';
+      list.forEach(function (item, i) {
+        var s = Object.assign({}, scope); s[as] = item; s.$index = i;
+        node.childNodes.forEach(function (c) { build(c, s, out); });
+      });
+      return;
+    }
+    if (tag === 'sc-if') {
+      var v = get(scope, (node.getAttribute('value') || '').replace(/^\s*\{\{|\}\}\s*$/g, ''));
+      if (v) node.childNodes.forEach(function (c) { build(c, scope, out); });
+      return;
+    }
+    var el = tag === 'x-select' ? document.createElement('select') : node.cloneNode(false);
+    el.__h = {}; el.__p = {};
+    Array.from(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+    Array.from(node.attributes).forEach(function (a) {
+      var name = a.name, val = a.value, w = WHOLE.exec(val);
+      if (name.indexOf('hint-') === 0) return;
+      if (/^on[a-z]+$/.test(name)) { if (w) { var fn = get(scope, w[1]); if (typeof fn === 'function') el.__h[evType(node.localName === 'x-select' ? el : node, name)] = fn; } return; }
+      var raw = w ? get(scope, w[1]) : (val.indexOf('{{') >= 0 ? interp(val, scope) : val);
+      if (name === 'checked') { el.__p.checked = !!raw; return; }
+      if (name === 'value' && (el.localName === 'input' || el.localName === 'select' || el.localName === 'textarea')) { el.__p.value = raw == null ? '' : String(raw); return; }
+      if (name === 'disabled' || name === 'readonly' || name === 'required') { if (raw === false || raw == null || raw === 'false') return; el.setAttribute(name, ''); return; }
+      if (raw == null || raw === false) return;
+      el.setAttribute(name, String(raw));
+    });
+    var kids = []; node.childNodes.forEach(function (c) { build(c, scope, kids); });
+    kids.forEach(function (k) { el.appendChild(k); });
+    out.push(el);
+  }
+  function bind(el) {
+    if (!el.__bound) el.__bound = {};
+    Object.keys(el.__h || {}).forEach(function (t) {
+      if (el.__bound[t]) return; el.__bound[t] = true;
+      el.addEventListener(t, function (e) { var h = el.__h && el.__h[t]; if (h) h(e); });
+    });
+  }
+  function applyProps(el, p) {
+    if (!p) return;
+    if ('value' in p && el.value !== p.value) el.value = p.value;
+    if ('checked' in p && el.checked !== p.checked) el.checked = p.checked;
+  }
+  function bindAll(n) {
+    if (n.nodeType !== 1) return;
+    Array.from(n.childNodes).forEach(bindAll);
+    bind(n); applyProps(n, n.__p);
+  }
+  function same(a, b) { return a.nodeType === b.nodeType && a.nodeName === b.nodeName && a.namespaceURI === b.namespaceURI; }
+  function patchNode(l, f) {
+    if (l.nodeType === 3) { if (l.data !== f.data) l.data = f.data; return; }
+    Array.from(l.attributes).forEach(function (a) { if (!f.hasAttribute(a.name)) l.removeAttribute(a.name); });
+    Array.from(f.attributes).forEach(function (a) { if (l.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value); });
+    l.__h = f.__h; bind(l);
+    patchChildren(l, Array.from(f.childNodes));
+    l.__p = f.__p; applyProps(l, f.__p);
+  }
+  function patchChildren(parent, fresh) {
+    var lives = Array.from(parent.childNodes);
+    fresh.forEach(function (f, i) {
+      var l = lives[i];
+      if (!l) { parent.appendChild(f); bindAll(f); return; }
+      if (same(l, f)) patchNode(l, f); else { parent.replaceChild(f, l); bindAll(f); }
+    });
+    for (var i = fresh.length; i < lives.length; i++) parent.removeChild(lives[i]);
+  }
+  function render() {
+    var vals = comp.renderVals ? comp.renderVals() : {};
+    var out = []; tpl.childNodes.forEach(function (c) { build(c, vals, out); });
+    patchChildren(app, out);
+  }
+  var Component = new Function('DCLogic', code + '\n;return Component;')(DCLogic);
+  comp = new Component({});
+  if (!comp.state) comp.state = {};
+  render();
+  if (comp.componentDidMount) comp.componentDidMount();
+})();
+
+</script>
+</body>
+</html>

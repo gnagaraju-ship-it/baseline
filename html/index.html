@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omni by Canvs — Palette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+.chip{-webkit-appearance:none;appearance:none;border:0;padding:0;width:32px;height:32px;border-radius:7px;background:none;cursor:pointer;flex:none}
+.chip::-webkit-color-swatch-wrapper{padding:0}
+.chip::-webkit-color-swatch{border:none;border-radius:7px}
+.chip::-moz-color-swatch{border:none;border-radius:7px}
+.sw:focus-visible,.ib:focus-visible,.tab:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+.ib:hover{background:#F4F4F5}
+.hexin:focus{outline:none}
+.field:focus-within{border-color:#A1A1AA}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<template id="tpl">
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <!-- Rail + side panel -->
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+
+    <!-- Icon rail -->
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px">
+        <span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span>
+      </div>
+      <button class="ib" aria-label="Projects" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div style="width: 28px; height: 1px; background: #E4E4E7; margin: 4px 0"></div>
+      <button class="ib" aria-label="Color" aria-current="page" style="width: 44px; height: 44px; border: 1px solid #E4E4E7; border-radius: 10px; background: #FFFFFF; color: #18181B; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,.05)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></button>
+      <a class="ib" href="typography.html" aria-label="Typography" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="ib" href="grids.html" aria-label="Grids" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="ib" href="spacing.html" aria-label="Spacing" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="ib" href="elevation.html" aria-label="Elevation" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div style="width: 28px; height: 1px; background: #E4E4E7; margin: 4px 0"></div>
+      <a class="ib" href="preview.html" aria-label="UI preview" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="ib" aria-label="Documentation" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="ib" aria-label="Toggle dark mode" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <!-- Side panel -->
+    <aside aria-label="Palette settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center; flex: none">
+          <span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span>
+        </div>
+        <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em; flex: 1">Omni by Canvs</div>
+        <button class="ib" aria-label="Rename project" style="width: 36px; height: 36px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></button>
+      </div>
+
+      <div role="tablist" aria-label="Panel" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 20px; border-bottom: 1px solid #E4E4E7">
+        <button class="tab" role="tab" aria-selected="{{brandSel}}" onClick="{{showBrand}}" style="height: 44px; border: 0; background: transparent; font-size: 14px; font-weight: {{brandWeight}}; color: {{brandColor}}; box-shadow: inset 0 -2px 0 {{brandLine}}">Brand</button>
+        <button class="tab" role="tab" aria-selected="{{tokensSel}}" onClick="{{showTokens}}" style="height: 44px; border: 0; background: transparent; font-size: 14px; font-weight: {{tokensWeight}}; color: {{tokensColor}}; box-shadow: inset 0 -2px 0 {{tokensLine}}">Tokens</button>
+      </div>
+
+      <sc-if value="{{isBrand}}" hint-placeholder-val="{{ true }}">
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 24px">
+
+          <!-- Brand -->
+          <section style="display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #52525B">Brand</h3>
+              <button class="ib" aria-label="Pick color from image" style="width: 32px; height: 32px; border: 1px solid #E4E4E7; border-radius: 7px; background: #FFFFFF; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9.5" cy="9.5" r="1.5"/><path d="M20 15l-5-5-9 9"/></svg></button>
+            </div>
+            <sc-for list="{{brandFields}}" as="f" hint-placeholder-count="1">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; align-items: center; justify-content: space-between">
+                  <label for="{{f.id}}" style="font-size: 13px; font-weight: 500; color: #27272A">{{f.label}}</label>
+                  <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #52525B; display: flex; align-items: center; gap: 4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"/></svg>HEX</span>
+                </div>
+                <div class="field" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; background: #FFFFFF; border: 1px solid {{f.border}}; border-radius: 10px">
+                  <input class="chip" type="color" value="{{f.pickerVal}}" onChange="{{f.onPick}}" aria-label="{{f.pickLabel}}">
+                  <input class="hexin" id="{{f.id}}" type="text" value="{{f.text}}" onChange="{{f.onText}}" spellcheck="false" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #18181B">
+                </div>
+                <sc-if value="{{f.invalid}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #B91C1C">Enter six hex digits, like #9D00D6.</div></sc-if>
+              </div>
+            </sc-for>
+            <button style="height: 40px; border: 1px dashed #D4D4D8; border-radius: 10px; background: transparent; color: #52525B; font-size: 13px; text-align: left; padding: 0 14px">+ Add secondary</button>
+          </section>
+
+          <div style="height: 1px; background: #E4E4E7"></div>
+
+          <!-- Neutral -->
+          <section style="display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #52525B">Neutral</h3>
+              <sc-if value="{{hasNeutral}}" hint-placeholder-val="{{ true }}"><button onClick="{{toggleNeutral}}" style="border: 0; background: transparent; color: #52525B; font-size: 13px; padding: 6px 0">Remove</button></sc-if>
+            </div>
+            <sc-if value="{{hasNeutral}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <div role="group" aria-label="Neutral source" style="display: inline-flex; align-self: flex-start; padding: 3px; background: #F0F0F2; border-radius: 9px; gap: 2px">
+                  <button aria-pressed="true" style="height: 32px; padding: 0 14px; border: 0; border-radius: 7px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,.08); font-size: 13px; font-weight: 500; color: #18181B">Preset</button>
+                  <button aria-pressed="false" style="height: 32px; padding: 0 14px; border: 0; border-radius: 7px; background: transparent; font-size: 13px; color: #52525B">Custom</button>
+                </div>
+                <div style="position: relative; display: flex; align-items: center; height: 44px; background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 10px; padding-left: 10px; gap: 10px">
+                  <div aria-hidden="true" style="display: flex; gap: 2px; padding: 3px; border: 1px solid #F0F0F2; border-radius: 6px">
+                    <sc-for list="{{neutralMini}}" as="m" hint-placeholder-count="5"><span style="width: 12px; height: 20px; border-radius: 3px; background: {{m}}"></span></sc-for>
+                  </div>
+                  <label for="neutral-preset" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Neutral preset</label>
+                  <x-select id="neutral-preset" value="{{preset}}" onChange="{{onPreset}}" style="flex: 1; height: 100%; border: 0; background: transparent; font-size: 14px; font-weight: 500; color: #18181B; padding-right: 12px">
+                    <option value="gray">Gray</option>
+                    <option value="slate">Slate</option>
+                    <option value="zinc">Zinc</option>
+                    <option value="stone">Stone</option>
+                  </x-select>
+                </div>
+                <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #52525B">Exact Tailwind values, resampled to the archetype’s density.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{noNeutral}}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{toggleNeutral}}" style="height: 40px; border: 1px dashed #D4D4D8; border-radius: 10px; background: transparent; color: #52525B; font-size: 13px; text-align: left; padding: 0 14px">+ Add neutral</button>
+            </sc-if>
+          </section>
+
+          <div style="height: 1px; background: #E4E4E7"></div>
+
+          <!-- Semantic -->
+          <section style="display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; align-items: center; justify-content: space-between">
+              <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #52525B">Semantic</h3>
+              <sc-if value="{{hasSemantic}}" hint-placeholder-val="{{ true }}"><button onClick="{{toggleSemantic}}" style="border: 0; background: transparent; color: #52525B; font-size: 13px; padding: 6px 0">Remove</button></sc-if>
+            </div>
+            <sc-if value="{{hasSemantic}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 14px">
+                <sc-for list="{{semanticFields}}" as="f" hint-placeholder-count="5">
+                  <div style="display: flex; flex-direction: column; gap: 6px">
+                    <div style="display: flex; align-items: center; justify-content: space-between">
+                      <label for="{{f.id}}" style="font-size: 13px; font-weight: 500; color: #27272A">{{f.label}}</label>
+                      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #52525B; display: flex; align-items: center; gap: 4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"/></svg>HEX</span>
+                    </div>
+                    <div class="field" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px; background: #FFFFFF; border: 1px solid {{f.border}}; border-radius: 10px">
+                      <input class="chip" type="color" value="{{f.pickerVal}}" onChange="{{f.onPick}}" aria-label="{{f.pickLabel}}">
+                      <input class="hexin" id="{{f.id}}" type="text" value="{{f.text}}" onChange="{{f.onText}}" spellcheck="false" style="flex: 1; min-width: 0; border: 0; background: transparent; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #18181B">
+                    </div>
+                    <sc-if value="{{f.invalid}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #B91C1C">Enter six hex digits.</div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{noSemantic}}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{toggleSemantic}}" style="height: 40px; border: 1px dashed #D4D4D8; border-radius: 10px; background: transparent; color: #52525B; font-size: 13px; text-align: left; padding: 0 14px">+ Add semantic colors</button>
+            </sc-if>
+          </section>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isTokens}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #52525B">CSS custom properties for every ramp. {{tokenCount}} tokens.</p>
+          <div style="background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 10px; max-height: 1180px; overflow: auto; padding: 8px 0">
+            <sc-for list="{{tokenRows}}" as="t" hint-placeholder-count="16">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 5px 12px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px">
+                <span style="width: 12px; height: 12px; border-radius: 3px; flex: none; background: {{t.bg}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08)"></span>
+                <span style="color: #27272A; flex: 1">{{t.name}}</span>
+                <span style="color: #52525B">{{t.hex}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <!-- Main -->
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; background: #FFFFFF">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <nav aria-label="Views" style="display: flex; flex-wrap: wrap; gap: 4px">
+        <a href="#palette" aria-current="page" style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; text-decoration: none; color: #18181B; font-weight: 600; box-shadow: inset 0 -2px 0 #E2531B">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>
+          Palette
+          <span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; background: #FFF1EB; color: #C2410C; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">{{paletteCount}}</span>
+        </a>
+        <a href="tokens.html" style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; text-decoration: none; color: #52525B; font-weight: 500">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+          Tokens
+        </a>
+        <a href="contrast.html" style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; text-decoration: none; color: #52525B; font-weight: 500">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg>
+          Contrast grid
+        </a>
+        <a href="preview.html" style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; text-decoration: none; color: #52525B; font-weight: 500">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          UI preview
+        </a>
+      </nav>
+      <div style="display: flex; gap: 8px; padding: 10px 0">
+        <button onClick="{{copyAll}}" style="height: 40px; padding: 0 14px; border: 1px solid #E4E4E7; border-radius: 9px; background: #FFFFFF; color: #18181B; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+          {{copyLabel}}
+        </button>
+        <button style="height: 40px; padding: 0 10px 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(210,64,11,.3)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+          Export
+          <span style="height: 20px; padding: 0 6px; border-radius: 5px; background: rgba(255,255,255,.2); font-size: 11px; font-weight: 600; display: inline-flex; align-items: center">{{tokenCount}}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Selection strip -->
+    <div aria-live="polite" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 14px 28px; border-bottom: 1px solid #F0F0F2; background: #FCFCFC">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 28px; height: 28px; border-radius: 7px; background: {{sel.bg}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08)"></span>
+        <div style="font-weight: 600">{{sel.name}}</div>
+        <div style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #52525B">{{sel.hex}}</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px">
+        <span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 999px; background: #FFFFFF"><span style="width: 10px; height: 10px; border-radius: 50%; background: #FFFFFF; box-shadow: inset 0 0 0 1px #A1A1AA"></span>On white <b style="font-weight: 600">{{sel.onWhite}}</b><span style="color: {{sel.whiteTone}}; font-weight: 600">{{sel.whiteGrade}}</span></span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid #E4E4E7; border-radius: 999px; background: #FFFFFF"><span style="width: 10px; height: 10px; border-radius: 50%; background: #09090B"></span>On black <b style="font-weight: 600">{{sel.onBlack}}</b><span style="color: {{sel.blackTone}}; font-weight: 600">{{sel.blackGrade}}</span></span>
+      </div>
+      <div style="margin-left: auto; font-size: 12px; color: #52525B">Click any swatch to inspect it</div>
+    </div>
+
+    <div id="palette" style="padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 20px">
+      <sc-for list="{{palettes}}" as="p" hint-placeholder-count="4">
+        <section aria-label="{{p.name}}" style="border: 1px solid #E4E4E7; border-radius: 14px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(24,24,27,.04)">
+          <header style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 20px; border-bottom: 1px solid #F0F0F2">
+            <span style="width: 16px; height: 16px; border-radius: 4px; background: {{p.bg}}"></span>
+            <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">{{p.name}}</h2>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #52525B">{{p.hex}}</span>
+            <div style="margin-left: auto; display: flex; gap: 4px">
+              <button class="ib" aria-label="{{p.editLabel}}" style="width: 36px; height: 36px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></button>
+              <button class="ib" aria-label="{{p.downloadLabel}}" style="width: 36px; height: 36px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
+            </div>
+          </header>
+          <div style="overflow-x: auto; padding: 14px">
+            <div style="display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; min-width: 896px">
+              <sc-for list="{{p.steps}}" as="s" hint-placeholder-count="16">
+                <button class="sw" onClick="{{s.pick}}" aria-label="{{s.label}}" aria-pressed="{{s.pressed}}" style="position: relative; display: flex; flex-direction: column; padding: 0; border: 1px solid {{s.border}}; border-radius: 6px; background: #FFFFFF; text-align: left; overflow: hidden; transform: {{s.lift}}; box-shadow: {{s.shadow}}; transition: transform .15s ease, box-shadow .15s ease; z-index: {{s.z}}">
+                  <span style="display: block; height: 68px; background: {{s.bg}}"></span>
+                  <sc-if value="{{s.isBase}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: {{s.dot}}"></span></sc-if>
+                  <span style="display: flex; flex-direction: column; gap: 3px; padding: 10px 8px 9px">
+                    <span style="font-size: 13px; font-weight: 600; color: #18181B">{{s.num}}</span>
+                    <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: #52525B">{{s.hex}}</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</template>
+<script id="logic" type="text/plain">
+var EXACT = {
+  primary: ["FBF4FF","F8EBFF","F3DEFF","EDCDFF","E4B7FF","DB9DFF","D07DFF","C252FB","AD2CE8","9D00D6","7C00AD","65008F","4F0072","3B0056","29003F","1C002D"],
+  neutral: ["F9FAFB","F5F6F8","EEF0F2","E5E7EB","D8DBE0","BFC4CC","9CA3AF","7B828F","606876","4B5563","3E4857","2F3948","1F2937","161E2C","0B1220","030712"],
+  info: ["F3F7FF","E9F0FF","DBE7FF","C9DBFF","B2CCFF","97BAFF","78A6FF","538BFF","3070F7","2563EB","0A48BF","0039A1","002C7E","00205E","001644","000D30"]
+};
+var DEF = { primary: "9D00D6", info: "2563EB", success: "1F9D55", caution: "EAB308", warning: "F97316", danger: "DC2626" };
+var PRESETS = { gray: "606876", slate: "64748B", zinc: "71717A", stone: "78716C" };
+var DEFS = [
+  { key: "primary", name: "Primary", base: 10, group: "brand" },
+  { key: "neutral", name: "Neutral", base: 9, group: "neutral" },
+  { key: "info", name: "Info", base: 10, group: "semantic" },
+  { key: "success", name: "Success", base: 9, group: "semantic" },
+  { key: "caution", name: "Caution", base: 9, group: "semantic" },
+  { key: "warning", name: "Warning", base: 9, group: "semantic" },
+  { key: "danger", name: "Critical", base: 9, group: "semantic" }
+];
+function norm(h) { h = String(h || "").trim().replace(/^#/, ""); return /^[0-9a-fA-F]{6}$/.test(h) ? h.toUpperCase() : null; }
+function rgb(h) { return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+function hex(c) { return c.map(function (v) { v = Math.round(Math.max(0, Math.min(255, v))); return (v < 16 ? "0" : "") + v.toString(16); }).join("").toUpperCase(); }
+function mix(h, t, a) { return hex(rgb(h).map(function (v) { return v + (t - v) * a; })); }
+function gen(h, base) {
+  var out = [], b = base - 1, n = 15 - b;
+  for (var i = 0; i < 16; i++) {
+    if (i < b) out.push(mix(h, 255, 0.96 * Math.pow(1 - i / b, 0.9)));
+    else if (i === b) out.push(h);
+    else out.push(mix(h, 0, 0.84 * Math.pow((i - b) / n, 0.95)));
+  }
+  return out;
+}
+function lum(h) { var w = [0.2126, 0.7152, 0.0722]; return rgb(h).reduce(function (s, v, i) { v /= 255; v = v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); return s + v * w[i]; }, 0); }
+function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function grade(r) { return r >= 7 ? "AAA" : r >= 4.5 ? "AA" : r >= 3 ? "AA Large" : "Fail"; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      text: { primary: "#9d00d6", info: "#2563EB", success: "#1F9D55", caution: "#EAB308", warning: "#F97316", danger: "#DC2626" },
+      preset: "gray", sel: { k: "primary", i: 10 }, side: "brand", neutral: true, semantic: true, copied: false
+    };
+  }
+  setText(k, v) { var t = Object.assign({}, this.state.text); t[k] = v; this.setState({ text: t }); }
+  baseHex(k) {
+    if (k === "neutral") return PRESETS[this.state.preset];
+    return norm(this.state.text[k]) || DEF[k];
+  }
+  ramp(d) {
+    var h = this.baseHex(d.key);
+    if (EXACT[d.key] && (d.key === "neutral" ? this.state.preset === "gray" : h === DEF[d.key])) return EXACT[d.key];
+    return gen(h, d.base);
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var defs = DEFS.filter(function (d) { return d.group === "brand" || (d.group === "neutral" && s.neutral) || (d.group === "semantic" && s.semantic); });
+    var selKey = defs.some(function (d) { return d.key === s.sel.k; }) ? s.sel.k : "primary";
+    var tokenRows = [];
+    var palettes = defs.map(function (d) {
+      var list = self.ramp(d), baseIdx = d.base - 1;
+      list.forEach(function (x, i) { tokenRows.push({ name: "--" + d.key + "-" + (i + 1), hex: "#" + x, bg: "#" + x }); });
+      return {
+        name: d.name, hex: "#" + self.baseHex(d.key), bg: "#" + self.baseHex(d.key),
+        editLabel: "Edit " + d.name, downloadLabel: "Download " + d.name + " ramp",
+        steps: list.map(function (x, i) {
+          var on = selKey === d.key && s.sel.i === i;
+          return {
+            num: i + 1, hex: x, bg: "#" + x, isBase: i === baseIdx,
+            dot: lum(x) > 0.4 ? "#18181B" : "#FFFFFF",
+            label: d.name + " " + (i + 1) + ", #" + x, pressed: on ? "true" : "false",
+            border: on ? "#18181B" : "#EFEFF1", lift: on ? "translateY(-4px)" : "none",
+            shadow: on ? "0 8px 18px rgba(24,24,27,.18)" : "none", z: on ? 2 : 1,
+            pick: function () { self.setState({ sel: { k: d.key, i: i } }); }
+          };
+        })
+      };
+    });
+    var selDef = DEFS.filter(function (d) { return d.key === selKey; })[0];
+    var selIdx = selKey === s.sel.k ? s.sel.i : 10;
+    var selHex = this.ramp(selDef)[selIdx];
+    var rw = ratio(selHex, "FFFFFF"), rb = ratio(selHex, "000000");
+    function tone(r) { return r >= 4.5 ? "#15803D" : r >= 3 ? "#A16207" : "#B91C1C"; }
+    function field(k, label) {
+      var v = norm(s.text[k]);
+      return {
+        id: "f-" + k, label: label, text: s.text[k], invalid: !v, border: v ? "#E4E4E7" : "#DC2626",
+        pickerVal: "#" + (v || DEF[k]).toLowerCase(), pickLabel: label + " color picker",
+        onText: function (e) { self.setText(k, e.target.value); },
+        onPick: function (e) { self.setText(k, e.target.value.toUpperCase()); }
+      };
+    }
+    var nRamp = this.ramp(DEFS[1]);
+    var isBrand = s.side === "brand";
+    return {
+      isBrand: isBrand, isTokens: !isBrand,
+      brandSel: isBrand ? "true" : "false", tokensSel: isBrand ? "false" : "true",
+      brandWeight: isBrand ? 600 : 500, tokensWeight: isBrand ? 500 : 600,
+      brandColor: isBrand ? "#18181B" : "#52525B", tokensColor: isBrand ? "#52525B" : "#18181B",
+      brandLine: isBrand ? "#E2531B" : "transparent", tokensLine: isBrand ? "transparent" : "#E2531B",
+      showBrand: function () { self.setState({ side: "brand" }); },
+      showTokens: function () { self.setState({ side: "tokens" }); },
+      brandFields: [field("primary", "Primary")],
+      semanticFields: [field("info", "Info"), field("success", "Success"), field("caution", "Caution"), field("warning", "Warning"), field("danger", "Critical")],
+      hasNeutral: s.neutral, noNeutral: !s.neutral, hasSemantic: s.semantic, noSemantic: !s.semantic,
+      toggleNeutral: function () { self.setState({ neutral: !self.state.neutral }); },
+      toggleSemantic: function () { self.setState({ semantic: !self.state.semantic }); },
+      preset: s.preset,
+      onPreset: function (e) { self.setState({ preset: e.target.value }); },
+      neutralMini: [nRamp[1], nRamp[5], nRamp[8], nRamp[11], nRamp[14]].map(function (x) { return "#" + x; }),
+      palettes: palettes, paletteCount: palettes.length, tokenCount: palettes.length * 16, tokenRows: tokenRows,
+      sel: {
+        name: selDef.name + " " + (selIdx + 1), hex: "#" + selHex, bg: "#" + selHex,
+        onWhite: rw.toFixed(2) + ":1", whiteGrade: grade(rw), whiteTone: tone(rw),
+        onBlack: rb.toFixed(2) + ":1", blackGrade: grade(rb), blackTone: tone(rb)
+      },
+      copyLabel: s.copied ? "Copied" : "Copy all",
+      copyAll: function () {
+        var css = ":root {\n" + tokenRows.map(function (t) { return "  " + t.name + ": " + t.hex + ";"; }).join("\n") + "\n}";
+        try { navigator.clipboard.writeText(css); } catch (e) {}
+        self.setState({ copied: true });
+        setTimeout(function () { self.setState({ copied: false }); }, 1600);
+      }
+    };
+  }
+}
+</script>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var tpl = document.getElementById('tpl').content;
+  var code = document.getElementById('logic').textContent;
+  var queued = false, comp;
+  function DCLogic(props) { this.props = props || {}; this.state = {}; }
+  DCLogic.prototype.setState = function (p) {
+    var n = typeof p === 'function' ? p(this.state, this.props) : p;
+    this.state = Object.assign({}, this.state, n);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+  function schedule() { if (queued) return; queued = true; Promise.resolve().then(function () { queued = false; render(); }); }
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g, WHOLE = /^\s*\{\{\s*([^}]+?)\s*\}\}\s*$/;
+  function get(scope, path) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (path === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    var m = /^'(.*)'$|^"(.*)"$/.exec(path); if (m) return m[1] != null ? m[1] : m[2];
+    return path.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, scope);
+  }
+  function interp(str, scope) { return str.replace(HOLE, function (_, p) { var v = get(scope, p); return v == null || v === false ? '' : String(v); }); }
+  function evType(el, name) {
+    var ev = name.slice(2);
+    if (ev === 'change') {
+      var t = (el.getAttribute('type') || '').toLowerCase(), tag = el.localName;
+      if (tag === 'select' || t === 'checkbox' || t === 'radio') return 'change';
+      return 'input';
+    }
+    return ev === 'doubleclick' ? 'dblclick' : ev;
+  }
+  function build(node, scope, out) {
+    if (node.nodeType === 3) { out.push(document.createTextNode(node.data.indexOf('{{') >= 0 ? interp(node.data, scope) : node.data)); return; }
+    if (node.nodeType !== 1) return;
+    var tag = node.localName;
+    if (tag === 'sc-for') {
+      var list = get(scope, (node.getAttribute('list') || '').replace(/^\s*\{\{|\}\}\s*$/g, '')) || [];
+      var as = node.getAttribute('as') || 'item';
+      list.forEach(function (item, i) {
+        var s = Object.assign({}, scope); s[as] = item; s.$index = i;
+        node.childNodes.forEach(function (c) { build(c, s, out); });
+      });
+      return;
+    }
+    if (tag === 'sc-if') {
+      var v = get(scope, (node.getAttribute('value') || '').replace(/^\s*\{\{|\}\}\s*$/g, ''));
+      if (v) node.childNodes.forEach(function (c) { build(c, scope, out); });
+      return;
+    }
+    var el = tag === 'x-select' ? document.createElement('select') : node.cloneNode(false);
+    el.__h = {}; el.__p = {};
+    Array.from(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+    Array.from(node.attributes).forEach(function (a) {
+      var name = a.name, val = a.value, w = WHOLE.exec(val);
+      if (name.indexOf('hint-') === 0) return;
+      if (/^on[a-z]+$/.test(name)) { if (w) { var fn = get(scope, w[1]); if (typeof fn === 'function') el.__h[evType(node.localName === 'x-select' ? el : node, name)] = fn; } return; }
+      var raw = w ? get(scope, w[1]) : (val.indexOf('{{') >= 0 ? interp(val, scope) : val);
+      if (name === 'checked') { el.__p.checked = !!raw; return; }
+      if (name === 'value' && (el.localName === 'input' || el.localName === 'select' || el.localName === 'textarea')) { el.__p.value = raw == null ? '' : String(raw); return; }
+      if (name === 'disabled' || name === 'readonly' || name === 'required') { if (raw === false || raw == null || raw === 'false') return; el.setAttribute(name, ''); return; }
+      if (raw == null || raw === false) return;
+      el.setAttribute(name, String(raw));
+    });
+    var kids = []; node.childNodes.forEach(function (c) { build(c, scope, kids); });
+    kids.forEach(function (k) { el.appendChild(k); });
+    out.push(el);
+  }
+  function bind(el) {
+    if (!el.__bound) el.__bound = {};
+    Object.keys(el.__h || {}).forEach(function (t) {
+      if (el.__bound[t]) return; el.__bound[t] = true;
+      el.addEventListener(t, function (e) { var h = el.__h && el.__h[t]; if (h) h(e); });
+    });
+  }
+  function applyProps(el, p) {
+    if (!p) return;
+    if ('value' in p && el.value !== p.value) el.value = p.value;
+    if ('checked' in p && el.checked !== p.checked) el.checked = p.checked;
+  }
+  function bindAll(n) {
+    if (n.nodeType !== 1) return;
+    Array.from(n.childNodes).forEach(bindAll);
+    bind(n); applyProps(n, n.__p);
+  }
+  function same(a, b) { return a.nodeType === b.nodeType && a.nodeName === b.nodeName && a.namespaceURI === b.namespaceURI; }
+  function patchNode(l, f) {
+    if (l.nodeType === 3) { if (l.data !== f.data) l.data = f.data; return; }
+    Array.from(l.attributes).forEach(function (a) { if (!f.hasAttribute(a.name)) l.removeAttribute(a.name); });
+    Array.from(f.attributes).forEach(function (a) { if (l.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value); });
+    l.__h = f.__h; bind(l);
+    patchChildren(l, Array.from(f.childNodes));
+    l.__p = f.__p; applyProps(l, f.__p);
+  }
+  function patchChildren(parent, fresh) {
+    var lives = Array.from(parent.childNodes);
+    fresh.forEach(function (f, i) {
+      var l = lives[i];
+      if (!l) { parent.appendChild(f); bindAll(f); return; }
+      if (same(l, f)) patchNode(l, f); else { parent.replaceChild(f, l); bindAll(f); }
+    });
+    for (var i = fresh.length; i < lives.length; i++) parent.removeChild(lives[i]);
+  }
+  function render() {
+    var vals = comp.renderVals ? comp.renderVals() : {};
+    var out = []; tpl.childNodes.forEach(function (c) { build(c, vals, out); });
+    patchChildren(app, out);
+  }
+  var Component = new Function('DCLogic', code + '\n;return Component;')(DCLogic);
+  comp = new Component({});
+  if (!comp.state) comp.state = {};
+  render();
+  if (comp.componentDidMount) comp.componentDidMount();
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Omni by Canvs — UI preview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Raleway:wght@600;700&amp;family=Nunito:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}
+.rl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#52525B;text-decoration:none;border:1px solid transparent;background:transparent}
+.rl:hover{background:#F4F4F5}
+.rl.on{background:#FFFFFF;border-color:#E4E4E7;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.sep{width:28px;height:1px;background:#E4E4E7;margin:4px 0}
+.h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#52525B}
+.fld{display:flex;align-items:center;gap:10px;height:44px;padding:0 7px;background:#FFFFFF;border:1px solid #E4E4E7;border-radius:10px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;color:#18181B}
+.hx{font-size:11px;font-weight:600;letter-spacing:.04em;color:#52525B}
+.tab{display:flex;align-items:center;gap:8px;height:64px;padding:0 14px;text-decoration:none;color:#52525B;font-weight:500}
+.tab:hover{color:#18181B}
+.tab.on{color:#18181B;font-weight:600;box-shadow:inset 0 -2px 0 #E2531B}
+:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</helmet>
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span></div>
+      <button class="rl" aria-label="Projects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div class="sep"></div>
+      <a class="rl on" href="Main.dc.html" aria-label="Color" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></a>
+      <a class="rl" href="Typography.dc.html" aria-label="Typography"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="rl" href="Grids.dc.html" aria-label="Grids"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="rl" href="Spacing.dc.html" aria-label="Spacing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="rl" href="Elevation.dc.html" aria-label="Elevation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div class="sep"></div>
+      <a class="rl" href="Preview.dc.html" aria-label="UI preview"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="rl" aria-label="Documentation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="rl" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <aside aria-label="Palette settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span></div>
+        <div style="font-size: 16px; font-weight: 600; flex: 1">Omni by Canvs</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 20px; border-bottom: 1px solid #E4E4E7">
+        <div style="height: 44px; display: flex; align-items: center; justify-content: center; font-weight: 600; box-shadow: inset 0 -2px 0 #E2531B">Brand</div>
+        <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #52525B">Tokens</div>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 22px">
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Brand</h3>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Primary <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #9D00D6"></span>#9d00d6</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Secondary <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #4852E5"></span>#4852e5</div>
+          <div style="font-size: 13px; color: #52525B">+ Add tertiary · Remove</div>
+        </section>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Neutral</h3>
+          <div class="fld" style="font-family: Inter, sans-serif; font-weight: 500"><span style="display: flex; gap: 2px"><span style="width: 12px; height: 20px; border-radius: 3px; background: #F5F6F8"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #BFC4CC"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #606876"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #2F3948"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #0B1220"></span></span>Gray</div>
+        </section>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Semantic</h3>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Info <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #2563EB"></span>#2563EB</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Success <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #1F9D55"></span>#1F9D55</div>
+        </section>
+      </div>
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <nav aria-label="Views" style="display: flex; flex-wrap: wrap; gap: 4px">
+        <a class="tab" href="Main.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/></svg>Palette<span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; background: #F4F4F5; color: #52525B; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">8</span></a>
+        <a class="tab" href="Tokens.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>Tokens</a>
+        <a class="tab" href="Contrast.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg>Contrast grid</a>
+        <a class="tab on" href="Preview.dc.html" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>UI preview</a>
+      </nav>
+      <div style="display: flex; gap: 8px; padding: 10px 0">
+        <button style="height: 40px; padding: 0 14px; border: 1px solid #E4E4E7; border-radius: 9px; background: #FFFFFF; color: #18181B; font-size: 13px; font-weight: 500">Copy all</button>
+        <button style="height: 40px; padding: 0 10px 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px">Export <span style="height: 20px; padding: 0 6px; border-radius: 5px; background: rgba(255,255,255,.2); font-size: 11px; display: inline-flex; align-items: center">128</span></button>
+      </div>
+    </div>
+
+    <div style="padding: 20px 28px 48px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+        <div role="group" aria-label="Preview type" style="display: flex; flex-wrap: wrap; gap: 6px">
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Dashboard</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Mobile</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Web</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Components</button>
+          <button aria-pressed="true" style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #18181B; background: #18181B; color: #FFFFFF; font-size: 13px; font-weight: 500">Charts</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Logos</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Gradients</button>
+          <button style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #3F3F46; font-size: 13px">Text</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px; font-size: 13px; color: #52525B">
+          <div role="group" aria-label="Theme" style="display: inline-flex; padding: 3px; background: #F0F0F2; border-radius: 9px; gap: 2px">
+            <button onClick="{{setLight}}" aria-pressed="{{lightPressed}}" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: {{lightBg}}; color: #18181B; font-size: 13px; font-weight: 500">Light</button>
+            <button onClick="{{setDark}}" aria-pressed="{{darkPressed}}" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: {{darkBg}}; color: #18181B; font-size: 13px; font-weight: 500">Dark</button>
+          </div>
+          <span>Fonts: Raleway, Nunito</span>
+          <a href="#customise" style="color: #18181B">Customise</a>
+        </div>
+      </div>
+
+      <div style="background: {{t.canvas}}; border-radius: 14px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; font-family: Nunito, system-ui, sans-serif">
+
+        <figure style="margin: 0; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+          <figcaption style="font-family: Raleway, sans-serif; font-weight: 700; font-size: 15px; color: {{t.text}}">Revenue vs Expenses</figcaption>
+          <svg viewBox="0 0 520 220" role="img" aria-label="Grouped bar chart of revenue and expenses, January to June" style="width: 100%; height: auto">
+            <sc-for list="{{yTicks100}}" as="g" hint-placeholder-count="5">
+              <line x1="36" x2="510" y1="{{g.y}}" y2="{{g.y}}" stroke="{{t.grid}}" stroke-dasharray="3 4"></line>
+              <text x="28" y="{{g.ty}}" text-anchor="end" font-size="11" fill="{{t.axis}}">{{g.label}}</text>
+            </sc-for>
+            <sc-for list="{{bars}}" as="b" hint-placeholder-count="6">
+              <rect x="{{b.x1}}" y="{{b.y1}}" width="26" height="{{b.h1}}" rx="3" fill="{{t.c1}}"></rect>
+              <rect x="{{b.x2}}" y="{{b.y2}}" width="26" height="{{b.h2}}" rx="3" fill="{{t.c2}}"></rect>
+              <text x="{{b.cx}}" y="214" text-anchor="middle" font-size="11" fill="{{t.axis}}">{{b.m}}</text>
+            </sc-for>
+          </svg>
+          <div style="display: flex; gap: 16px; font-size: 12px; color: {{t.muted}}"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{t.c1}}"></span>Revenue</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{t.c2}}"></span>Expenses</span></div>
+        </figure>
+
+        <figure style="margin: 0; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+          <figcaption style="font-family: Raleway, sans-serif; font-weight: 700; font-size: 15px; color: {{t.text}}">User Growth</figcaption>
+          <svg viewBox="0 0 520 220" role="img" aria-label="Line chart of new and total users, January to June" style="width: 100%; height: auto">
+            <sc-for list="{{yTicks800}}" as="g" hint-placeholder-count="5">
+              <line x1="36" x2="510" y1="{{g.y}}" y2="{{g.y}}" stroke="{{t.grid}}" stroke-dasharray="3 4"></line>
+              <text x="28" y="{{g.ty}}" text-anchor="end" font-size="11" fill="{{t.axis}}">{{g.label}}</text>
+            </sc-for>
+            <path d="{{growth.a}}" fill="none" stroke="{{t.c2}}" stroke-width="2" stroke-dasharray="5 5"></path>
+            <path d="{{growth.b}}" fill="none" stroke="{{t.c1}}" stroke-width="2.5"></path>
+            <sc-for list="{{growth.dots}}" as="d" hint-placeholder-count="12">
+              <circle cx="{{d.x}}" cy="{{d.y}}" r="3.5" fill="{{d.c}}"></circle>
+            </sc-for>
+            <sc-for list="{{months}}" as="m" hint-placeholder-count="6">
+              <text x="{{m.x}}" y="214" text-anchor="middle" font-size="11" fill="{{t.axis}}">{{m.m}}</text>
+            </sc-for>
+          </svg>
+          <div style="display: flex; gap: 16px; font-size: 12px; color: {{t.muted}}"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 3px; border-radius: 2px; background: {{t.c1}}"></span>New users</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 0; border-top: 2px dashed {{t.c2}}"></span>Total users</span></div>
+        </figure>
+
+        <figure style="margin: 0; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+          <figcaption style="font-family: Raleway, sans-serif; font-weight: 700; font-size: 15px; color: {{t.text}}">Traffic by Platform</figcaption>
+          <svg viewBox="0 0 520 220" role="img" aria-label="Area chart of web and mobile traffic, January to June" style="width: 100%; height: auto">
+            <sc-for list="{{yTicks800}}" as="g" hint-placeholder-count="5">
+              <line x1="36" x2="510" y1="{{g.y}}" y2="{{g.y}}" stroke="{{t.grid}}" stroke-dasharray="3 4"></line>
+              <text x="28" y="{{g.ty}}" text-anchor="end" font-size="11" fill="{{t.axis}}">{{g.label}}</text>
+            </sc-for>
+            <path d="{{traffic.areaA}}" fill="{{t.c1}}" fill-opacity="0.12"></path>
+            <path d="{{traffic.areaB}}" fill="{{t.c3}}" fill-opacity="0.10"></path>
+            <path d="{{traffic.a}}" fill="none" stroke="{{t.c1}}" stroke-width="2.5"></path>
+            <path d="{{traffic.b}}" fill="none" stroke="{{t.c3}}" stroke-width="2.5"></path>
+            <sc-for list="{{months}}" as="m" hint-placeholder-count="6">
+              <text x="{{m.x}}" y="214" text-anchor="middle" font-size="11" fill="{{t.axis}}">{{m.m}}</text>
+            </sc-for>
+          </svg>
+          <div style="display: flex; gap: 16px; font-size: 12px; color: {{t.muted}}"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{t.c1}}"></span>Web</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{t.c3}}"></span>Mobile</span></div>
+        </figure>
+
+        <figure style="margin: 0; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+          <figcaption style="font-family: Raleway, sans-serif; font-weight: 700; font-size: 15px; color: {{t.text}}">Audience Breakdown</figcaption>
+          <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 28px; padding: 8px 0">
+            <svg viewBox="0 0 160 160" width="180" height="180" role="img" aria-label="Donut chart: Primary 42%, Secondary 28%, Tertiary 18%, Other 12%">
+              <g transform="rotate(-90 80 80)">
+                <sc-for list="{{donut}}" as="d" hint-placeholder-count="4">
+                  <circle cx="80" cy="80" r="56" fill="none" stroke="{{d.c}}" stroke-width="26" stroke-dasharray="{{d.dash}}" stroke-dashoffset="{{d.off}}"></circle>
+                </sc-for>
+              </g>
+            </svg>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: {{t.text}}">
+              <sc-for list="{{donut}}" as="d" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 12px 90px 40px; align-items: center; gap: 8px"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{d.c}}"></span><span>{{d.label}}</span><span style="text-align: right; font-weight: 700">{{d.pct}}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </figure>
+
+        <figure style="margin: 0; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px">
+          <figcaption style="font-family: Raleway, sans-serif; font-weight: 700; font-size: 15px; color: {{t.text}}">Quarterly Goals</figcaption>
+          <sc-for list="{{goals}}" as="g" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; color: {{t.text}}"><span>{{g.label}}</span><span style="font-weight: 700">{{g.pct}}</span></div>
+              <div role="progressbar" aria-label="{{g.label}}" aria-valuenow="{{g.v}}" aria-valuemin="0" aria-valuemax="100" style="height: 8px; border-radius: 999px; background: {{t.track}}; overflow: hidden"><div style="height: 100%; width: {{g.pct}}; border-radius: 999px; background: {{g.c}}"></div></div>
+            </div>
+          </sc-for>
+        </figure>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+var X0 = 60, X1 = 490, YT = 12, YB = 196;
+function xAt(i) { return X0 + (X1 - X0) * i / 5; }
+function yAt(v, max) { return YB - (YB - YT) * v / max; }
+function smooth(pts) {
+  var d = "M" + pts[0][0] + "," + pts[0][1];
+  for (var i = 0; i < pts.length - 1; i++) {
+    var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    var c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6, c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += " C" + c1x.toFixed(1) + "," + c1y.toFixed(1) + " " + c2x.toFixed(1) + "," + c2y.toFixed(1) + " " + p2[0].toFixed(1) + "," + p2[1].toFixed(1);
+  }
+  return d;
+}
+function straight(pts) { return pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); }
+function ticks(max) { return [0, 1, 2, 3, 4].map(function (k) { var v = max * k / 4, y = yAt(v, max); return { y: y, ty: y + 4, label: String(v) }; }); }
+var THEMES = {
+  light: { canvas: "#F4F4F5", card: "#FFFFFF", border: "#E4E4E7", text: "#18181B", muted: "#52525B", axis: "#71717A", grid: "#E4E4E7", track: "#EEF0F2", c1: "#AD2CE8", c2: "#8EA5FF", c3: "#4852E5", c4: "#BFC4CC" },
+  dark: { canvas: "#030712", card: "#161E2C", border: "#2F3948", text: "#F5F6F8", muted: "#BFC4CC", axis: "#9CA3AF", grid: "#2F3948", track: "#2F3948", c1: "#C252FB", c2: "#97BAFF", c3: "#7C86F2", c4: "#606876" }
+};
+
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { mode: "light" }; }
+  renderVals() {
+    var self = this, t = THEMES[this.state.mode], light = this.state.mode === "light";
+    var rev = [42, 58, 47, 72, 63, 86], exp = [30, 38, 34, 44, 40, 52];
+    var bars = MONTHS.map(function (m, i) {
+      var cx = xAt(i);
+      return { m: m, cx: cx, x1: cx - 28, x2: cx + 2, y1: yAt(rev[i], 100), h1: YB - yAt(rev[i], 100), y2: yAt(exp[i], 100), h2: YB - yAt(exp[i], 100) };
+    });
+    var newU = [120, 150, 140, 195, 205, 250], tot = [340, 395, 365, 480, 505, 620];
+    var pN = newU.map(function (v, i) { return [xAt(i), yAt(v, 800)]; }), pT = tot.map(function (v, i) { return [xAt(i), yAt(v, 800)]; });
+    var web = [400, 530, 500, 600, 560, 720], mob = [240, 280, 270, 380, 350, 440];
+    var pW = web.map(function (v, i) { return [xAt(i), yAt(v, 800)]; }), pM = mob.map(function (v, i) { return [xAt(i), yAt(v, 800)]; });
+    function area(p) { return smooth(p) + " L" + X1 + "," + YB + " L" + X0 + "," + YB + " Z"; }
+    var C = 2 * Math.PI * 56, acc = 0;
+    var donut = [["Primary", 42, t.c1], ["Secondary", 28, t.c2], ["Tertiary", 18, t.c3], ["Other", 12, t.c4]].map(function (d) {
+      var len = C * d[1] / 100, o = { label: d[0], pct: d[1] + "%", c: d[2], dash: (len - 2).toFixed(1) + " " + (C - len + 2).toFixed(1), off: (-acc).toFixed(1) };
+      acc += len; return o;
+    });
+    return {
+      t: t,
+      lightPressed: light ? "true" : "false", darkPressed: light ? "false" : "true",
+      lightBg: light ? "#FFFFFF" : "transparent", darkBg: light ? "transparent" : "#FFFFFF",
+      setLight: function () { self.setState({ mode: "light" }); }, setDark: function () { self.setState({ mode: "dark" }); },
+      yTicks100: ticks(100), yTicks800: ticks(800),
+      months: MONTHS.map(function (m, i) { return { m: m, x: xAt(i) }; }),
+      bars: bars,
+      growth: { a: straight(pT), b: straight(pN), dots: pN.map(function (p) { return { x: p[0], y: p[1], c: t.c1 }; }).concat(pT.map(function (p) { return { x: p[0], y: p[1], c: t.c2 }; })) },
+      traffic: { a: smooth(pW), b: smooth(pM), areaA: area(pW), areaB: area(pM) },
+      donut: donut,
+      goals: [["Revenue target", 78, t.c1], ["New customers", 64, t.c3], ["Retention", 91, "#1F9D55"], ["NPS", 55, "#F97316"]].map(function (g) { return { label: g[0], v: g[1], pct: g[1] + "%", c: g[2] }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

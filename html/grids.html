@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omni by Canvs — Grids</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}input{font:inherit}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.rl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#52525B;text-decoration:none;border:1px solid transparent;background:transparent}
+.rl:hover{background:#F4F4F5}
+.rl.on{background:#FFFFFF;border-color:#E4E4E7;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.sep{width:28px;height:1px;background:#E4E4E7;margin:4px 0}
+.h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#52525B}
+.ck{width:18px;height:18px;accent-color:#E2531B;margin:0}
+.num{width:100%;box-sizing:border-box;height:40px;border:1px solid #E4E4E7;border-radius:8px;padding:0 10px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;background:#FFFFFF;color:#18181B}
+:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<template id="tpl">
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span></div>
+      <button class="rl" aria-label="Projects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div class="sep"></div>
+      <a class="rl" href="index.html" aria-label="Color"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></a>
+      <a class="rl" href="typography.html" aria-label="Typography"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="rl on" href="grids.html" aria-label="Grids" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="rl" href="spacing.html" aria-label="Spacing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="rl" href="elevation.html" aria-label="Elevation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div class="sep"></div>
+      <a class="rl" href="preview.html" aria-label="UI preview"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="rl" aria-label="Documentation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="rl" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <aside aria-label="Grid settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #E4E4E7">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span></div>
+        <div style="font-size: 16px; font-weight: 600">Grids</div>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 22px">
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><h3 class="h3">Platform</h3><span style="font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #52525B; border: 1px solid #E4E4E7; border-radius: 4px; padding: 2px 6px">PROJECT</span></div>
+          <div role="group" aria-label="Platform" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid #E4E4E7; border-radius: 10px; background: #FFFFFF">
+            <sc-for list="{{platforms}}" as="p" hint-placeholder-count="4">
+              <button onClick="{{p.pick}}" aria-label="{{p.label}}" aria-pressed="{{p.pressed}}" style="height: 36px; border: 1px solid {{p.border}}; border-radius: 7px; background: {{p.bg}}; color: {{p.color}}; display: flex; align-items: center; justify-content: center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icon}}"></path></svg>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Layout</h3>
+          <sc-for list="{{toggles}}" as="t" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px">
+              <span id="{{t.id}}" style="font-size: 13px">{{t.label}}</span>
+              <button role="switch" aria-checked="{{t.checked}}" aria-labelledby="{{t.id}}" onClick="{{t.flip}}" style="width: 36px; height: 20px; border: 0; border-radius: 999px; background: {{t.track}}; padding: 2px; display: flex; justify-content: {{t.justify}}">
+                <span style="width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,.2)"></span>
+              </button>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Presets</h3>
+          <div role="group" aria-label="Preset" style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{presets}}" as="p" hint-placeholder-count="4">
+              <button onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.color}}; font-size: 12px; font-weight: 500">{{p.label}}</button>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between"><h3 class="h3">Breakpoints</h3><span style="font-size: 11px; color: #52525B">{{onCount}} ON</span></div>
+          <sc-for list="{{bpRows}}" as="b" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 10px; min-height: 36px">
+              <input class="ck" type="checkbox" id="{{b.cid}}" checked="{{b.on}}" onChange="{{b.toggle}}">
+              <label for="{{b.cid}}" style="flex: 1; font-size: 13px; font-weight: 500">{{b.label}}</label>
+              <span class="mono" style="font-size: 13px">{{b.w}}</span>
+              <span style="font-size: 11px; color: #52525B">px</span>
+            </div>
+          </sc-for>
+          <button style="align-self: flex-start; height: 34px; padding: 0 12px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; font-size: 12px; color: #3F3F46">+ Add breakpoint or device</button>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between"><h3 class="h3">Grid</h3><span style="font-size: 11px; font-weight: 600; color: #C2410C">{{activeLabel}}</span></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="g-cols" style="font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #52525B">COLUMNS</label><input class="num" id="g-cols" type="number" min="1" max="24" value="{{cols}}" onChange="{{setCols}}"></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="g-gut" style="font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #52525B">GUTTER (PX)</label><input class="num" id="g-gut" type="number" min="0" max="96" value="{{gutter}}" onChange="{{setGutter}}"></div>
+          </div>
+        </section>
+      </div>
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <nav aria-label="Views" style="display: flex; gap: 4px">
+        <a href="grids.html" aria-current="page" style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; text-decoration: none; color: #18181B; font-weight: 600; box-shadow: inset 0 -2px 0 #E2531B">Grid <span style="height: 20px; padding: 0 6px; border-radius: 6px; background: #FFF1EB; color: #C2410C; font-size: 11px; display: inline-flex; align-items: center">{{cols}}</span></a>
+        <a href="preview.html" style="display: flex; align-items: center; height: 64px; padding: 0 14px; text-decoration: none; color: #52525B; font-weight: 500">UI preview</a>
+      </nav>
+      <div style="display: flex; gap: 8px; padding: 10px 0; align-items: center">
+        <div role="group" aria-label="Unit" style="display: inline-flex; padding: 3px; border: 1px solid #E4E4E7; border-radius: 9px; gap: 2px">
+          <sc-for list="{{units}}" as="u" hint-placeholder-count="3">
+            <button onClick="{{u.pick}}" aria-pressed="{{u.pressed}}" class="mono" style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: {{u.bg}}; color: {{u.color}}; font-size: 12px">{{u.label}}</button>
+          </sc-for>
+        </div>
+        <button style="height: 40px; padding: 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600">Export</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 28px; border-bottom: 1px solid #F0F0F2">
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: .08em; color: #52525B; margin-right: 6px">BREAKPOINT</span>
+      <sc-for list="{{bpTabs}}" as="b" hint-placeholder-count="3">
+        <button onClick="{{b.pick}}" aria-pressed="{{b.pressed}}" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid {{b.border}}; background: {{b.bg}}; color: {{b.color}}; font-size: 12px; font-weight: 600; display: flex; gap: 8px; align-items: center">{{b.label}}<span class="mono" style="font-weight: 400; opacity: .8">{{b.w}}</span></button>
+      </sc-for>
+    </div>
+
+    <div style="padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-start">
+        <div>
+          <h1 style="margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -.01em">{{title}}</h1>
+          <p style="margin: 0; font-size: 13px; color: #52525B">{{desc}}</p>
+        </div>
+        <span style="height: 32px; padding: 0 12px; border: 1px solid #E4E4E7; border-radius: 8px; font-size: 12px; color: #3F3F46; display: inline-flex; align-items: center; gap: 6px">Sidebar: {{sbState}} <span class="mono" style="color: #52525B">{{sbWidth}}</span></span>
+      </div>
+
+      <div style="border: 1px solid #E4E4E7; border-radius: 14px; padding: 36px 24px; background: #FFFFFF; overflow-x: auto">
+        <div style="width: {{frameW}}; min-width: 280px; margin: 0 auto; position: relative">
+          <div style="position: relative; height: 22px">
+            <sc-for list="{{colsVis}}" as="c" hint-placeholder-count="12">
+              <span class="mono" style="position: absolute; left: {{c.left}}; width: {{c.width}}; text-align: center; font-size: 9px; color: #52525B; border-bottom: 1px solid #D4D4D8; padding-bottom: 3px; white-space: nowrap; overflow: hidden">{{c.label}}</span>
+            </sc-for>
+          </div>
+          <div style="border: 1px solid #D4D4D8; border-radius: 10px; overflow: hidden; background: #FFFFFF; box-shadow: 0 8px 24px rgba(24,24,27,.08)">
+            <div style="height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 10px; border-bottom: 1px solid #EAEAEC; background: #FAFAFA"><span style="width: 7px; height: 7px; border-radius: 50%; background: #F87171"></span><span style="width: 7px; height: 7px; border-radius: 50%; background: #FBBF24"></span><span style="width: 7px; height: 7px; border-radius: 50%; background: #34D399"></span></div>
+            <div style="position: relative; height: 300px">
+              <sc-if value="{{hasSidebar}}" hint-placeholder-val="{{ true }}">
+                <div style="position: absolute; left: {{sbLeft}}; top: {{sbTop}}; bottom: {{sbTop}}; width: {{sbPct}}; background: #EFEFF1; border-right: 1px dashed #A1A1AA; border-radius: {{sbRadius}}; box-shadow: {{sbShadow}}; z-index: 2; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px">
+                  <span class="mono" style="font-size: 10px; color: #52525B">Sidebar</span><span class="mono" style="font-size: 10px; color: #52525B">{{sbWidth}}</span>
+                </div>
+              </sc-if>
+              <sc-for list="{{colsVis}}" as="c" hint-placeholder-count="12">
+                <div style="position: absolute; top: 0; bottom: 0; left: {{c.left}}; width: {{c.width}}; background: #FFE4DA"></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position: relative; height: 24px">
+            <sc-for list="{{gapsVis}}" as="g" hint-placeholder-count="13">
+              <span class="mono" style="position: absolute; top: 6px; left: {{g.left}}; transform: translateX(-50%); font-size: 9px; color: #52525B; white-space: nowrap">{{g.label}}</span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #E4E4E7; border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); overflow: hidden">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="7">
+          <div style="padding: 12px 14px; border-right: 1px solid #F0F0F2; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #52525B">{{s.k}}</span>
+            <span class="mono" style="font-size: 15px; font-weight: 600; color: {{s.color}}">{{s.v}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+</div>
+</template>
+<script id="logic" type="text/plain">
+var BPS = [
+  { key: "xxl", label: "XXL", w: 1400, sb: 272, sbState: "Expanded", name: "Expanded" },
+  { key: "md", label: "MD", w: 768, sb: 72, sbState: "Collapsed", name: "Collapsed rail" },
+  { key: "xs", label: "XS", w: 390, sb: 0, sbState: "Hidden", name: "Compact" }
+];
+var PRESETS = { standard: { g: [24, 16, 16], m: [16, 16, 16] }, dense: { g: [16, 12, 8], m: [12, 12, 12] }, airy: { g: [32, 24, 16], m: [32, 24, 20] } };
+var ICONS = ["M3 5h18v12H3zM8 21h8M12 17v4", "M3 4h18v16H3zM9 4v16", "M6 3h12v18H6zM11 18h2", "M8 3h8v18H8zM11 18h2"];
+var PNAMES = ["Website", "Web app", "Tablet", "Phone"];
+function fmt(px, unit) { if (unit === "rem") return +(px / 16).toFixed(2) + "rem"; if (unit === "pt") return +(px * 0.75).toFixed(1) + "pt"; return +px.toFixed(1) + "px"; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { platform: 1, sidebar: true, floating: false, maxw: false, preset: "standard", on: { xxl: true, md: true, xs: true }, active: "xxl", cols: { xxl: 12, md: 8, xs: 4 }, gut: { xxl: 24, md: 16, xs: 16 }, unit: "px" };
+  }
+  renderVals() {
+    var self = this, s = this.state, u = s.unit;
+    var bi = BPS.map(function (b) { return b.key; }).indexOf(s.active), bp = BPS[bi];
+    var n = Math.max(1, Math.min(24, s.cols[bp.key] || 1)), g = Math.max(0, s.gut[bp.key] || 0);
+    var m = PRESETS[s.preset === "custom" ? "standard" : s.preset].m[bi];
+    var sb = s.sidebar ? bp.sb : 0, reserved = s.floating ? 0 : sb;
+    var avail = bp.w - reserved - 2 * m, content = s.maxw ? Math.min(avail, 1200) : avail;
+    var start = reserved + m + (avail - content) / 2, col = (content - (n - 1) * g) / n;
+    function pct(px) { return (px / bp.w * 100).toFixed(3) + "%"; }
+    var colsVis = [], gapsVis = [];
+    for (var i = 0; i < n; i++) {
+      var l = start + i * (col + g);
+      colsVis.push({ left: pct(l), width: pct(col), label: fmt(col, u) });
+      if (i < n - 1 && g > 0) gapsVis.push({ left: pct(l + col + g / 2), label: n > 8 ? String(g) : fmt(g, u) });
+    }
+    gapsVis.unshift({ left: pct(reserved + m / 2), label: fmt(m, u) });
+    gapsVis.push({ left: pct(bp.w - m / 2), label: fmt(m, u) });
+    function setP(k, v) { var o = Object.assign({}, self.state[k]); o[s.active] = v; var st = {}; st[k] = o; return st; }
+    var toggles = [["sidebar", "Sidebar"], ["floating", "Floating"], ["maxw", "Max content width"]].map(function (t) {
+      var on = s[t[0]];
+      return { id: "tg-" + t[0], label: t[1], checked: on ? "true" : "false", track: on ? "#E2531B" : "#D4D4D8", justify: on ? "flex-end" : "flex-start", flip: function () { var st = {}; st[t[0]] = !self.state[t[0]]; self.setState(st); } };
+    });
+    function pill(on) { return { bg: on ? "#18181B" : "#FFFFFF", color: on ? "#FFFFFF" : "#3F3F46", border: on ? "#18181B" : "#E4E4E7", pressed: on ? "true" : "false" }; }
+    return {
+      platforms: ICONS.map(function (ic, i) { var on = s.platform === i; return { icon: ic, label: PNAMES[i], pressed: on ? "true" : "false", bg: on ? "#FFF1EB" : "transparent", border: on ? "#F5B49A" : "transparent", color: on ? "#C2410C" : "#52525B", pick: function () { self.setState({ platform: i }); } }; }),
+      toggles: toggles,
+      presets: [["standard", "Standard"], ["dense", "Dense"], ["airy", "Airy"], ["custom", "Custom"]].map(function (p) {
+        return Object.assign(pill(s.preset === p[0]), { label: p[1], pick: function () {
+          if (p[0] === "custom") return self.setState({ preset: "custom" });
+          var gv = PRESETS[p[0]].g; self.setState({ preset: p[0], gut: { xxl: gv[0], md: gv[1], xs: gv[2] } });
+        } });
+      }),
+      onCount: BPS.filter(function (b) { return s.on[b.key]; }).length,
+      bpRows: BPS.map(function (b) { return { cid: "bp-" + b.key, label: b.label, w: b.w, on: !!s.on[b.key], toggle: function () { var o = Object.assign({}, self.state.on); o[b.key] = !o[b.key]; self.setState({ on: o }); } }; }),
+      bpTabs: BPS.filter(function (b) { return s.on[b.key]; }).map(function (b) { return Object.assign(pill(s.active === b.key), { label: b.label, w: b.w, pick: function () { self.setState({ active: b.key }); } }); }),
+      activeLabel: bp.label, cols: n, gutter: g,
+      setCols: function (e) { self.setState(setP("cols", parseInt(e.target.value, 10) || 1)); },
+      setGutter: function (e) { var st = setP("gut", parseInt(e.target.value, 10) || 0); st.preset = "custom"; self.setState(st); },
+      units: ["rem", "px", "pt"].map(function (x) { var on = s.unit === x; return { label: x, pressed: on ? "true" : "false", bg: on ? "#F4F4F5" : "transparent", color: on ? "#18181B" : "#52525B", pick: function () { self.setState({ unit: x }); } }; }),
+      title: bp.label + " · " + (s.sidebar ? bp.name : "No sidebar"),
+      desc: s.sidebar && sb ? (s.floating ? "Sidebar floats over the content, so the columns use the full width." : "Sidebar width is reserved. The columns divide what is left, so each one is " + fmt(col, u) + ".") : "No sidebar reserved. The columns divide the full width, so each one is " + fmt(col, u) + ".",
+      sbState: s.sidebar ? bp.sbState : "Off", sbWidth: fmt(sb, u), hasSidebar: sb > 0,
+      sbPct: pct(sb), sbLeft: s.floating ? "8px" : "0", sbTop: s.floating ? "8px" : "0", sbRadius: s.floating ? "8px" : "0", sbShadow: s.floating ? "0 6px 16px rgba(0,0,0,.12)" : "none",
+      frameW: (bp.w / 1400 * 100).toFixed(2) + "%",
+      colsVis: colsVis, gapsVis: gapsVis,
+      stats: [["VIEWPORT", fmt(bp.w, u)], ["SIDEBAR", reserved ? "−" + fmt(reserved, u) : fmt(0, u)], ["MARGINS", "−" + fmt(2 * m + (avail - content), u)], ["CONTENT", fmt(content, u)], ["COLUMNS", String(n)], ["GUTTER", fmt(g, u)], ["COLUMN", fmt(col, u)]].map(function (x, i) { return { k: x[0], v: x[1], color: i === 6 ? "#C2410C" : "#18181B" }; })
+    };
+  }
+}
+</script>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var tpl = document.getElementById('tpl').content;
+  var code = document.getElementById('logic').textContent;
+  var queued = false, comp;
+  function DCLogic(props) { this.props = props || {}; this.state = {}; }
+  DCLogic.prototype.setState = function (p) {
+    var n = typeof p === 'function' ? p(this.state, this.props) : p;
+    this.state = Object.assign({}, this.state, n);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+  function schedule() { if (queued) return; queued = true; Promise.resolve().then(function () { queued = false; render(); }); }
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g, WHOLE = /^\s*\{\{\s*([^}]+?)\s*\}\}\s*$/;
+  function get(scope, path) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (path === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    var m = /^'(.*)'$|^"(.*)"$/.exec(path); if (m) return m[1] != null ? m[1] : m[2];
+    return path.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, scope);
+  }
+  function interp(str, scope) { return str.replace(HOLE, function (_, p) { var v = get(scope, p); return v == null || v === false ? '' : String(v); }); }
+  function evType(el, name) {
+    var ev = name.slice(2);
+    if (ev === 'change') {
+      var t = (el.getAttribute('type') || '').toLowerCase(), tag = el.localName;
+      if (tag === 'select' || t === 'checkbox' || t === 'radio') return 'change';
+      return 'input';
+    }
+    return ev === 'doubleclick' ? 'dblclick' : ev;
+  }
+  function build(node, scope, out) {
+    if (node.nodeType === 3) { out.push(document.createTextNode(node.data.indexOf('{{') >= 0 ? interp(node.data, scope) : node.data)); return; }
+    if (node.nodeType !== 1) return;
+    var tag = node.localName;
+    if (tag === 'sc-for') {
+      var list = get(scope, (node.getAttribute('list') || '').replace(/^\s*\{\{|\}\}\s*$/g, '')) || [];
+      var as = node.getAttribute('as') || 'item';
+      list.forEach(function (item, i) {
+        var s = Object.assign({}, scope); s[as] = item; s.$index = i;
+        node.childNodes.forEach(function (c) { build(c, s, out); });
+      });
+      return;
+    }
+    if (tag === 'sc-if') {
+      var v = get(scope, (node.getAttribute('value') || '').replace(/^\s*\{\{|\}\}\s*$/g, ''));
+      if (v) node.childNodes.forEach(function (c) { build(c, scope, out); });
+      return;
+    }
+    var el = tag === 'x-select' ? document.createElement('select') : node.cloneNode(false);
+    el.__h = {}; el.__p = {};
+    Array.from(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+    Array.from(node.attributes).forEach(function (a) {
+      var name = a.name, val = a.value, w = WHOLE.exec(val);
+      if (name.indexOf('hint-') === 0) return;
+      if (/^on[a-z]+$/.test(name)) { if (w) { var fn = get(scope, w[1]); if (typeof fn === 'function') el.__h[evType(node.localName === 'x-select' ? el : node, name)] = fn; } return; }
+      var raw = w ? get(scope, w[1]) : (val.indexOf('{{') >= 0 ? interp(val, scope) : val);
+      if (name === 'checked') { el.__p.checked = !!raw; return; }
+      if (name === 'value' && (el.localName === 'input' || el.localName === 'select' || el.localName === 'textarea')) { el.__p.value = raw == null ? '' : String(raw); return; }
+      if (name === 'disabled' || name === 'readonly' || name === 'required') { if (raw === false || raw == null || raw === 'false') return; el.setAttribute(name, ''); return; }
+      if (raw == null || raw === false) return;
+      el.setAttribute(name, String(raw));
+    });
+    var kids = []; node.childNodes.forEach(function (c) { build(c, scope, kids); });
+    kids.forEach(function (k) { el.appendChild(k); });
+    out.push(el);
+  }
+  function bind(el) {
+    if (!el.__bound) el.__bound = {};
+    Object.keys(el.__h || {}).forEach(function (t) {
+      if (el.__bound[t]) return; el.__bound[t] = true;
+      el.addEventListener(t, function (e) { var h = el.__h && el.__h[t]; if (h) h(e); });
+    });
+  }
+  function applyProps(el, p) {
+    if (!p) return;
+    if ('value' in p && el.value !== p.value) el.value = p.value;
+    if ('checked' in p && el.checked !== p.checked) el.checked = p.checked;
+  }
+  function bindAll(n) {
+    if (n.nodeType !== 1) return;
+    Array.from(n.childNodes).forEach(bindAll);
+    bind(n); applyProps(n, n.__p);
+  }
+  function same(a, b) { return a.nodeType === b.nodeType && a.nodeName === b.nodeName && a.namespaceURI === b.namespaceURI; }
+  function patchNode(l, f) {
+    if (l.nodeType === 3) { if (l.data !== f.data) l.data = f.data; return; }
+    Array.from(l.attributes).forEach(function (a) { if (!f.hasAttribute(a.name)) l.removeAttribute(a.name); });
+    Array.from(f.attributes).forEach(function (a) { if (l.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value); });
+    l.__h = f.__h; bind(l);
+    patchChildren(l, Array.from(f.childNodes));
+    l.__p = f.__p; applyProps(l, f.__p);
+  }
+  function patchChildren(parent, fresh) {
+    var lives = Array.from(parent.childNodes);
+    fresh.forEach(function (f, i) {
+      var l = lives[i];
+      if (!l) { parent.appendChild(f); bindAll(f); return; }
+      if (same(l, f)) patchNode(l, f); else { parent.replaceChild(f, l); bindAll(f); }
+    });
+    for (var i = fresh.length; i < lives.length; i++) parent.removeChild(lives[i]);
+  }
+  function render() {
+    var vals = comp.renderVals ? comp.renderVals() : {};
+    var out = []; tpl.childNodes.forEach(function (c) { build(c, vals, out); });
+    patchChildren(app, out);
+  }
+  var Component = new Function('DCLogic', code + '\n;return Component;')(DCLogic);
+  comp = new Component({});
+  if (!comp.state) comp.state = {};
+  render();
+  if (comp.componentDidMount) comp.componentDidMount();
+})();
+
+</script>
+</body>
+</html>

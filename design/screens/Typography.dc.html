@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Omni by Canvs — Type scale</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Raleway:wght@300;400;500;600;700;800&amp;family=Nunito:wght@300;400;500;600;700;800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=DM+Sans:wght@300;400;500;600;700;800&amp;family=Playfair+Display:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}input,select{font:inherit}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.rl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#52525B;text-decoration:none;border:1px solid transparent;background:transparent}
+.rl:hover{background:#F4F4F5}
+.rl.on{background:#FFFFFF;border-color:#E4E4E7;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.sep{width:28px;height:1px;background:#E4E4E7;margin:4px 0}
+.h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#52525B}
+.rng{width:100%;accent-color:#E2531B;margin:0}
+.inp{box-sizing:border-box;height:40px;border:1px solid #E4E4E7;border-radius:8px;padding:0 10px;background:#FFFFFF;color:#18181B;font-size:13px}
+.trow:hover{background:#FAFAFA}
+.tb{display:flex;align-items:center;gap:8px;height:64px;padding:0 14px;border:0;background:transparent;color:#52525B;font-weight:500;font-size:14px}
+:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</helmet>
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span></div>
+      <button class="rl" aria-label="Projects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div class="sep"></div>
+      <a class="rl" href="Main.dc.html" aria-label="Color"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></a>
+      <a class="rl on" href="Typography.dc.html" aria-label="Typography" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="rl" href="Grids.dc.html" aria-label="Grids"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="rl" href="Spacing.dc.html" aria-label="Spacing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="rl" href="Elevation.dc.html" aria-label="Elevation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div class="sep"></div>
+      <a class="rl" href="Preview.dc.html" aria-label="UI preview"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="rl" aria-label="Documentation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="rl" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <aside aria-label="Type scale settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #E4E4E7">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span></div>
+        <div style="font-size: 16px; font-weight: 600">Type Scale</div>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 22px">
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><h3 class="h3">Platform</h3><span style="font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #52525B; border: 1px solid #E4E4E7; border-radius: 4px; padding: 2px 6px">PROJECT</span></div>
+          <div role="group" aria-label="Platform" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid #E4E4E7; border-radius: 10px; background: #FFFFFF">
+            <sc-for list="{{platforms}}" as="p" hint-placeholder-count="4">
+              <button onClick="{{p.pick}}" aria-label="{{p.label}}" aria-pressed="{{p.pressed}}" style="height: 36px; border: 1px solid {{p.border}}; border-radius: 7px; background: {{p.bg}}; color: {{p.color}}; display: flex; align-items: center; justify-content: center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icon}}"></path></svg>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+
+        <sc-if value="{{isWeb}}" hint-placeholder-val="{{ true }}">
+          <section style="display: flex; flex-direction: column; gap: 12px">
+            <h3 class="h3">Scale</h3>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500"><label for="base-range">Base size</label><span class="mono" style="font-weight: 600">{{base}}px</span></div>
+            <div style="display: flex; align-items: center; gap: 12px">
+              <input id="base-range" class="rng" type="range" min="10" max="24" step="1" value="{{base}}" onChange="{{setBase}}">
+              <label for="base-num" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Base size in px</label>
+              <input id="base-num" class="inp mono" type="number" min="10" max="24" value="{{base}}" onChange="{{setBase}}" style="width: 64px">
+            </div>
+            <label for="ratio" style="font-size: 13px; font-weight: 500">Scale ratio</label>
+            <select id="ratio" class="inp mono" value="{{ratio}}" onChange="{{setRatio}}" style="width: 100%">
+              <sc-for list="{{ratios}}" as="r" hint-placeholder-count="8"><option value="{{r.v}}">{{r.label}}</option></sc-for>
+            </select>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Line grid <span class="mono" style="font-size: 11px; font-weight: 400; color: #52525B">snaps line heights</span></div>
+            <div role="group" aria-label="Line grid" style="display: flex; gap: 6px">
+              <sc-for list="{{grids}}" as="g" hint-placeholder-count="2">
+                <button onClick="{{g.pick}}" aria-pressed="{{g.pressed}}" style="height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid {{g.border}}; background: {{g.bg}}; color: {{g.color}}; font-size: 12px; font-weight: 500">{{g.label}}</button>
+              </sc-for>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Presets</h3>
+          <div role="group" aria-label="Preset" style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{presets}}" as="p" hint-placeholder-count="3">
+              <button onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.color}}; font-size: 12px; font-weight: 500">{{p.label}}</button>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Fonts</h3>
+          <sc-for list="{{fonts}}" as="f" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500"><label for="{{f.id}}">{{f.label}}</label><span class="mono" style="font-size: 11px; font-weight: 400; color: #52525B">{{f.value}}</span></div>
+              <div style="display: flex; gap: 6px">
+                <select id="{{f.id}}" class="inp" value="{{f.value}}" onChange="{{f.set}}" disabled="{{f.locked}}" style="flex: 1; min-width: 0; font-family: {{f.css}}">
+                  <sc-for list="{{f.options}}" as="o" hint-placeholder-count="6"><option value="{{o}}">{{o}}</option></sc-for>
+                </select>
+                <button aria-label="{{f.uploadLabel}}" style="width: 40px; height: 40px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; color: #52525B; display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg></button>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{isApple}}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #52525B">SF Pro is Apple’s system font — not available via Google Fonts. Use <span class="mono">-apple-system</span> in your CSS stack.</p>
+          </sc-if>
+        </section>
+
+        <sc-if value="{{isWeb}}" hint-placeholder-val="{{ true }}">
+          <section style="display: flex; flex-direction: column; gap: 12px">
+            <h3 class="h3">Responsive</h3>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500">Desktop <span style="font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px; background: #18181B; color: #FFFFFF">BASE</span></div>
+            <sc-for list="{{resp}}" as="r" hint-placeholder-count="2">
+              <div style="display: grid; grid-template-columns: 36px 1fr 44px 96px; align-items: center; gap: 10px">
+                <button role="switch" aria-checked="{{r.checked}}" aria-label="{{r.switchLabel}}" onClick="{{r.flip}}" style="width: 36px; height: 20px; border: 0; border-radius: 999px; background: {{r.track}}; padding: 2px; display: flex; justify-content: {{r.justify}}"><span style="width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,.2)"></span></button>
+                <label for="{{r.id}}" style="font-size: 13px">{{r.label}}</label>
+                <span class="mono" style="font-size: 12px; text-align: right; color: #3F3F46">{{r.pctLabel}}</span>
+                <input id="{{r.id}}" class="rng" type="range" min="-30" max="0" step="1" value="{{r.pct}}" onChange="{{r.set}}" disabled="{{r.off}}">
+              </div>
+            </sc-for>
+            <p style="margin: 0; font-size: 12px; line-height: 1.55; color: #52525B">Headings shrink on smaller breakpoints; body and labels stay put.</p>
+          </section>
+        </sc-if>
+      </div>
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <div role="tablist" aria-label="Views" style="display: flex; gap: 4px">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+          <button class="tb" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="color: {{t.color}}; font-weight: {{t.weight}}; box-shadow: inset 0 -2px 0 {{t.line}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"></path></svg>{{t.label}}
+            <sc-if value="{{t.hasCount}}" hint-placeholder-val="{{ false }}"><span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; background: #FFF1EB; color: #C2410C; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">{{count}}</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 8px; padding: 10px 0; align-items: center">
+        <div role="group" aria-label="Unit" style="display: inline-flex; padding: 3px; border: 1px solid #E4E4E7; border-radius: 9px; gap: 2px">
+          <sc-for list="{{units}}" as="u" hint-placeholder-count="3">
+            <button onClick="{{u.pick}}" aria-pressed="{{u.pressed}}" class="mono" style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: {{u.bg}}; color: {{u.color}}; font-size: 12px">{{u.label}}</button>
+          </sc-for>
+        </div>
+        <button style="height: 40px; padding: 0 10px 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px">Export <span style="height: 20px; padding: 0 6px; border-radius: 5px; background: rgba(255,255,255,.2); font-size: 11px; display: inline-flex; align-items: center">{{count}}</span></button>
+      </div>
+    </div>
+
+    <div style="padding: 28px 28px 56px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: flex-start">
+        <div style="max-width: 560px">
+          <h1 style="margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -.01em">Type Scale</h1>
+          <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #52525B">Click any step to add weight variants or override line height and letter spacing.</p>
+        </div>
+        <sc-if value="{{showViews}}" hint-placeholder-val="{{ true }}">
+          <div role="group" aria-label="Breakpoint" style="display: inline-flex; padding: 3px; background: #F0F0F2; border-radius: 9px; gap: 2px">
+            <sc-for list="{{views}}" as="v" hint-placeholder-count="3">
+              <button onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="height: 32px; padding: 0 14px; border: 0; border-radius: 7px; background: {{v.bg}}; box-shadow: {{v.shadow}}; color: {{v.color}}; font-size: 13px; font-weight: 500">{{v.label}}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{isScale}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 28px">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+            <section aria-label="{{g.title}}" style="display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; align-items: baseline">
+                <div style="display: flex; gap: 10px; align-items: baseline"><h2 style="margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em">{{g.title}}</h2><span style="font-size: 12px; color: #52525B">{{g.font}}</span></div>
+                <span class="mono" style="font-size: 11px; color: #52525B">{{g.count}} steps</span>
+              </div>
+              <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="4">
+                <div style="border: 1px solid {{r.border}}; border-radius: 10px; background: #FFFFFF; overflow: hidden; box-shadow: {{r.glow}}">
+                  <button class="trow" onClick="{{r.toggle}}" aria-expanded="{{r.expanded}}" style="width: 100%; border: 0; background: {{r.headBg}}; display: grid; grid-template-columns: 180px minmax(0, 1fr) auto 24px; align-items: center; gap: 16px; padding: 12px 16px; text-align: left; min-height: 64px">
+                    <span class="mono" style="font-size: 14px; color: #52525B">{{r.name}}</span>
+                    <span style="font-family: {{r.fam}}; font-size: {{r.size}}px; line-height: {{r.lh}}px; font-weight: {{r.weight}}; letter-spacing: {{r.tr}}em; color: #18181B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">The quick brown fox</span>
+                    <span style="display: grid; grid-template-columns: repeat(3, auto); column-gap: 14px; text-align: right">
+                      <span class="mono" style="font-size: 13px; font-weight: 700">{{r.sizeL}}</span><span class="mono" style="font-size: 13px; font-weight: 700">{{r.lhL}}</span><span class="mono" style="font-size: 13px; font-weight: 700">{{r.trL}}</span>
+                      <span class="mono" style="font-size: 9.5px; letter-spacing: .06em; color: #52525B">SIZE</span><span class="mono" style="font-size: 9.5px; letter-spacing: .06em; color: #52525B">LINE-H</span><span class="mono" style="font-size: 9.5px; letter-spacing: .06em; color: #52525B">TRACK</span>
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52525B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate({{r.rot}}deg); transition: transform .15s"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <sc-if value="{{r.open}}" hint-placeholder-val="{{ false }}">
+                    <div style="border-top: 1px solid #FBD5C4; background: #FFF7F3; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+                      <div style="font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #52525B">WEIGHT VARIANTS</div>
+                      <div role="group" aria-label="Weight variants" style="display: flex; flex-wrap: wrap; gap: 6px">
+                        <sc-for list="{{r.chips}}" as="c" hint-placeholder-count="5">
+                          <button onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.color}}; font-size: 12px; font-weight: 600; display: flex; gap: 6px; align-items: center">{{c.label}}<span class="mono" style="font-weight: 400; opacity: .75">{{c.w}}</span></button>
+                        </sc-for>
+                      </div>
+                      <div style="font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #52525B">OVERRIDES</div>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+                        <div style="display: flex; flex-direction: column; gap: 6px"><label for="{{r.lhId}}" style="font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: #52525B">LINE HEIGHT (PX)</label><input id="{{r.lhId}}" class="inp mono" type="number" min="8" step="1" value="{{r.lh}}" onChange="{{r.setLh}}"></div>
+                        <div style="display: flex; flex-direction: column; gap: 6px"><label for="{{r.trId}}" style="font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: #52525B">LETTER SPACING (EM)</label><input id="{{r.trId}}" class="inp mono" type="number" step="0.001" value="{{r.tr}}" onChange="{{r.setTr}}"></div>
+                      </div>
+                      <sc-if value="{{r.overridden}}" hint-placeholder-val="{{ false }}"><button onClick="{{r.reset}}" style="align-self: flex-start; border: 0; background: transparent; padding: 4px 0; color: #C2410C; font-size: 12px; font-weight: 600">Reset to scale</button></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-for list="{{r.kids}}" as="k" hint-placeholder-count="0">
+                    <div style="display: grid; grid-template-columns: 180px minmax(0, 1fr) auto 24px; align-items: center; gap: 16px; padding: 10px 16px 10px 36px; border-top: 1px solid #F0F0F2; background: #FCFCFC">
+                      <span class="mono" style="font-size: 12px; color: #52525B">{{k.name}}</span>
+                      <span style="font-family: {{r.fam}}; font-size: {{r.size}}px; line-height: {{r.lh}}px; font-weight: {{k.weight}}; letter-spacing: {{r.tr}}em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">The quick brown fox</span>
+                      <span class="mono" style="font-size: 12px; font-weight: 600; text-align: right">{{r.sizeL}} · {{r.lhL}} · {{k.wLabel}}</span>
+                      <span></span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </section>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isPreview}}" hint-placeholder-val="{{ false }}">
+        <article style="border: 1px solid #E4E4E7; border-radius: 14px; padding: 40px; max-width: 760px; display: flex; flex-direction: column; gap: 16px">
+          <span style="font-family: {{sp.label.fam}}; font-size: {{sp.label.size}}px; line-height: {{sp.label.lh}}px; letter-spacing: {{sp.label.tr}}em; font-weight: 600; color: #C2410C; text-transform: uppercase">Field notes</span>
+          <h2 style="margin: 0; font-family: {{sp.h1.fam}}; font-size: {{sp.h1.size}}px; line-height: {{sp.h1.lh}}px; letter-spacing: {{sp.h1.tr}}em; font-weight: 700">A type scale you can see at a glance</h2>
+          <p style="margin: 0; font-family: {{sp.lead.fam}}; font-size: {{sp.lead.size}}px; line-height: {{sp.lead.lh}}px; letter-spacing: {{sp.lead.tr}}em; color: #3F3F46">Every step on this page comes from the scale on the left. Change the base size or ratio and the whole page follows.</p>
+          <h3 style="margin: 8px 0 0; font-family: {{sp.h2.fam}}; font-size: {{sp.h2.size}}px; line-height: {{sp.h2.lh}}px; letter-spacing: {{sp.h2.tr}}em; font-weight: 600">Why a ratio works</h3>
+          <p style="margin: 0; font-family: {{sp.body.fam}}; font-size: {{sp.body.size}}px; line-height: {{sp.body.lh}}px; letter-spacing: {{sp.body.tr}}em; color: #3F3F46">Multiplying by one number keeps the steps in proportion, so headings feel related to body copy instead of picked at random. Line heights snap to the grid, which keeps baselines in step across columns.</p>
+          <p style="margin: 0; font-family: {{sp.small.fam}}; font-size: {{sp.small.size}}px; line-height: {{sp.small.lh}}px; letter-spacing: {{sp.small.tr}}em; color: #52525B">Caption text sits on the smallest body step.</p>
+        </article>
+      </sc-if>
+
+      <sc-if value="{{isExport}}" hint-placeholder-val="{{ false }}">
+        <div class="mono" style="padding: 18px 20px; border-radius: 12px; background: #18181B; color: #E4E4E7; font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; overflow-x: auto">{{css}}</div>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+var RATIOS = [["Minor Second", 1.067], ["Major Second", 1.125], ["Minor Third", 1.2], ["Major Third", 1.25], ["Perfect Fourth", 1.333], ["Augmented Fourth", 1.414], ["Perfect Fifth", 1.5], ["Golden Ratio", 1.618]];
+var WEB = [
+  { title: "HEADING", font: "h", lhF: 1.2, tr: -0.01, weight: 500, steps: [["heading-xl", 5], ["heading-lg", 4], ["heading-md", 3], ["heading-sm", 2]] },
+  { title: "BODY", font: "b", lhF: 1.5, tr: 0, weight: 400, steps: [["body-lg", 1], ["body-md", 0], ["body-sm", -1]] },
+  { title: "LABEL", font: "b", lhF: 1.25, tr: 0.01, weight: 500, steps: [["label-lg", 0], ["label-md", -1], ["label-sm", -2], ["label-xs", -3]] }
+];
+var APPLE = {
+  ios: { hig: [["caption-2", 11, 13, 0.0064, 400], ["caption-1", 12, 16, 0, 400], ["footnote", 13, 18, -0.0062, 400], ["subhead", 15, 20, -0.0153, 400], ["callout", 16, 21, -0.02, 400], ["body", 17, 22, -0.0253, 400], ["headline", 17, 22, -0.0253, 600], ["title-3", 20, 25, 0.019, 400], ["title-2", 22, 28, 0.0159, 400], ["title-1", 28, 34, 0.0129, 400], ["large-title", 34, 41, 0.0109, 400]] },
+  watch: { hig: [["footnote-2", 13, 15, 0, 400], ["footnote", 14, 16, 0, 400], ["caption", 15, 18, 0, 400], ["body", 16, 21, 0, 400], ["headline", 16, 21, 0, 600], ["title-3", 18, 22, 0, 400], ["title-2", 20, 24, 0, 400], ["title-1", 24, 28, 0, 400], ["large-title", 32, 36, 0, 400]] }
+};
+function modern(list) { return list.map(function (s) { return [s[0], s[1], s[2] + 2, 0, s[0] === "headline" || s[0].indexOf("title") === 0 ? 600 : s[4]]; }); }
+var WEB_PRESETS = { dense: ["Dense", 13, 1.125, 4], comfortable: ["Comfortable", 16, 1.2, 8], polaris: ["Polaris", 14, 1.25, 4] };
+var FONTS = ["Raleway", "Inter", "Nunito", "Manrope", "DM Sans", "Playfair Display"];
+var WEIGHTS = [["light", 300], ["medium", 500], ["semibold", 600], ["bold", 700], ["extrabold", 800]];
+var PLATFORM = [["Website", "M3 5h18v12H3zM8 21h8M12 17v4"], ["Web app", "M3 4h18v16H3zM9 4v16"], ["iOS", "M7 3h10v18H7zM11 18h2"], ["watchOS", "M8 7h8v10H8zM9 7l1-4h4l1 4M9 17l1 4h4l1-4"]];
+function stack(f) { return f === "SF Pro Display" || f === "SF Pro Text" ? "-apple-system, 'SF Pro Display', system-ui, Inter, sans-serif" : "'" + f + "', system-ui, sans-serif"; }
+function trLabel(t) { return t === 0 ? "0" : (t > 0 ? "" : "−") + Math.abs(t).toFixed(4) + "em"; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { platform: 1, base: 14, ratio: 1.125, grid: 8, preset: null, hFont: "Raleway", bFont: "Nunito",
+      tablet: { on: true, pct: -8 }, mobile: { on: true, pct: -15 }, view: "desktop", unit: "rem", open: { "heading-xl": true }, vars: {}, ov: {}, tab: "scale", apple: "hig" };
+  }
+  patch(key, name, val) { var o = Object.assign({}, this.state[key]); if (val === undefined) delete o[name]; else o[name] = val; var st = {}; st[key] = o; this.setState(st); }
+  renderVals() {
+    var self = this, s = this.state, web = s.platform < 2, appleKey = s.platform === 2 ? "ios" : "watch";
+    var unit = web ? s.unit : (s.unit === "rem" ? "pt" : s.unit);
+    function fmtSize(px) { if (unit === "rem") return (px / 16).toFixed(3) + "rem"; if (unit === "pt") return (web ? +(px * 0.75).toFixed(1) : px) + "pt"; return px + "px"; }
+    function pill(on) { return { pressed: on ? "true" : "false", bg: on ? "#18181B" : "#FFFFFF", color: on ? "#FFFFFF" : "#3F3F46", border: on ? "#18181B" : "#E4E4E7" }; }
+    var scaleF = 1;
+    if (web && s.view === "tablet" && s.tablet.on) scaleF = 1 + s.tablet.pct / 100;
+    if (web && s.view === "mobile" && s.mobile.on) scaleF = 1 + s.mobile.pct / 100;
+    var hFam = stack(web ? s.hFont : "SF Pro Display"), bFam = stack(web ? s.bFont : "SF Pro Text");
+    var total = 0, all = {};
+    function makeRow(name, size, lhBase, trBase, weight, fam) {
+      var ov = s.ov[name] || {}, lh = ov.lh != null ? ov.lh : lhBase, tr = ov.tr != null ? ov.tr : trBase, open = !!s.open[name], vs = s.vars[name] || [];
+      total += 1 + vs.length;
+      var row = {
+        name: name, size: size, lh: lh, tr: tr, weight: weight, fam: fam, open: open, expanded: open ? "true" : "false", rot: open ? 90 : 0,
+        border: open ? "#F08A5D" : "#E4E4E7", glow: open ? "0 0 0 3px #FFE4DA" : "none", headBg: open ? "#FFF7F3" : "#FFFFFF",
+        sizeL: fmtSize(size), lhL: lh + "px", trL: trLabel(tr), lhId: "lh-" + name, trId: "tr-" + name,
+        overridden: ov.lh != null || ov.tr != null,
+        toggle: function () { self.patch("open", name, open ? undefined : true); },
+        setLh: function (e) { var v = parseFloat(e.target.value); var o = Object.assign({}, s.ov[name]); o.lh = isNaN(v) ? undefined : v; self.patch("ov", name, o); },
+        setTr: function (e) { var v = parseFloat(e.target.value); var o = Object.assign({}, s.ov[name]); o.tr = isNaN(v) ? undefined : v; self.patch("ov", name, o); },
+        reset: function () { self.patch("ov", name, undefined); },
+        chips: WEIGHTS.map(function (w) { var on = vs.indexOf(w[1]) >= 0; return Object.assign(pill(on), { label: w[0], w: w[1], pick: function () { var n = on ? vs.filter(function (x) { return x !== w[1]; }) : vs.concat([w[1]]).sort(); self.patch("vars", name, n); } }); }),
+        kids: vs.map(function (w) { var wn = WEIGHTS.filter(function (x) { return x[1] === w; })[0]; return { name: name + "-" + wn[0], weight: w, wLabel: w }; })
+      };
+      all[name] = row; return row;
+    }
+    var groups;
+    if (web) {
+      groups = WEB.map(function (g) {
+        return { title: g.title, font: g.font === "h" ? s.hFont : s.bFont, count: g.steps.length, rows: g.steps.map(function (st) {
+          var size = Math.round(s.base * Math.pow(s.ratio, st[1]));
+          if (g.font === "h") size = Math.round(size * scaleF);
+          var lh = Math.max(s.grid, Math.round(size * g.lhF / s.grid) * s.grid);
+          return makeRow(st[0], size, lh, g.tr, g.weight, g.font === "h" ? hFam : bFam);
+        }) };
+      });
+    } else {
+      var list = s.apple === "modern" ? modern(APPLE[appleKey].hig) : APPLE[appleKey].hig;
+      groups = [{ title: "TEXT STYLES", font: "SF Pro Display", count: list.length, rows: list.map(function (st) { return makeRow(st[0], st[1], st[2], st[3], st[4], st[1] >= 20 ? hFam : bFam); }) }];
+    }
+    function sp(n) { var r = all[n]; return { fam: r.fam, size: r.size, lh: r.lh, tr: r.tr }; }
+    var specimen = web ? { label: sp("label-sm"), h1: sp("heading-xl"), lead: sp("body-lg"), h2: sp("heading-md"), body: sp("body-md"), small: sp("body-sm") }
+      : { label: sp("footnote"), h1: sp("large-title"), lead: sp("callout"), h2: sp("title-3"), body: sp("body"), small: sp(appleKey === "ios" ? "caption-1" : "caption") };
+    var cssLines = [];
+    groups.forEach(function (g) { g.rows.forEach(function (r) {
+      cssLines.push("  --type-" + r.name + "-size: " + (web ? (r.size / 16).toFixed(3) + "rem" : r.size + "px") + ";", "  --type-" + r.name + "-line: " + r.lh + "px;", "  --type-" + r.name + "-track: " + r.tr + "em;");
+      r.kids.forEach(function (k) { cssLines.push("  --type-" + k.name + "-weight: " + k.weight + ";"); });
+    }); });
+    var presets = web
+      ? Object.keys(WEB_PRESETS).map(function (k) { var p = WEB_PRESETS[k]; return Object.assign(pill(s.preset === k), { label: p[0], pick: function () { self.setState({ preset: k, base: p[1], ratio: p[2], grid: p[3], ov: {} }); } }); })
+      : [["hig", "Default HIG"], ["modern", "Modern"]].map(function (p) { return Object.assign(pill(s.apple === p[0]), { label: p[1], pick: function () { self.setState({ apple: p[0], ov: {} }); } }); });
+    var views = [["desktop", "Desktop", true], ["tablet", "Tablet", s.tablet.on], ["mobile", "Mobile", s.mobile.on]].filter(function (v) { return v[2]; });
+    var viewKey = views.some(function (v) { return v[0] === s.view; }) ? s.view : "desktop";
+    return {
+      isWeb: web, isApple: !web,
+      platforms: PLATFORM.map(function (p, i) { var on = s.platform === i; return { label: p[0], icon: p[1], pressed: on ? "true" : "false", bg: on ? "#FFF1EB" : "transparent", border: on ? "#F5B49A" : "transparent", color: on ? "#C2410C" : "#52525B", pick: function () { self.setState({ platform: i, unit: i < 2 ? "rem" : "pt", open: {}, vars: {}, ov: {} }); } }; }),
+      base: s.base, setBase: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) self.setState({ base: Math.max(8, Math.min(32, v)), preset: null }); },
+      ratio: String(s.ratio), ratios: RATIOS.map(function (r) { return { v: String(r[1]), label: r[0] + " — " + r[1] }; }),
+      setRatio: function (e) { self.setState({ ratio: parseFloat(e.target.value), preset: null }); },
+      grids: [4, 8].map(function (g) { return Object.assign(pill(s.grid === g), { label: g + "px", pick: function () { self.setState({ grid: g, preset: null }); } }); }),
+      presets: presets,
+      fonts: web
+        ? [{ id: "f-head", label: "Heading / Display", value: s.hFont, css: stack(s.hFont), options: FONTS, locked: false, uploadLabel: "Upload heading font", set: function (e) { self.setState({ hFont: e.target.value }); } },
+           { id: "f-body", label: "Body / Label", value: s.bFont, css: stack(s.bFont), options: FONTS, locked: false, uploadLabel: "Upload body font", set: function (e) { self.setState({ bFont: e.target.value }); } }]
+        : [{ id: "f-head", label: "Heading / Display", value: "SF Pro Display", css: stack("SF Pro Display"), options: ["SF Pro Display"], locked: true, uploadLabel: "Upload heading font", set: function () {} },
+           { id: "f-body", label: "Body / UI", value: "SF Pro Text", css: stack("SF Pro Text"), options: ["SF Pro Text"], locked: true, uploadLabel: "Upload body font", set: function () {} }],
+      resp: [["tablet", "Tablet"], ["mobile", "Mobile"]].map(function (r) {
+        var v = s[r[0]];
+        return { id: "rs-" + r[0], label: r[1], switchLabel: r[1] + " scaling", checked: v.on ? "true" : "false", track: v.on ? "#E2531B" : "#D4D4D8", justify: v.on ? "flex-end" : "flex-start", off: !v.on, pct: v.pct, pctLabel: v.pct + "%",
+          flip: function () { var st = {}; st[r[0]] = { on: !v.on, pct: v.pct }; self.setState(st); },
+          set: function (e) { var st = {}; st[r[0]] = { on: v.on, pct: parseInt(e.target.value, 10) }; self.setState(st); } };
+      }),
+      tabs: [["scale", "Scale", "M5 6V4h14v2M12 4v16M9 20h6"], ["preview", "Preview", "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"], ["export", "Export", "M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"]].map(function (t) {
+        var on = s.tab === t[0];
+        return { label: t[1], icon: t[2], hasCount: t[0] === "scale", sel: on ? "true" : "false", color: on ? "#18181B" : "#52525B", weight: on ? 600 : 500, line: on ? "#E2531B" : "transparent", pick: function () { self.setState({ tab: t[0] }); } };
+      }),
+      isScale: s.tab === "scale", isPreview: s.tab === "preview", isExport: s.tab === "export",
+      count: total,
+      units: (web ? ["rem", "px", "pt"] : ["pt", "px"]).map(function (x) { var on = unit === x; return { label: x, pressed: on ? "true" : "false", bg: on ? "#F4F4F5" : "transparent", color: on ? "#18181B" : "#52525B", pick: function () { self.setState({ unit: x }); } }; }),
+      showViews: web && views.length > 1,
+      views: views.map(function (v) { var on = viewKey === v[0]; return { label: v[1], pressed: on ? "true" : "false", bg: on ? "#FFFFFF" : "transparent", shadow: on ? "0 1px 2px rgba(0,0,0,.08)" : "none", color: on ? "#18181B" : "#52525B", pick: function () { self.setState({ view: v[0] }); } }; }),
+      groups: groups, sp: specimen,
+      css: ":root {\n" + cssLines.join("\n") + "\n}"
+    };
+  }
+}
+</script>
+</body>
+</html>

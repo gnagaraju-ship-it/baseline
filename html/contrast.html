@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omni by Canvs — Contrast grid</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#C2410C}a:hover{color:#9A3412}
+button{font:inherit;cursor:pointer}input,select{font:inherit}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.rl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#52525B;text-decoration:none;border:1px solid transparent;background:transparent}
+.rl:hover{background:#F4F4F5}
+.rl.on{background:#FFFFFF;border-color:#E4E4E7;color:#18181B;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.sep{width:28px;height:1px;background:#E4E4E7;margin:4px 0}
+.h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#52525B}
+.fld{display:flex;align-items:center;gap:10px;height:44px;padding:0 7px;background:#FFFFFF;border:1px solid #E4E4E7;border-radius:10px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;color:#18181B}
+.hx{font-size:11px;font-weight:600;letter-spacing:.04em;color:#52525B}
+.tab{display:flex;align-items:center;gap:8px;height:64px;padding:0 14px;text-decoration:none;color:#52525B;font-weight:500}
+.tab:hover{color:#18181B}
+.tab.on{color:#18181B;font-weight:600;box-shadow:inset 0 -2px 0 #E2531B}
+.gc:hover{outline:2px solid #A1A1AA;outline-offset:-2px}
+:focus-visible{outline:2px solid #C2410C;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<template id="tpl">
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #18181B; background: #FFFFFF; display: flex; flex-wrap: wrap; min-height: 100vh; font-size: 14px">
+
+  <div style="flex: 1 1 384px; max-width: 100%; display: flex; background: #FAFAFA; border-right: 1px solid #EAEAEC">
+    <nav aria-label="Workspace" style="width: 64px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid #EAEAEC">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #18181B; display: flex; align-items: center; justify-content: center; margin-bottom: 14px"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FF5A1F"></span></div>
+      <button class="rl" aria-label="Projects"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <div class="sep"></div>
+      <a class="rl on" href="index.html" aria-label="Color" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></a>
+      <a class="rl" href="typography.html" aria-label="Typography"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></a>
+      <a class="rl" href="grids.html" aria-label="Grids"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="4" height="16" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></a>
+      <a class="rl" href="spacing.html" aria-label="Spacing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16M4 20h16M12 8v8M9 11l3-3 3 3M9 13l3 3 3-3"/></svg></a>
+      <a class="rl" href="elevation.html" aria-label="Elevation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="11" height="11" rx="2"/><path d="M4 14V6a2 2 0 0 1 2-2h8"/></svg></a>
+      <div class="sep"></div>
+      <a class="rl" href="preview.html" aria-label="UI preview"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></a>
+      <button class="rl" aria-label="Documentation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></button>
+      <div style="flex: 1"></div>
+      <button class="rl" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    </nav>
+
+    <aside aria-label="Palette settings" style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: #18181B; display: flex; align-items: center; justify-content: center"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FF5A1F"></span></div>
+        <div style="font-size: 16px; font-weight: 600; flex: 1">Omni by Canvs</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 20px; border-bottom: 1px solid #E4E4E7">
+        <div style="height: 44px; display: flex; align-items: center; justify-content: center; font-weight: 600; box-shadow: inset 0 -2px 0 #E2531B">Brand</div>
+        <div style="height: 44px; display: flex; align-items: center; justify-content: center; color: #52525B">Tokens</div>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 22px">
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Brand</h3>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Primary <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #9D00D6"></span>#9d00d6</div>
+          <div style="height: 40px; border: 1px dashed #D4D4D8; border-radius: 10px; color: #52525B; font-size: 13px; display: flex; align-items: center; padding: 0 14px">+ Add secondary</div>
+        </section>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Neutral</h3>
+          <div class="fld" style="font-family: Inter, sans-serif; font-weight: 500"><span style="display: flex; gap: 2px"><span style="width: 12px; height: 20px; border-radius: 3px; background: #F5F6F8"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #BFC4CC"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #606876"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #2F3948"></span><span style="width: 12px; height: 20px; border-radius: 3px; background: #0B1220"></span></span>Gray</div>
+        </section>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <section style="display: flex; flex-direction: column; gap: 10px">
+          <h3 class="h3">Semantic</h3>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Info <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #2563EB"></span>#2563EB</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Success <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #1F9D55"></span>#1F9D55</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500">Caution <span class="hx">HEX</span></div>
+          <div class="fld"><span style="width: 30px; height: 30px; border-radius: 7px; background: #EAB308"></span>#EAB308</div>
+        </section>
+      </div>
+      <div style="flex: 1"></div>
+      <div style="padding: 16px 20px; border-top: 1px solid #E4E4E7; font-size: 13px; color: #52525B">Omni by Canvs</div>
+    </aside>
+  </div>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px 0 28px; border-bottom: 1px solid #EAEAEC; min-height: 64px">
+      <nav aria-label="Views" style="display: flex; flex-wrap: wrap; gap: 4px">
+        <a class="tab" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.2.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/></svg>Palette<span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; background: #F4F4F5; color: #52525B; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">7</span></a>
+        <a class="tab" href="tokens.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>Tokens</a>
+        <a class="tab on" href="contrast.html" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg>Contrast grid</a>
+        <a class="tab" href="preview.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>UI preview</a>
+      </nav>
+      <div style="display: flex; gap: 8px; padding: 10px 0">
+        <button style="height: 40px; padding: 0 14px; border: 1px solid #E4E4E7; border-radius: 9px; background: #FFFFFF; color: #18181B; font-size: 13px; font-weight: 500">Copy all</button>
+        <button style="height: 40px; padding: 0 10px 0 14px; border: 0; border-radius: 9px; background: #D2400B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px">Export <span style="height: 20px; padding: 0 6px; border-radius: 5px; background: rgba(255,255,255,.2); font-size: 11px; display: inline-flex; align-items: center">112</span></button>
+      </div>
+    </div>
+
+    <div style="padding: 20px 28px 48px; display: flex; flex-direction: column; gap: 20px">
+      <div role="group" aria-label="Palette" style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{chips}}" as="c" hint-placeholder-count="7">
+          <button onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="height: 34px; padding: 0 14px 0 10px; border-radius: 999px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.color}}; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px">
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: {{c.dot}}; box-shadow: 0 0 0 2px {{c.dotRing}}"></span>{{c.label}}
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+        <div style="flex: 1 1 220px; max-width: 260px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3 class="h3">Guidelines</h3>
+            <sc-for list="{{guides}}" as="g" hint-placeholder-count="2">
+              <button onClick="{{g.pick}}" aria-pressed="{{g.pressed}}" style="height: 40px; border-radius: 9px; border: 1px solid {{g.border}}; background: {{g.bg}}; text-align: left; padding: 0 12px; font-size: 13px; font-weight: {{g.weight}}; color: #18181B">{{g.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <h3 class="h3">{{thLabel}}</h3>
+            <sc-for list="{{thresholds}}" as="t" hint-placeholder-count="7">
+              <button onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="height: 36px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; text-align: left; padding: 0 12px; font-size: 13px; font-weight: {{t.weight}}; color: #27272A">{{t.label}}</button>
+            </sc-for>
+            <div style="margin-top: 6px; padding: 10px 12px; border-radius: 8px; background: #F4F4F5; font-size: 12px; color: #3F3F46"><b>{{thTitle}}</b> — {{thDesc}}</div>
+          </div>
+
+          <div aria-live="polite" style="background: #18181B; color: #FAFAFA; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">{{det.title}}</span><span class="mono" style="color: #D4D4D8">{{det.score}}</span></div>
+            <div style="border-radius: 8px; padding: 12px; background: {{det.bg}}; color: {{det.fg}}; font-size: 15px; font-weight: 500">Sample text preview</div>
+            <sc-for list="{{det.checks}}" as="k" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 12px">
+                <span style="width: 14px; color: {{k.iconColor}}; font-weight: 700" aria-hidden="true">{{k.icon}}</span>
+                <span style="flex: 1; color: {{k.textColor}}; text-decoration: {{k.strike}}">{{k.label}}</span>
+                <span class="mono" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #27272A; color: {{k.iconColor}}">{{k.need}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex: 999 1 520px; min-width: 0; border: 1px solid #E4E4E7; border-radius: 14px; padding: 12px; overflow-x: auto; background: #FFFFFF">
+          <div role="grid" aria-label="{{gridLabel}}" style="display: flex; flex-direction: column; gap: 2px; min-width: 720px">
+            <div role="row" style="display: grid; grid-template-columns: 52px repeat(18, minmax(0, 1fr)); gap: 2px; padding-bottom: 4px">
+              <span></span>
+              <sc-for list="{{cols}}" as="h" hint-placeholder-count="18">
+                <span role="columnheader" style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #52525B">
+                  <span style="width: 18px; height: 18px; border-radius: 5px; background: {{h.bg}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1)"></span>{{h.label}}
+                </span>
+              </sc-for>
+            </div>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="18">
+              <div role="row" style="display: grid; grid-template-columns: 52px repeat(18, minmax(0, 1fr)); gap: 2px">
+                <span role="rowheader" style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 10px; color: #52525B; padding-right: 4px">{{r.label}}<span style="width: 18px; height: 18px; border-radius: 5px; background: {{r.bg}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1)"></span></span>
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="18">
+                  <button class="gc mono" role="gridcell" onClick="{{c.pick}}" aria-label="{{c.aria}}" aria-selected="{{c.sel}}" style="height: 32px; padding: 0; border: 0; border-radius: 4px; background: {{c.bg}}; color: {{c.fg}}; font-size: 10.5px; font-weight: {{c.weight}}; box-shadow: {{c.ring}}">{{c.v}}</button>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin: 12px 4px 0; font-size: 12px; color: #52525B">Rows are text colours, columns are backgrounds. Filled cells meet the selected threshold.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</template>
+<script id="logic" type="text/plain">
+var EXACT = {
+  primary: ["FBF4FF","F8EBFF","F3DEFF","EDCDFF","E4B7FF","DB9DFF","D07DFF","C252FB","AD2CE8","9D00D6","7C00AD","65008F","4F0072","3B0056","29003F","1C002D"],
+  neutral: ["F9FAFB","F5F6F8","EEF0F2","E5E7EB","D8DBE0","BFC4CC","9CA3AF","7B828F","606876","4B5563","3E4857","2F3948","1F2937","161E2C","0B1220","030712"],
+  info: ["F3F7FF","E9F0FF","DBE7FF","C9DBFF","B2CCFF","97BAFF","78A6FF","538BFF","3070F7","2563EB","0A48BF","0039A1","002C7E","00205E","001644","000D30"]
+};
+function rgb(h) { return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+function hex(c) { return c.map(function (v) { v = Math.round(Math.max(0, Math.min(255, v))); return (v < 16 ? "0" : "") + v.toString(16); }).join("").toUpperCase(); }
+function mix(h, t, a) { return hex(rgb(h).map(function (v) { return v + (t - v) * a; })); }
+function gen(h, base) { var out = [], b = base - 1, n = 15 - b; for (var i = 0; i < 16; i++) { if (i < b) out.push(mix(h, 255, 0.96 * Math.pow(1 - i / b, 0.9))); else if (i === b) out.push(h); else out.push(mix(h, 0, 0.84 * Math.pow((i - b) / n, 0.95))); } return out; }
+var PALS = [
+  { key: "primary", label: "Primary", ramp: EXACT.primary, dot: "#9D00D6" },
+  { key: "neutral", label: "Neutral", ramp: EXACT.neutral, dot: "#606876" },
+  { key: "info", label: "Info", ramp: EXACT.info, dot: "#2563EB" },
+  { key: "success", label: "Success", ramp: gen("1F9D55", 9), dot: "#1F9D55" },
+  { key: "caution", label: "Caution", ramp: gen("EAB308", 9), dot: "#EAB308" },
+  { key: "warning", label: "Warning", ramp: gen("F97316", 9), dot: "#F97316" },
+  { key: "critical", label: "Critical", ramp: gen("DC2626", 9), dot: "#DC2626" }
+];
+function lin(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+function L(h) { var c = rgb(h); return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]); }
+function ratio(a, b) { var x = L(a), y = L(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function Y(h) { var c = rgb(h); return 0.2126729 * Math.pow(c[0] / 255, 2.4) + 0.7151522 * Math.pow(c[1] / 255, 2.4) + 0.0721750 * Math.pow(c[2] / 255, 2.4); }
+function apca(txt, bg) {
+  function cl(y) { return y > 0.022 ? y : y + Math.pow(0.022 - y, 1.414); }
+  var t = cl(Y(txt)), b = cl(Y(bg)), s;
+  if (Math.abs(b - t) < 0.0005) return 0;
+  if (b > t) { s = (Math.pow(b, 0.56) - Math.pow(t, 0.57)) * 1.14; return s < 0.1 ? 0 : (s - 0.027) * 100; }
+  s = (Math.pow(b, 0.65) - Math.pow(t, 0.62)) * 1.14; return s > -0.1 ? 0 : (s + 0.027) * 100;
+}
+var TH = {
+  apca: [[15, "15+", "Non-text: dividers, outlines"], [30, "30+", "Placeholder and disabled text"], [45, "45+", "Large text, icons"], [60, "60+", "Small text, UI elements"], [75, "75+", "Body text (minimum)"], [90, "90+", "Body text (preferred)"], [0, "All", "Show every value"]],
+  wcag: [[3, "3 : 1", "Large text, UI components"], [4.5, "4.5 : 1", "AA body text"], [7, "7 : 1", "AAA body text"], [0, "All", "Show every value"]]
+};
+var CHECKS = {
+  apca: [[45, "Large text (≥24px bold or ≥36px regular)", "45+"], [60, "Small text, UI elements", "60+"], [75, "Body text (minimum)", "75+"], [90, "Body text (preferred)", "90+"]],
+  wcag: [[3, "AA large text, UI components", "3:1"], [4.5, "AA body text", "4.5:1"], [7, "AAA body text", "7:1"]]
+};
+
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pal: "primary", std: "apca", th: { apca: 60, wcag: 4.5 }, cell: [3, 10] }; }
+  renderVals() {
+    var self = this, s = this.state, std = s.std, th = s.th[std];
+    var pal = PALS.filter(function (p) { return p.key === s.pal; })[0];
+    var steps = [{ label: "White", short: "W", hex: "FFFFFF" }].concat(pal.ramp.map(function (h, i) { return { label: String(i + 1), short: String(i + 1), hex: h }; }), [{ label: "Black", short: "B", hex: "000000" }]);
+    function score(fg, bg) { return std === "apca" ? apca(fg, bg) : ratio(fg, bg); }
+    function show(v) { return std === "apca" ? String(Math.round(v)) : v.toFixed(1); }
+    function passes(v) { return th === 0 ? true : (std === "apca" ? Math.abs(v) >= th : v >= th); }
+    var rows = steps.map(function (r, ri) {
+      return {
+        label: r.label === "White" ? "White" : r.label === "Black" ? "Black" : r.label, bg: "#" + r.hex,
+        cells: steps.map(function (c, ci) {
+          var same = ri === ci, v = same ? 0 : score(r.hex, c.hex), ok = !same && passes(v) && th !== 0;
+          var sel = s.cell[0] === ri && s.cell[1] === ci;
+          return {
+            v: same ? "—" : show(v), bg: ok ? "#" + c.hex : "#F4F4F5", fg: ok ? "#" + r.hex : "#52525B", weight: ok ? 600 : 400,
+            ring: sel ? "0 0 0 2px #FFFFFF, 0 0 0 4px #18181B" : "none", sel: sel ? "true" : "false",
+            aria: r.label + " text on " + c.label + ": " + (same ? "same colour" : show(v)),
+            pick: function () { self.setState({ cell: [ri, ci] }); }
+          };
+        })
+      };
+    });
+    var fr = steps[s.cell[0]], bc = steps[s.cell[1]], dv = s.cell[0] === s.cell[1] ? 0 : score(fr.hex, bc.hex);
+    var cur = TH[std].filter(function (t) { return t[0] === th; })[0];
+    return {
+      chips: PALS.map(function (p) { var on = p.key === s.pal; return { label: p.label, dot: p.dot, dotRing: on ? "#3F3F46" : "#FFFFFF", pressed: on ? "true" : "false", bg: on ? "#18181B" : "#FFFFFF", color: on ? "#FFFFFF" : "#27272A", border: on ? "#18181B" : "#E4E4E7", pick: function () { self.setState({ pal: p.key }); } }; }),
+      guides: [["apca", "WCAG 3 · APCA"], ["wcag", "WCAG 2"]].map(function (g) { var on = g[0] === std; return { label: g[1], pressed: on ? "true" : "false", bg: on ? "#FFFFFF" : "transparent", border: on ? "#D4D4D8" : "transparent", weight: on ? 600 : 400, pick: function () { self.setState({ std: g[0] }); } }; }),
+      thLabel: std === "apca" ? "APCA Lc" : "Contrast ratio",
+      thresholds: TH[std].map(function (t) { var on = t[0] === th; return { label: t[1], pressed: on ? "true" : "false", bg: on ? "#FFFFFF" : "transparent", border: on ? "#D4D4D8" : "transparent", weight: on ? 600 : 400, pick: function () { var n = Object.assign({}, self.state.th); n[std] = t[0]; self.setState({ th: n }); } }; }),
+      thTitle: (std === "apca" ? "Lc " : "") + cur[1], thDesc: cur[2],
+      cols: steps.map(function (c) { return { label: c.short, bg: "#" + c.hex }; }),
+      rows: rows, gridLabel: pal.label + " contrast grid",
+      det: {
+        title: fr.label + " on " + bc.label, score: std === "apca" ? "Lc " + Math.round(dv) : dv.toFixed(2) + ":1",
+        bg: "#" + bc.hex, fg: "#" + fr.hex,
+        checks: CHECKS[std].map(function (k) { var ok = std === "apca" ? Math.abs(dv) >= k[0] : dv >= k[0]; return { label: k[1], need: k[2], icon: ok ? "✓" : "✕", iconColor: ok ? "#4ADE80" : "#F87171", textColor: ok ? "#FAFAFA" : "#A1A1AA", strike: ok ? "none" : "line-through" }; })
+      }
+    };
+  }
+}
+</script>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var tpl = document.getElementById('tpl').content;
+  var code = document.getElementById('logic').textContent;
+  var queued = false, comp;
+  function DCLogic(props) { this.props = props || {}; this.state = {}; }
+  DCLogic.prototype.setState = function (p) {
+    var n = typeof p === 'function' ? p(this.state, this.props) : p;
+    this.state = Object.assign({}, this.state, n);
+    schedule();
+  };
+  DCLogic.prototype.forceUpdate = function () { schedule(); };
+  function schedule() { if (queued) return; queued = true; Promise.resolve().then(function () { queued = false; render(); }); }
+  var HOLE = /\{\{\s*([^}]+?)\s*\}\}/g, WHOLE = /^\s*\{\{\s*([^}]+?)\s*\}\}\s*$/;
+  function get(scope, path) {
+    path = path.trim();
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    if (path === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(path)) return +path;
+    var m = /^'(.*)'$|^"(.*)"$/.exec(path); if (m) return m[1] != null ? m[1] : m[2];
+    return path.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, scope);
+  }
+  function interp(str, scope) { return str.replace(HOLE, function (_, p) { var v = get(scope, p); return v == null || v === false ? '' : String(v); }); }
+  function evType(el, name) {
+    var ev = name.slice(2);
+    if (ev === 'change') {
+      var t = (el.getAttribute('type') || '').toLowerCase(), tag = el.localName;
+      if (tag === 'select' || t === 'checkbox' || t === 'radio') return 'change';
+      return 'input';
+    }
+    return ev === 'doubleclick' ? 'dblclick' : ev;
+  }
+  function build(node, scope, out) {
+    if (node.nodeType === 3) { out.push(document.createTextNode(node.data.indexOf('{{') >= 0 ? interp(node.data, scope) : node.data)); return; }
+    if (node.nodeType !== 1) return;
+    var tag = node.localName;
+    if (tag === 'sc-for') {
+      var list = get(scope, (node.getAttribute('list') || '').replace(/^\s*\{\{|\}\}\s*$/g, '')) || [];
+      var as = node.getAttribute('as') || 'item';
+      list.forEach(function (item, i) {
+        var s = Object.assign({}, scope); s[as] = item; s.$index = i;
+        node.childNodes.forEach(function (c) { build(c, s, out); });
+      });
+      return;
+    }
+    if (tag === 'sc-if') {
+      var v = get(scope, (node.getAttribute('value') || '').replace(/^\s*\{\{|\}\}\s*$/g, ''));
+      if (v) node.childNodes.forEach(function (c) { build(c, scope, out); });
+      return;
+    }
+    var el = tag === 'x-select' ? document.createElement('select') : node.cloneNode(false);
+    el.__h = {}; el.__p = {};
+    Array.from(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+    Array.from(node.attributes).forEach(function (a) {
+      var name = a.name, val = a.value, w = WHOLE.exec(val);
+      if (name.indexOf('hint-') === 0) return;
+      if (/^on[a-z]+$/.test(name)) { if (w) { var fn = get(scope, w[1]); if (typeof fn === 'function') el.__h[evType(node.localName === 'x-select' ? el : node, name)] = fn; } return; }
+      var raw = w ? get(scope, w[1]) : (val.indexOf('{{') >= 0 ? interp(val, scope) : val);
+      if (name === 'checked') { el.__p.checked = !!raw; return; }
+      if (name === 'value' && (el.localName === 'input' || el.localName === 'select' || el.localName === 'textarea')) { el.__p.value = raw == null ? '' : String(raw); return; }
+      if (name === 'disabled' || name === 'readonly' || name === 'required') { if (raw === false || raw == null || raw === 'false') return; el.setAttribute(name, ''); return; }
+      if (raw == null || raw === false) return;
+      el.setAttribute(name, String(raw));
+    });
+    var kids = []; node.childNodes.forEach(function (c) { build(c, scope, kids); });
+    kids.forEach(function (k) { el.appendChild(k); });
+    out.push(el);
+  }
+  function bind(el) {
+    if (!el.__bound) el.__bound = {};
+    Object.keys(el.__h || {}).forEach(function (t) {
+      if (el.__bound[t]) return; el.__bound[t] = true;
+      el.addEventListener(t, function (e) { var h = el.__h && el.__h[t]; if (h) h(e); });
+    });
+  }
+  function applyProps(el, p) {
+    if (!p) return;
+    if ('value' in p && el.value !== p.value) el.value = p.value;
+    if ('checked' in p && el.checked !== p.checked) el.checked = p.checked;
+  }
+  function bindAll(n) {
+    if (n.nodeType !== 1) return;
+    Array.from(n.childNodes).forEach(bindAll);
+    bind(n); applyProps(n, n.__p);
+  }
+  function same(a, b) { return a.nodeType === b.nodeType && a.nodeName === b.nodeName && a.namespaceURI === b.namespaceURI; }
+  function patchNode(l, f) {
+    if (l.nodeType === 3) { if (l.data !== f.data) l.data = f.data; return; }
+    Array.from(l.attributes).forEach(function (a) { if (!f.hasAttribute(a.name)) l.removeAttribute(a.name); });
+    Array.from(f.attributes).forEach(function (a) { if (l.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value); });
+    l.__h = f.__h; bind(l);
+    patchChildren(l, Array.from(f.childNodes));
+    l.__p = f.__p; applyProps(l, f.__p);
+  }
+  function patchChildren(parent, fresh) {
+    var lives = Array.from(parent.childNodes);
+    fresh.forEach(function (f, i) {
+      var l = lives[i];
+      if (!l) { parent.appendChild(f); bindAll(f); return; }
+      if (same(l, f)) patchNode(l, f); else { parent.replaceChild(f, l); bindAll(f); }
+    });
+    for (var i = fresh.length; i < lives.length; i++) parent.removeChild(lives[i]);
+  }
+  function render() {
+    var vals = comp.renderVals ? comp.renderVals() : {};
+    var out = []; tpl.childNodes.forEach(function (c) { build(c, vals, out); });
+    patchChildren(app, out);
+  }
+  var Component = new Function('DCLogic', code + '\n;return Component;')(DCLogic);
+  comp = new Component({});
+  if (!comp.state) comp.state = {};
+  render();
+  if (comp.componentDidMount) comp.componentDidMount();
+})();
+
+</script>
+</body>
+</html>
