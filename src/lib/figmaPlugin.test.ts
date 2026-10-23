@@ -64,7 +64,13 @@ function mockFigma() {
       createVariable: (name: string, c: any, type: string) => {
         const v: any = {
           id: `V${++id}`, name, resolvedType: type, variableCollectionId: c.id, valuesByMode: {}, scopes: ['ALL_SCOPES'], codeSyntax: {}, description: '',
-          setValueForMode(m: string, val: any) { this.valuesByMode[m] = val },
+          setValueForMode(m: string, val: any) {
+            const alias = val && val.type === 'VARIABLE_ALIAS'
+            const ok = alias || (this.resolvedType === 'STRING' ? typeof val === 'string' : this.resolvedType === 'FLOAT' ? typeof val === 'number' : typeof val === 'object')
+            if (!ok) throw new Error('Mismatched variable resolved type for mode ' + m)
+            this.valuesByMode[m] = val
+          },
+          remove() { variables.splice(variables.indexOf(this), 1) },
           setVariableCodeSyntax(k: string, val: string) { this.codeSyntax[k] = val }
         }
         variables.push(v)
@@ -121,7 +127,7 @@ describe('plugin import', () => {
     expect(count('Grid')).toBe(18)
     expect(count('Spacing')).toBe(17 + 36)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [] })
+    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [] })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -305,6 +311,31 @@ describe('plugin import', () => {
     await p.send({ type: 'import', doc: p.doc, groups: [] })
     expect(p.posted.at(-1).message).toMatch(/Nothing to import/)
     expect(p.variables).toHaveLength(0)
+  })
+
+  it('replaces a variable left with the wrong type by an older import, and says so', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    // simulate an older plugin that made the font family a number variable
+    const bad = p.variables.find((v) => v.name === 'font-family/heading')!
+    bad.resolvedType = 'FLOAT'
+    bad.valuesByMode = {}
+    const typeCollectionId = bad.variableCollectionId
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    const result = p.posted.at(-1).result
+    expect(result.replaced).toEqual(['font-family/heading'])
+    const fixed = p.variables.filter((v) => v.name === 'font-family/heading')
+    expect(fixed).toHaveLength(1)
+    expect(fixed[0].resolvedType).toBe('STRING')
+    expect(fixed[0].variableCollectionId).toBe(typeCollectionId)
+    expect(Object.values(fixed[0].valuesByMode)[0]).toBe('Raleway')
+    // the steps still point at the new variable
+    const alias = Object.values(p.variables.find((v) => v.name === 'heading-xl/family')!.valuesByMode)[0] as any
+    expect(alias.id).toBe(fixed[0].id)
+    // a clean re-run replaces nothing
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    expect(p.posted.at(-1).result.replaced).toEqual([])
   })
 
   it('skips a value that is not a number and names it, instead of failing the whole import', async () => {

@@ -98,7 +98,7 @@ async function importTokens(doc, groups) {
 
   var collections = await figma.variables.getLocalVariableCollectionsAsync();
   var variables = await figma.variables.getLocalVariablesAsync();
-  var created = 0, updated = 0, styles = 0;
+  var created = 0, updated = 0, styles = 0, replaced = [];
   var byCollection = {};
 
   async function collectionFor(name) {
@@ -127,6 +127,13 @@ async function importTokens(doc, groups) {
 
   function upsert(c, name, type) {
     var v = findVariable(c, name);
+    // A variable of the same name but another type (for example left by an older import) cannot be changed: replace it.
+    if (v && v.resolvedType !== type) {
+      try { v.remove(); } catch (e) {}
+      variables.splice(variables.indexOf(v), 1);
+      replaced.push(name);
+      v = null;
+    }
     if (v) { updated++; return v; }
     try { v = figma.variables.createVariable(name, c, type); }
     catch (e) { v = figma.variables.createVariable(name, c.id, type); }
@@ -254,7 +261,7 @@ async function importTokens(doc, groups) {
     });
   }
 
-  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped };
+  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped, replaced: replaced };
 }
 
 figma.ui.onmessage = async function (msg) {
@@ -263,7 +270,7 @@ figma.ui.onmessage = async function (msg) {
   try {
     var result = await importTokens(msg.doc, msg.groups);
     figma.ui.postMessage({ type: 'done', result: result });
-    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : '') + (result.skipped && result.skipped.length ? '. Skipped ' + result.skipped.length + ' values that were not numbers' : ''));
+    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : '') + (result.replaced && result.replaced.length ? '. Replaced ' + result.replaced.length + ' variables that had the wrong type' : '') + (result.skipped && result.skipped.length ? '. Skipped ' + result.skipped.length + ' values that were not numbers' : ''));
   } catch (e) {
     figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
   }
