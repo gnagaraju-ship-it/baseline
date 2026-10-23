@@ -3,7 +3,7 @@
  * Ported from RAW, paint, lcFor, ALPHA and CHIPS in html/tokens.html, but resolved against the
  * user's own palettes instead of the mockup's fixed defaults.
  */
-import type { Palette, PaletteKey } from './colour'
+import { clampAlpha, withAlpha, type Palette, type PaletteKey } from './colour'
 import { apcaLc } from './contrast'
 
 export type PaletteRef = PaletteKey | 'blackA' | 'whiteA'
@@ -125,6 +125,8 @@ export interface ResolvedCell {
   paint: string
   hex: string | null
   lc: number | null
+  /** Opacity in percent set on this token value (100 = opaque). Alpha palettes carry their own and stay at 100. */
+  alpha: number
   /** False when the palette this ref points at has been removed. */
   available: boolean
   overridden: boolean
@@ -140,12 +142,16 @@ export function overrideKey(name: string, mode: Mode): string {
   return `${name}|${mode}`
 }
 
-function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string>, palettes: Palette[]): ResolvedCell {
+function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number>): ResolvedCell {
   const overridden = overrides[overrideKey(def.name, mode)] !== undefined
   const ref = overrides[overrideKey(def.name, mode)] ?? def[mode]
   const { palette, step } = parseRef(ref)
   const index = step - 1
-  const paint = paintFor(palette, index, palettes)
+  const found = paintFor(palette, index, palettes)
+  const intrinsic = palette === 'blackA' || palette === 'whiteA'
+  const alpha = intrinsic ? 100 : clampAlpha(alphas[overrideKey(def.name, mode)] ?? 100)
+  // A ramp colour with its own opacity is painted over a checkerboard, like the alpha palettes.
+  const paint = found && alpha < 100 && found.hex ? { css: `linear-gradient(#${withAlpha(found.hex, alpha)}, #${withAlpha(found.hex, alpha)}), ${CHECKER}`, hex: found.hex } : found
   return {
     ref,
     label: refLabel(ref),
@@ -153,14 +159,15 @@ function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string
     index,
     paint: paint?.css ?? 'transparent',
     hex: paint?.hex ?? null,
-    lc: paint ? lcFor(def.kind, mode, paint.hex, palettes) : null,
+    lc: paint && alpha === 100 ? lcFor(def.kind, mode, paint.hex, palettes) : null,
+    alpha,
     available: paint !== null,
     overridden
   }
 }
 
-export function resolveToken(def: TokenDef, overrides: Record<string, string>, palettes: Palette[]): ResolvedToken {
-  return { def, light: resolveCell(def, 'light', overrides, palettes), dark: resolveCell(def, 'dark', overrides, palettes) }
+export function resolveToken(def: TokenDef, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number> = {}): ResolvedToken {
+  return { def, light: resolveCell(def, 'light', overrides, palettes, alphas), dark: resolveCell(def, 'dark', overrides, palettes, alphas) }
 }
 
 export function isResolved(t: ResolvedToken): boolean {
@@ -177,8 +184,8 @@ export interface TokenSet {
 
 const DISPLAY_ORDER: PaletteKey[] = ['primary', 'secondary', 'neutral', 'info', 'success', 'caution', 'warning', 'critical']
 
-export function resolveAll(palettes: Palette[], overrides: Record<string, string>): TokenSet {
-  const tokens = TOKEN_DEFS.map((d) => resolveToken(d, overrides, palettes))
+export function resolveAll(palettes: Palette[], overrides: Record<string, string>, alphas: Record<string, number> = {}): TokenSet {
+  const tokens = TOKEN_DEFS.map((d) => resolveToken(d, overrides, palettes, alphas))
   const missing = new Set<PaletteKey>()
   for (const t of tokens) {
     for (const c of [t.light, t.dark]) {
@@ -203,7 +210,8 @@ export function pickerChips(palettes: Palette[]): Array<{ key: PaletteRef; label
 function cssValue(c: ResolvedCell): string {
   if (c.palette === 'blackA') return `rgb(0 0 0 / ${ALPHA[c.index]})`
   if (c.palette === 'whiteA') return `rgb(255 255 255 / ${ALPHA[c.index]})`
-  return `var(--${c.palette}-${c.index + 1})`
+  const ref = `var(--${c.palette}-${c.index + 1})`
+  return c.alpha < 100 ? `color-mix(in srgb, ${ref} ${c.alpha}%, transparent)` : ref
 }
 
 /** Light values in :root, dark values in [data-theme="dark"]. Tokens with a removed palette are skipped. */

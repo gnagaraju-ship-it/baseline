@@ -20,6 +20,7 @@ export function TokenPicker({ token, mode, palettes }: Props) {
   const pickerPalette = useProject((s) => s.pickerPalette)
   const setPickerPalette = useProject((s) => s.setPickerPalette)
   const setTokenOverride = useProject((s) => s.setTokenOverride)
+  const setTokenAlpha = useProject((s) => s.setTokenAlpha)
   const closePicker = useProject((s) => s.closePicker)
 
   const chips = pickerChips(palettes)
@@ -78,6 +79,18 @@ export function TokenPicker({ token, mode, palettes }: Props) {
             )
           })}
         </div>
+        {cell.palette === 'blackA' || cell.palette === 'whiteA' ? (
+          <p className="m-0 text-xs text-muted">Alpha palettes already carry their own opacity.</p>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-semibold text-ink-2">Opacity</span>
+            <input type="range" min={0} max={100} step={1} value={cell.alpha} aria-label={`${def.name} ${mode} opacity`} onChange={(e) => setTokenAlpha(def.name, mode, Number(e.target.value))} className="m-0 h-4 min-w-0 flex-1 accent-accent" />
+            <span className="flex items-center gap-1">
+              <input type="number" min={0} max={100} value={cell.alpha} aria-label={`${def.name} ${mode} opacity percent`} onChange={(e) => setTokenAlpha(def.name, mode, Number(e.target.value))} className="inp h-8 w-[68px] px-1.5 text-right font-mono" />
+              <span className="text-xs text-muted">%</span>
+            </span>
+          </div>
+        )}
         <div className="border-t border-line-faint pt-2.5 font-mono text-xs text-muted">{cell.label}  →  {def.name} ({mode})</div>
       </div>
     </div>

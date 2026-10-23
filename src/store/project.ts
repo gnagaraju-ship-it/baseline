@@ -54,6 +54,8 @@ interface ProjectState {
   copyFailed: boolean
   /** Remapped token values keyed "name|mode"; absent = default mapping. */
   tokenOverrides: Record<string, string>
+  /** Opacity in percent per "name|mode" token value; absent = 100. */
+  tokenAlpha: Record<string, number>
   openToken: { name: string; mode: Mode } | null
   pickerPalette: PaletteRef | null
   contrast: ContrastState
@@ -123,6 +125,7 @@ interface ProjectState {
   closePicker: () => void
   setPickerPalette: (palette: PaletteRef) => void
   setTokenOverride: (name: string, mode: Mode, ref: string) => void
+  setTokenAlpha: (name: string, mode: Mode, percent: number) => void
   reset: () => void
 }
 
@@ -146,6 +149,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   copied: false,
   copyFailed: false,
   tokenOverrides: {},
+  tokenAlpha: {},
   openToken: null,
   pickerPalette: null,
   contrast: defaultContrast(),
@@ -276,6 +280,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       else next[overrideKey(name, mode)] = ref
       return { tokenOverrides: next }
     }),
+  setTokenAlpha: (name, mode, percent) =>
+    set((s) => {
+      const next = { ...s.tokenAlpha }
+      if (clampAlpha(percent) >= 100) delete next[overrideKey(name, mode)]
+      else next[overrideKey(name, mode)] = clampAlpha(percent)
+      return { tokenAlpha: next }
+    }),
   reset: () =>
     set({
       settings: defaultSettings(),
@@ -284,6 +295,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       copied: false,
       copyFailed: false,
       tokenOverrides: {},
+      tokenAlpha: {},
       openToken: null,
       pickerPalette: null,
       contrast: defaultContrast(),
@@ -306,6 +318,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   partialize: (s) => ({
     settings: s.settings,
     tokenOverrides: s.tokenOverrides,
+    tokenAlpha: s.tokenAlpha,
     contrast: s.contrast,
     previewMode: s.previewMode,
     appTheme: s.appTheme,

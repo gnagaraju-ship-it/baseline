@@ -11,6 +11,8 @@ import { computeGroups, countRows, isWeb, toTypeCss, withGridBreakpoints, type T
 export interface ExportInput {
   settings: PaletteSettings
   tokenOverrides: Record<string, string>
+  /** Opacity per "name|mode" token value. */
+  tokenAlpha?: Record<string, number>
   type: TypeSettings
   grid: GridSettings
   spacing: SpacingSettings
@@ -22,7 +24,7 @@ export interface ExportSection { title: string; css: string; count: number }
 export function exportSections(s: ExportInput): ExportSection[] {
   const palettes = buildPalettes(s.settings)
   const rows = tokenRows(palettes)
-  const resolved = resolveAll(palettes, s.tokenOverrides)
+  const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha)
   const type = withGridBreakpoints(s.type, s.grid.on.md, s.grid.on.xs)
   const typeGroups = computeGroups(type)
   const steps = scaleSteps(s.spacing.base, s.spacing.extra)

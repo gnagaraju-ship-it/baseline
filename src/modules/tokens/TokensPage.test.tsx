@@ -105,6 +105,43 @@ describe('Tokens screen', () => {
     expect(Number(exportBtn.textContent!.replace(/\D/g, ''))).toBeLessThan(58)
   })
 
+  it('sets an opacity on one token value from the picker', async () => {
+    setup()
+    await userEvent.click(cell('bg-fill', 'light', 'primary-10'))
+    const dialog = screen.getByRole('dialog')
+    const box = within(dialog).getByRole('spinbutton', { name: 'bg-fill light opacity percent' })
+    expect(within(dialog).getByRole('slider', { name: 'bg-fill light opacity' })).toHaveValue('100')
+    await userEvent.clear(box)
+    await userEvent.type(box, '60')
+    expect(useProject.getState().tokenAlpha).toEqual({ 'bg-fill|light': 60 })
+    const light = screen.getByRole('button', { name: /^bg-fill, light mode: primary-10 at 60% opacity\. Change/ })
+    expect(light).toHaveTextContent('60%')
+    // the dark value and other tokens are untouched, and the Lc badge is gone for the translucent value
+    expect(cell('bg-fill', 'dark', 'primary-9')).toBeInTheDocument()
+    expect(within(light).queryByText(/^\d+$/)).not.toBeInTheDocument()
+  })
+
+  it('goes back to opaque at 100 and does not offer opacity for alpha palettes', async () => {
+    setup()
+    useProject.getState().setTokenAlpha('text', 'dark', 40)
+    expect(await screen.findByRole('button', { name: /^text, dark mode: neutral-2 at 40% opacity/ })).toBeInTheDocument()
+    useProject.getState().setTokenAlpha('text', 'dark', 100)
+    expect(useProject.getState().tokenAlpha).toEqual({})
+    await userEvent.click(cell('bg-surface-disabled', 'light', 'black-alpha-5'))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).queryByRole('slider')).not.toBeInTheDocument()
+    expect(within(dialog).getByText(/already carry their own opacity/)).toBeInTheDocument()
+  })
+
+  it('exports the opacity as color-mix in Copy all', async () => {
+    const write = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })
+    useProject.getState().setTokenAlpha('bg-fill', 'light', 60)
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: /Copy all/ }))
+    expect(write.mock.calls[0][0]).toContain('--bg-fill: color-mix(in srgb, var(--primary-10) 60%, transparent);')
+  })
+
   it('copies the semantic token CSS with Copy all', async () => {
     const write = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })

@@ -128,6 +128,15 @@ describe('figma / DTCG export', () => {
     expect(colour.primary['10'].$value).toBe('#9D00D6')
   })
 
+  it('writes a literal #RRGGBBAA for a token value with its own opacity, and keeps aliases elsewhere', () => {
+    const i = input()
+    i.tokenAlpha = { 'bg-fill|light': 60 }
+    const fill = (buildFigmaTokens(i) as J).Semantic.colour['bg-fill']
+    expect(fill.$value).toBe('#9D00D699')
+    expect(fill.$extensions['com.figma'].modes).toEqual({ Light: '#9D00D699', Dark: '{Primitives.colour.primary.9}' })
+    expect((buildFigmaTokens(i) as J).Semantic.colour['bg-fill-hover'].$value).toBe('{Primitives.colour.primary.11}')
+  })
+
   it('counts tokens', () => {
     expect(figmaTokenCount(doc())).toBeGreaterThan(112 + 58)
   })

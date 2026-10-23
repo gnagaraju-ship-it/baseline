@@ -7,5 +7,6 @@ import { usePalettes } from './usePalettes'
 export function useResolvedTokens() {
   const { palettes } = usePalettes()
   const overrides = useProject((s) => s.tokenOverrides)
-  return useMemo(() => ({ palettes, ...resolveAll(palettes, overrides) }), [palettes, overrides])
+  const alphas = useProject((s) => s.tokenAlpha)
+  return useMemo(() => ({ palettes, ...resolveAll(palettes, overrides, alphas) }), [palettes, overrides, alphas])
 }

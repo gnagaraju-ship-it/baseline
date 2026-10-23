@@ -183,3 +183,43 @@ describe('pickerChips', () => {
     expect(pickerChips(buildPalettes(s)).map((c) => c.key)).toEqual(['neutral', 'primary', 'secondary', 'blackA', 'whiteA'])
   })
 })
+
+describe('per-token opacity', () => {
+  const palettes = buildPalettes(defaultSettings())
+  const key = 'bg-fill|light'
+
+  it('is 100 by default and leaves the paint and Lc badge alone', () => {
+    const t = resolveToken(TOKEN_DEFS.find((d) => d.name === 'bg-fill')!, {}, palettes)
+    expect(t.light.alpha).toBe(100)
+    expect(t.light.lc).not.toBeNull()
+    expect(t.light.paint).toBe('#9D00D6')
+  })
+  it('applies to one mode only, paints over a checkerboard and drops the Lc badge', () => {
+    const t = resolveToken(TOKEN_DEFS.find((d) => d.name === 'bg-fill')!, {}, palettes, { [key]: 60 })
+    expect(t.light.alpha).toBe(60)
+    expect(t.light.lc).toBeNull()
+    expect(t.light.paint).toContain('#9D00D699')
+    expect(t.light.paint).toContain('repeating-conic-gradient')
+    expect(t.light.hex).toBe('9D00D6')
+    expect(t.dark.alpha).toBe(100)
+    expect(t.dark.lc).not.toBeNull()
+  })
+  it('is ignored for the black and white alpha palettes, which carry their own', () => {
+    const t = resolveToken(TOKEN_DEFS.find((d) => d.name === 'bg-surface-disabled')!, {}, palettes, { 'bg-surface-disabled|light': 30 })
+    expect(t.light.alpha).toBe(100)
+  })
+  it('works together with a remap and is clamped', () => {
+    const t = resolveToken(TOKEN_DEFS.find((d) => d.name === 'bg-fill')!, { [key]: 'info-10' }, palettes, { [key]: 250 })
+    expect(t.light.label).toBe('info-10')
+    expect(t.light.alpha).toBe(100)
+    expect(resolveToken(TOKEN_DEFS.find((d) => d.name === 'bg-fill')!, { [key]: 'info-10' }, palettes, { [key]: 40 }).light.paint).toContain('#2563EB66')
+  })
+  it('exports a color-mix expression for the light value only', () => {
+    const { tokens } = resolveAll(palettes, {}, { [key]: 60 })
+    const css = toTokenCss(tokens)
+    expect(css).toContain('--bg-fill: color-mix(in srgb, var(--primary-10) 60%, transparent);')
+    const dark = css.slice(css.indexOf('[data-theme="dark"]'))
+    expect(dark).toContain('--bg-fill: var(--primary-9);')
+    expect(css.indexOf('color-mix')).toBeLessThan(css.indexOf('[data-theme="dark"]'))
+  })
+})

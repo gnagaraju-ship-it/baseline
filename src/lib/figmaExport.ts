@@ -22,6 +22,11 @@ function hexAlpha(hex: string, alpha: number): string {
   return `#${hex}${(a < 16 ? '0' : '') + a.toString(16).toUpperCase()}`
 }
 
+/** A token value: an alias to its ramp step, or the literal #RRGGBBAA when the token has its own opacity. */
+function value(c: ResolvedCell): string {
+  return c.alpha < 100 && c.hex ? `#${withAlpha(c.hex, c.alpha)}` : alias(c)
+}
+
 function alias(c: ResolvedCell): string {
   const p = c.palette === 'blackA' ? 'black-alpha' : c.palette === 'whiteA' ? 'white-alpha' : c.palette
   return `{Primitives.colour.${p}.${c.index + 1}}`
@@ -29,7 +34,7 @@ function alias(c: ResolvedCell): string {
 
 export function buildFigmaTokens(input: ExportInput): Json {
   const palettes = buildPalettes(input.settings)
-  const resolved = resolveAll(palettes, input.tokenOverrides)
+  const resolved = resolveAll(palettes, input.tokenOverrides, input.tokenAlpha)
 
   const ramps: Json = {}
   for (const p of palettes) {
@@ -54,8 +59,8 @@ export function buildFigmaTokens(input: ExportInput): Json {
     if (!(t.light.available && t.dark.available)) continue
     semantic[t.def.name] = {
       $type: 'color',
-      $value: alias(t.light),
-      $extensions: { 'com.figma': { modes: { Light: alias(t.light), Dark: alias(t.dark) } } }
+      $value: value(t.light),
+      $extensions: { 'com.figma': { modes: { Light: value(t.light), Dark: value(t.dark) } } }
     }
   }
 
