@@ -141,6 +141,42 @@ describe('Palette screen', () => {
     )
   })
 
+  it('sets an opacity on a brand colour: badge, alpha swatches and 16 extra tokens', async () => {
+    setup()
+    expect(screen.queryByTestId('alpha-swatch')).not.toBeInTheDocument()
+    const slider = screen.getByRole('slider', { name: 'Primary opacity' })
+    expect(slider).toHaveValue('100')
+    const box = screen.getByRole('spinbutton', { name: 'Primary opacity percent' })
+    await userEvent.clear(box)
+    await userEvent.type(box, '60')
+    expect(useProject.getState().settings.alpha).toEqual({ primary: 60 })
+    expect(slider).toHaveValue('60')
+    expect(screen.getByText('60% opacity')).toBeInTheDocument()
+    expect(screen.getAllByTestId('alpha-swatch')).toHaveLength(16)
+    expect(screen.getByRole('group', { name: 'Primary at 60% opacity' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('128')
+  })
+
+  it('removes the alpha tokens again when the opacity goes back to 100', async () => {
+    setup()
+    useProject.getState().setAlpha('critical', 25)
+    expect(await screen.findByRole('group', { name: 'Critical at 25% opacity' })).toBeInTheDocument()
+    useProject.getState().setAlpha('critical', 100)
+    expect(useProject.getState().settings.alpha).toEqual({})
+    expect(await screen.findByRole('button', { name: /^Export/ })).toHaveTextContent('112')
+    expect(screen.queryByTestId('alpha-swatch')).not.toBeInTheDocument()
+  })
+
+  it('has an opacity control on every colour field', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: '+ Add secondary' }))
+    await userEvent.click(screen.getByRole('button', { name: '+ Add tertiary' }))
+    await userEvent.click(screen.getByRole('button', { name: '+ Add utility colour' }))
+    for (const n of ['Primary', 'Secondary', 'Tertiary', 'Utility 1', 'Info', 'Success', 'Caution', 'Warning', 'Critical']) {
+      expect(screen.getByRole('slider', { name: `${n} opacity` })).toBeInTheDocument()
+    }
+  })
+
   it('copies the CSS variables with Copy all', async () => {
     const write = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })

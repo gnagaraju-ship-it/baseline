@@ -20,6 +20,7 @@ import { TOKEN_DEFS, overrideKey, type Mode, type PaletteRef } from '../lib/toke
 import {
   DEFAULT_SECONDARY,
   MAX_UTILITY,
+  clampAlpha,
   defaultSettings,
   defaultUtilityHex,
   nextUtilityId,
@@ -105,6 +106,7 @@ interface ProjectState {
   setContrastThreshold: (min: number) => void
   selectContrastCell: (row: number, col: number) => void
   setText: (key: TextKey, value: string) => void
+  setAlpha: (key: string, percent: number) => void
   setSecondary: (value: string | null) => void
   setTertiary: (value: string | null) => void
   addUtility: () => void
@@ -233,6 +235,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     set((s) => ({ contrast: { ...s.contrast, threshold: { ...s.contrast.threshold, [s.contrast.standard]: min } } })),
   selectContrastCell: (row, col) => set((s) => ({ contrast: { ...s.contrast, cell: [row, col] } })),
   setText: (key, value) => set((s) => ({ settings: { ...s.settings, text: { ...s.settings.text, [key]: value } } })),
+  setAlpha: (key, percent) =>
+    set((s) => {
+      const alpha = { ...s.settings.alpha }
+      if (clampAlpha(percent) >= 100) delete alpha[key]
+      else alpha[key] = clampAlpha(percent)
+      return { settings: { ...s.settings, alpha } }
+    }),
   setSecondary: (value) => set((s) => ({ settings: { ...s.settings, secondary: value } })),
   setTertiary: (value) => set((s) => ({ settings: { ...s.settings, tertiary: value } })),
   addUtility: () =>

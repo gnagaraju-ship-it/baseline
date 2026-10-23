@@ -117,6 +117,17 @@ describe('figma / DTCG export', () => {
     expect(text.endsWith('\n')).toBe(true)
   })
 
+  it('adds a <palette>-alpha primitive group only for colours below 100% opacity', () => {
+    const i = input()
+    i.settings.alpha = { primary: 60 }
+    const colour = (buildFigmaTokens(i) as J).Primitives.colour
+    expect(Object.keys(colour)).toContain('primary-alpha')
+    expect(colour['primary-alpha']['10']).toEqual({ $type: 'color', $value: '#9D00D699' })
+    expect(Object.keys(colour['primary-alpha'])).toHaveLength(16)
+    expect(colour['info-alpha']).toBeUndefined()
+    expect(colour.primary['10'].$value).toBe('#9D00D6')
+  })
+
   it('counts tokens', () => {
     expect(figmaTokenCount(doc())).toBeGreaterThan(112 + 58)
   })

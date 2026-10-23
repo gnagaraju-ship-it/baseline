@@ -3,7 +3,7 @@
  * Colours are hex, aliases are written "{Group.path.token}", and Figma's Light / Dark modes live in
  * $extensions["com.figma"].modes because the DTCG format has no modes of its own.
  */
-import { buildPalettes, norm } from './colour'
+import { buildPalettes, norm, withAlpha } from './colour'
 import { computeGrid, BREAKPOINTS } from './grid'
 import type { ExportInput } from './exportAll'
 import { onValues, scaleSteps, spacingBreakpoints, spacingTokens } from './spacing'
@@ -36,6 +36,12 @@ export function buildFigmaTokens(input: ExportInput): Json {
     const steps: Json = {}
     p.steps.forEach((h, i) => (steps[String(i + 1)] = color(h)))
     ramps[p.key] = steps
+  }
+  for (const p of palettes) {
+    if (p.alpha >= 100) continue
+    const steps: Json = {}
+    p.steps.forEach((h, i) => (steps[String(i + 1)] = { $type: 'color', $value: `#${withAlpha(h, p.alpha)}` }))
+    ramps[`${p.key}-alpha`] = steps
   }
   for (const [key, base] of [['black-alpha', '000000'], ['white-alpha', 'FFFFFF']] as const) {
     const steps: Json = {}

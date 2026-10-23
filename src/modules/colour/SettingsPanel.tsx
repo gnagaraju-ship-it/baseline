@@ -34,7 +34,7 @@ function Divider() {
 }
 
 export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: TokenRow[] }) {
-  const { settings, side, setSide, setText, setSecondary, setTertiary, addUtility, setUtilityHex, renameUtility, removeUtility, setNeutralPreset, setNeutralEnabled, setSemanticEnabled } = useProject()
+  const { settings, side, setSide, setText, setAlpha, setSecondary, setTertiary, addUtility, setUtilityHex, renameUtility, removeUtility, setNeutralPreset, setNeutralEnabled, setSemanticEnabled } = useProject()
   const neutral = palettes.find((p) => p.key === 'neutral')
 
   return (
@@ -73,14 +73,14 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
                 <Icon name="image" size={15} />
               </button>
             </div>
-            <ColourField id="f-primary" label="Primary" value={settings.text.primary} fallback={DEFAULT_HEX.primary} invalidMessage="Enter six hex digits, like #9D00D6." onChange={(v) => setText('primary', v)} />
+            <ColourField id="f-primary" label="Primary" alpha={settings.alpha?.primary} onAlpha={(n) => setAlpha('primary', n)} value={settings.text.primary} fallback={DEFAULT_HEX.primary} invalidMessage="Enter six hex digits, like #9D00D6." onChange={(v) => setText('primary', v)} />
             {settings.secondary != null ? (
-              <ColourField id="f-secondary" label="Secondary" value={settings.secondary} fallback={DEFAULT_SECONDARY} invalidMessage="Enter six hex digits." onChange={setSecondary} onRemove={() => setSecondary(null)} />
+              <ColourField id="f-secondary" label="Secondary" alpha={settings.alpha?.secondary} onAlpha={(n) => setAlpha('secondary', n)} value={settings.secondary} fallback={DEFAULT_SECONDARY} invalidMessage="Enter six hex digits." onChange={setSecondary} onRemove={() => setSecondary(null)} />
             ) : (
               <button type="button" onClick={() => setSecondary('#' + DEFAULT_SECONDARY.toLowerCase())} className={dashed}>+ Add secondary</button>
             )}
             {settings.tertiary != null ? (
-              <ColourField id="f-tertiary" label="Tertiary" value={settings.tertiary} fallback={DEFAULT_TERTIARY} invalidMessage="Enter six hex digits." onChange={setTertiary} onRemove={() => setTertiary(null)} />
+              <ColourField id="f-tertiary" label="Tertiary" alpha={settings.alpha?.tertiary} onAlpha={(n) => setAlpha('tertiary', n)} value={settings.tertiary} fallback={DEFAULT_TERTIARY} invalidMessage="Enter six hex digits." onChange={setTertiary} onRemove={() => setTertiary(null)} />
             ) : (
               <button type="button" onClick={() => setTertiary('#' + DEFAULT_TERTIARY.toLowerCase())} className={dashed}>+ Add tertiary</button>
             )}
@@ -89,6 +89,8 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
                 key={u.id}
                 id={`f-utility-${u.id}`}
                 label={u.name}
+                alpha={settings.alpha?.[`utility-${u.id}`]}
+                onAlpha={(n) => setAlpha(`utility-${u.id}`, n)}
                 value={u.hex}
                 fallback={defaultUtilityHex(u.id)}
                 invalidMessage="Enter six hex digits."
@@ -147,7 +149,7 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
             {settings.semanticEnabled ? (
               <div className="flex flex-col gap-3.5">
                 {SEMANTIC.map((f) => (
-                  <ColourField key={f.key} id={`f-${f.key}`} label={f.label} value={settings.text[f.key]} fallback={DEFAULT_HEX[f.key]} onChange={(v) => setText(f.key, v)} />
+                  <ColourField key={f.key} id={`f-${f.key}`} label={f.label} alpha={settings.alpha?.[f.key]} onAlpha={(n) => setAlpha(f.key, n)} value={settings.text[f.key]} fallback={DEFAULT_HEX[f.key]} onChange={(v) => setText(f.key, v)} />
                 ))}
               </div>
             ) : (

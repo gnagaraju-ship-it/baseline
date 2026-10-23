@@ -135,6 +135,15 @@ export interface UtilityColour {
   hex: string
 }
 
+export const clampAlpha = (n: number) => Math.max(0, Math.min(100, Math.round(Number.isFinite(n) ? n : 100)))
+export const alphaFor = (s: PaletteSettings, key: string) => clampAlpha(s.alpha?.[key] ?? 100)
+
+/** "RRGGBB" plus an opacity in percent as "RRGGBBAA". */
+export function withAlpha(hexColour: string, percent: number): string {
+  const a = Math.round((clampAlpha(percent) / 100) * 255)
+  return hexColour + (a < 16 ? '0' : '') + a.toString(16).toUpperCase()
+}
+
 export const utilityKey = (id: number): UtilityKey => `utility-${id}`
 export const utilityName = (u: UtilityColour) => u.name.trim() || `Utility ${u.id}`
 export const defaultUtilityHex = (id: number) => UTILITY_HEXES[(id - 1) % UTILITY_HEXES.length]
@@ -155,6 +164,8 @@ export interface Palette {
   /** The input (base) colour. */
   hex: string
   steps: string[]
+  /** Opacity of the colour in percent. Below 100 an alpha version of every step is exported too. */
+  alpha: number
 }
 
 export interface PaletteSettings {
@@ -162,6 +173,8 @@ export interface PaletteSettings {
   text: Record<TextKey, string>
   /** null = secondary not added. */
   secondary: string | null
+  /** Opacity in percent per palette key; a missing key means 100. */
+  alpha: Record<string, number>
   /** null = tertiary not added. */
   tertiary: string | null
   /** Extra colours named Utility 1, Utility 2 ..., up to MAX_UTILITY. */
@@ -180,6 +193,7 @@ export function defaultSettings(): PaletteSettings {
       warning: '#F97316',
       critical: '#DC2626'
     },
+    alpha: {},
     secondary: null,
     tertiary: null,
     utility: [],
@@ -238,7 +252,7 @@ export function buildPalettes(s: PaletteSettings): Palette[] {
     return true
   }).map((d) => {
     const { hex: h, steps } = rampFor(d, s)
-    return { key: d.key, name: d.name, group: d.group, base: d.base, hex: h, steps }
+    return { key: d.key, name: d.name, group: d.group, base: d.base, hex: h, steps, alpha: alphaFor(s, d.key) }
   })
 }
 
@@ -249,7 +263,11 @@ export interface TokenRow {
 
 /** CSS custom property per step, e.g. --primary-10. */
 export function tokenRows(palettes: Palette[]): TokenRow[] {
-  return palettes.flatMap((p) => p.steps.map((h, i) => ({ name: `--${p.key}-${i + 1}`, hex: h })))
+  return palettes.flatMap((p) => [
+    ...p.steps.map((h, i) => ({ name: `--${p.key}-${i + 1}`, hex: h })),
+    // A colour set below 100% opacity also exports every step with that alpha, as #RRGGBBAA.
+    ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${i + 1}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
+  ])
 }
 
 export function toCss(rows: TokenRow[]): string {

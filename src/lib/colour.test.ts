@@ -1,6 +1,8 @@
 import { hexToOklch } from './oklch'
 import { describe, expect, it } from 'vitest'
 import {
+  clampAlpha,
+  withAlpha,
   defaultUtilityHex,
   nextUtilityId,
   utilityKey,
@@ -214,5 +216,42 @@ describe('tertiary and utility colours', () => {
     const rows = tokenRows(buildPalettes(s))
     expect(rows).toHaveLength(128)
     expect(rows.some((r) => r.name === '--utility-1-10' && r.hex === '0891B2')).toBe(true)
+  })
+})
+
+describe('alpha', () => {
+  it('turns a colour and an opacity in percent into #RRGGBBAA digits', () => {
+    expect(withAlpha('9D00D6', 100)).toBe('9D00D6FF')
+    expect(withAlpha('9D00D6', 60)).toBe('9D00D699')
+    expect(withAlpha('9D00D6', 0)).toBe('9D00D600')
+    expect(withAlpha('9D00D6', 5)).toBe('9D00D60D')
+    expect(clampAlpha(150)).toBe(100)
+    expect(clampAlpha(-4)).toBe(0)
+    expect(clampAlpha(NaN)).toBe(100)
+  })
+  it('defaults to 100 and adds no tokens', () => {
+    const p = buildPalettes(defaultSettings())
+    expect(p.every((x) => x.alpha === 100)).toBe(true)
+    expect(tokenRows(p)).toHaveLength(112)
+  })
+  it('adds 16 alpha tokens for a palette set below 100%, only for that palette', () => {
+    const s = defaultSettings()
+    s.alpha = { primary: 60 }
+    const p = buildPalettes(s)
+    expect(p[0].alpha).toBe(60)
+    expect(p[1].alpha).toBe(100)
+    const rows = tokenRows(p)
+    expect(rows).toHaveLength(128)
+    expect(rows.find((r) => r.name === '--primary-10-alpha')).toEqual({ name: '--primary-10-alpha', hex: '9D00D699' })
+    expect(rows.find((r) => r.name === '--primary-10')?.hex).toBe('9D00D6')
+    expect(toCss(rows)).toContain('--primary-1-alpha: #FBF4FF99;')
+  })
+  it('works for utility and semantic colours, and treats a missing alpha map as 100', () => {
+    const s = defaultSettings()
+    s.utility = [{ id: 1, name: 'Utility 1', hex: '#0891b2' }]
+    s.alpha = { 'utility-1': 40, critical: 80 }
+    expect(tokenRows(buildPalettes(s))).toHaveLength(112 + 16 + 16 + 16)
+    const old = { ...defaultSettings(), alpha: undefined as never }
+    expect(buildPalettes(old).every((x) => x.alpha === 100)).toBe(true)
   })
 })

@@ -1,6 +1,6 @@
 import { Icon } from '../../components/Icon'
 import { downloadText } from '../../lib/browser'
-import { toCss, tokenRows, type Palette } from '../../lib/colour'
+import { toCss, tokenRows, withAlpha, type Palette } from '../../lib/colour'
 import { luminance } from '../../lib/contrast'
 import { useProject } from '../../store/project'
 
@@ -23,6 +23,7 @@ export function RampCard({ palette }: { palette: Palette }) {
         <span className="h-4 w-4 rounded" style={{ background: `#${palette.hex}` }} />
         <h2 className="m-0 text-base font-semibold tracking-[-0.01em]">{palette.name}</h2>
         <span className="font-mono text-[13px] text-muted">#{palette.hex}</span>
+        {palette.alpha < 100 && <span className="rounded border border-line px-1.5 py-px font-mono text-[11px] text-muted">{palette.alpha}% opacity</span>}
         <div className="ml-auto flex gap-1">
           <button type="button" className={iconBtn} aria-label={`Edit ${palette.name}`} onClick={edit}><Icon name="edit" size={15} /></button>
           <button type="button" className={iconBtn} aria-label={`Download ${palette.name} ramp`} onClick={() => downloadText(`${palette.key}.css`, toCss(tokenRows([palette])))}><Icon name="download" size={15} /></button>
@@ -52,6 +53,19 @@ export function RampCard({ palette }: { palette: Palette }) {
             )
           })}
         </div>
+        {palette.alpha < 100 && (
+          <div role="group" aria-label={`${palette.name} at ${palette.alpha}% opacity`} className="mt-3 grid min-w-[896px] grid-cols-[repeat(16,minmax(0,1fr))] gap-[3px]">
+            {palette.steps.map((h, i) => (
+              <span
+                key={i}
+                title={`${palette.name} ${i + 1} at ${palette.alpha}%: #${withAlpha(h, palette.alpha)}`}
+                data-testid="alpha-swatch"
+                className="block h-8 rounded-md border border-line-faint"
+                style={{ background: `linear-gradient(#${withAlpha(h, palette.alpha)}, #${withAlpha(h, palette.alpha)}), repeating-conic-gradient(#E4E4E7 0 25%, #FFFFFF 0 50%) 0 0 / 8px 8px` }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

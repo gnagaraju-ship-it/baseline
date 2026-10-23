@@ -13,9 +13,12 @@ interface Props {
   onRemove?: () => void
   /** When given, the label becomes an editable name. */
   onRename?: (name: string) => void
+  /** Opacity in percent; when onAlpha is given an opacity slider is shown. */
+  alpha?: number
+  onAlpha?: (percent: number) => void
 }
 
-export function ColourField({ id, label, value, fallback, onChange, invalidMessage = 'Enter six hex digits.', onRemove, onRename }: Props) {
+export function ColourField({ id, label, value, fallback, onChange, invalidMessage = 'Enter six hex digits.', onRemove, onRename, alpha = 100, onAlpha }: Props) {
   const valid = norm(value) !== null
   const picker = '#' + (norm(value) ?? fallback).toLowerCase()
   return (
@@ -36,6 +39,16 @@ export function ColourField({ id, label, value, fallback, onChange, invalidMessa
         )}
       </div>
       {!valid && <div className="text-xs text-danger">{invalidMessage}</div>}
+      {onAlpha && (
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs text-muted">Opacity</span>
+          <input type="range" min={0} max={100} step={1} value={alpha} aria-label={`${label} opacity`} onChange={(e) => onAlpha(Number(e.target.value))} className="m-0 h-4 min-w-0 flex-1 accent-accent" />
+          <span className="flex items-center gap-1">
+            <input type="number" min={0} max={100} value={alpha} aria-label={`${label} opacity percent`} onChange={(e) => onAlpha(Number(e.target.value))} className="inp h-8 w-[68px] px-1.5 text-right font-mono" />
+            <span className="text-xs text-muted">%</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }
