@@ -1,6 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useProject } from '../store/project'
-import { ExportMenu } from './ExportMenu'
 import { Icon, type IconName } from './Icon'
 
 const COLOUR_ROUTES = ['/', '/tokens', '/contrast']
@@ -58,7 +57,7 @@ export function Rail() {
       <RailLink to="/preview" label="UI preview" icon="monitor" active={pathname === '/preview'} />
       <RailStub label="Documentation" icon="docs" />
       <div className="flex-1" />
-      <ExportMenu />
+      <RailButton label="All modules export settings" icon="download" title="Export settings — choose format and modules" onClick={() => project.openExport()} />
       <RailButton label="Reset project" icon="reset" onClick={resetProject} />
       <button
         type="button"

@@ -7,6 +7,8 @@ import {
   addLayer, addLevel, defaultElevationSettings, loadPreset, parseField, removeLayer, removeLevel, renameLevel, setLayerField,
   type ElevationPresetKey, type ElevationSettings, type LayerField
 } from '../lib/elevation'
+import type { ExportModule } from '../lib/exportAll'
+import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
   BREAKPOINTS, GRID_PRESETS, clampColumns, clampGutter, defaultGridSettings,
@@ -50,6 +52,13 @@ interface ProjectState {
   side: SideTab
   selected: { key: PaletteKey; index: number }
   copied: boolean
+  /** The Export dialog: open or not, and what it will export. Not saved with the project. */
+  exportDialog: { open: boolean; format: ExportFormat; modules: ExportModule[] }
+  openExport: (modules?: ExportModule[]) => void
+  closeExport: () => void
+  setExportFormat: (format: ExportFormat) => void
+  toggleExportModule: (module: ExportModule) => void
+  setExportModules: (modules: ExportModule[]) => void
   /** True briefly after the clipboard refused a copy. */
   copyFailed: boolean
   /** Remapped token values keyed "name|mode"; absent = default mapping. */
@@ -148,6 +157,17 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   selected: { key: 'primary', index: 9 },
   copied: false,
   copyFailed: false,
+  exportDialog: { open: false, format: 'css', modules: ALL_MODULES },
+  openExport: (modules = ALL_MODULES) => set((s) => ({ exportDialog: { ...s.exportDialog, open: true, modules: normaliseSelection(modules) } })),
+  closeExport: () => set((s) => ({ exportDialog: { ...s.exportDialog, open: false } })),
+  setExportFormat: (format) => set((s) => ({ exportDialog: { ...s.exportDialog, format } })),
+  toggleExportModule: (module) =>
+    set((s) => {
+      const has = s.exportDialog.modules.includes(module)
+      const next = has ? s.exportDialog.modules.filter((m) => m !== module) : [...s.exportDialog.modules, module]
+      return { exportDialog: { ...s.exportDialog, modules: normaliseSelection(next) } }
+    }),
+  setExportModules: (modules) => set((s) => ({ exportDialog: { ...s.exportDialog, modules: normaliseSelection(modules) } })),
   tokenOverrides: {},
   tokenAlpha: {},
   openToken: null,
@@ -294,6 +314,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       selected: { key: 'primary', index: 9 },
       copied: false,
       copyFailed: false,
+      exportDialog: { open: false, format: 'css', modules: ALL_MODULES },
       tokenOverrides: {},
       tokenAlpha: {},
       openToken: null,

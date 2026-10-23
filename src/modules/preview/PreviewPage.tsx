@@ -1,4 +1,4 @@
-import { copyText, downloadText } from '../../lib/browser'
+import { copyText } from '../../lib/browser'
 import { toCss } from '../../lib/colour'
 import { chartTheme, type PreviewMode } from '../../lib/chartTheme'
 import { fontStack } from '../../lib/typeScale'
@@ -11,6 +11,7 @@ const TYPES = ['Dashboard', 'Mobile', 'Web', 'Components', 'Charts', 'Logos', 'G
 const MODES: Array<[PreviewMode, string]> = [['light', 'Light'], ['dark', 'Dark']]
 
 export function PreviewPage() {
+  const openExport = useProject((s) => s.openExport)
   const { palettes, rows } = usePalettes()
   const { previewMode, setPreviewMode, flashCopied } = useProject()
   const headingFont = useProject((s) => s.type.headingFont)
@@ -22,7 +23,7 @@ export function PreviewPage() {
   }
 
   return (
-    <ColourLayout current="/preview" exportCount={rows.length} onCopyAll={copyAll} onExport={() => downloadText('tokens.css', toCss(rows))}>
+    <ColourLayout current="/preview" exportCount={rows.length} onCopyAll={copyAll} onExport={() => openExport(['ramps'])}>
       <div className="flex flex-col gap-4 px-7 pb-12 pt-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div role="group" aria-label="Preview type" className="flex flex-wrap gap-1.5">

@@ -123,7 +123,7 @@ describe('Grids screen', () => {
     expect(stat('VIEWPORT')).toHaveTextContent('1400px')
   })
 
-  it('exports the grid CSS for enabled breakpoints', async () => {
+  it('opens the export settings preselected for Grids', async () => {
     const click = vi.fn()
     Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() })
     HTMLAnchorElement.prototype.click = click
@@ -132,6 +132,6 @@ describe('Grids screen', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'MD' }))
     expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('2')
     await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
-    expect(click).toHaveBeenCalled()
+    expect(useProject.getState().exportDialog).toMatchObject({ open: true, modules: ['grids'] })
   })
 })

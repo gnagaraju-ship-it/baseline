@@ -1,10 +1,10 @@
-import { downloadText } from '../../lib/browser'
 import { BREAKPOINTS, computeGrid, gridDescription, gridStats, gridTitle, sidebarChip, toGridCss } from '../../lib/grid'
 import { useProject } from '../../store/project'
 import { GridOverlay } from './GridOverlay'
 import { GridsLayout } from './GridsLayout'
 
 export function GridsPage() {
+  const openExport = useProject((s) => s.openExport)
   const grid = useProject((s) => s.grid)
   const unit = useProject((s) => s.unit)
   const setActive = useProject((s) => s.setActiveBreakpoint)
@@ -13,7 +13,7 @@ export function GridsPage() {
   const chip = sidebarChip(layout, grid, unit)
 
   return (
-    <GridsLayout css={toGridCss(grid)} columns={layout.columns} exportCount={enabled.length} onExport={() => downloadText('grid.css', toGridCss(grid))}>
+    <GridsLayout css={toGridCss(grid)} columns={layout.columns} exportCount={enabled.length} onExport={() => openExport(['grids'])}>
       <div className="flex flex-wrap items-center gap-2 border-b border-line-faint px-7 py-3">
         <span className="mr-1.5 text-[11px] font-semibold tracking-[.08em] text-muted">BREAKPOINT</span>
         <div role="group" aria-label="Breakpoint" className="flex flex-wrap gap-2">

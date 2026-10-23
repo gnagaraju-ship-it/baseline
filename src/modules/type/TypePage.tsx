@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { downloadText } from '../../lib/browser'
 import { activeView, computeGroups, countRows, isWeb, toTypeCss, withGridBreakpoints, type ViewKey } from '../../lib/typeScale'
 import { useProject } from '../../store/project'
 import { PreviewView } from './PreviewView'
@@ -9,6 +8,7 @@ import { TypeLayout, type TypeTab } from './TypeLayout'
 const VIEWS: Array<[ViewKey, string]> = [['desktop', 'Desktop'], ['tablet', 'Tablet'], ['mobile', 'Mobile']]
 
 export function TypePage() {
+  const openExport = useProject((s) => s.openExport)
   const [tab, setTab] = useState<TypeTab>('scale')
   const rawType = useProject((s) => s.type)
   const gridOn = useProject((s) => s.grid.on)
@@ -22,7 +22,7 @@ export function TypePage() {
   const current = activeView(type)
 
   return (
-    <TypeLayout css={css} tab={tab} onTab={setTab} count={count} onExport={() => downloadText('type.css', css)}>
+    <TypeLayout css={css} tab={tab} onTab={setTab} count={count} onExport={() => openExport(['type'])}>
       <div className="flex flex-col gap-6 px-7 pb-14 pt-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[560px]">

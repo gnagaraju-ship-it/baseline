@@ -47,41 +47,114 @@ describe('app shell', () => {
     expect(rail.getByRole('link', { name: 'Color' })).not.toHaveAttribute('aria-current')
   })
 
-  it('downloads every module in one file from the rail on any screen', async () => {
-    const { click, blobs } = stubDownload()
+  it('opens export settings from the rail with every module selected', async () => {
     at('/elevation')
-    await userEvent.click(screen.getByRole('button', { name: 'Download all modules' }))
-    await userEvent.click(screen.getByRole('menuitem', { name: /Download CSS/ }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'All modules export settings' }))
+    const dialog = screen.getByRole('dialog', { name: 'Export settings' })
+    expect(within(dialog).getAllByRole('checkbox').filter((c) => (c as HTMLInputElement).checked)).toHaveLength(6)
+    expect(within(dialog).getByRole('radio', { name: /CSS variables/ })).toBeChecked()
+    expect(within(dialog).getByText(/206 tokens/)).toBeInTheDocument()
+  })
+
+  it('the Export button on a screen opens the dialog with that screen\'s modules only', async () => {
+    at('/grids')
+    await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Export settings' })
+    const on = within(dialog).getAllByRole('checkbox').filter((c) => (c as HTMLInputElement).checked)
+    expect(on).toHaveLength(1)
+    expect(within(dialog).getByRole('checkbox', { name: /Grids/ })).toBeChecked()
+    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--grid-xxl-width: 1400px;')
+    expect(within(dialog).getByLabelText('Export preview')).not.toHaveTextContent('--primary-10')
+  })
+
+  it('Tokens opens with semantic tokens and the ramps they need locked on', async () => {
+    at('/tokens')
+    await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('checkbox', { name: /Colour ramps/ })).toBeChecked()
+    expect(within(dialog).getByRole('checkbox', { name: /Colour ramps/ })).toBeDisabled()
+    expect(within(dialog).getByText('Needed by semantic tokens')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Semantic tokens/ }))
+    expect(within(dialog).getByRole('checkbox', { name: /Colour ramps/ })).toBeEnabled()
+  })
+
+  it('changes the preview and file name with the format and the modules, then downloads', async () => {
+    const { click, blobs } = stubDownload()
+    at('/')
+    await userEvent.click(screen.getByRole('button', { name: 'All modules export settings' }))
+    const dialog = screen.getByRole('dialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'None' }))
+    expect(within(dialog).getByText('Nothing selected')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: /Download/ })).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: /^Copy/ })).toBeDisabled()
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Spacing/ }))
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Elevation/ }))
+    await userEvent.click(within(dialog).getByRole('radio', { name: /Figma/ }))
+    expect(within(dialog).getByText(/omni-tokens\.json/, { selector: 'span' })).toBeInTheDocument()
+    expect(within(dialog).getByText(/22 tokens/)).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: /Download/ }))
+    expect(click).toHaveBeenCalledTimes(1)
+    expect(blobs[0].type).toBe('application/json')
+    const doc = JSON.parse(await blobs[0].text())
+    expect(Object.keys(doc).filter((k) => !k.startsWith('$'))).toEqual(['Spacing', 'Elevation'])
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('downloads the full CSS file with everything selected', async () => {
+    const { click, blobs } = stubDownload()
+    at('/type')
+    await userEvent.click(screen.getByRole('button', { name: 'All modules export settings' }))
+    await userEvent.click(screen.getByRole('button', { name: /Download/ }))
     expect(click).toHaveBeenCalled()
     const text = await blobs[0].text()
     for (const m of ['--primary-10:', '--bg-fill:', '--type-body-md-size', '--grid-xxl-width', '--space-24', '--elevation-md']) expect(text).toContain(m)
   })
 
-  it('offers Figma JSON from the same menu, closes on Escape, and copies it', async () => {
-    const { click, blobs } = stubDownload()
-    at('/grids')
-    const button = screen.getByRole('button', { name: 'Download all modules' })
-    await userEvent.click(button)
-    expect(button).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual([
-      expect.stringContaining('Download CSS'), expect.stringContaining('Download Figma JSON'), expect.stringContaining('Copy Figma JSON')
-    ])
-    await userEvent.click(screen.getByRole('menuitem', { name: /Download Figma JSON/ }))
-    expect(click).toHaveBeenCalledTimes(1)
-    expect(blobs[0].type).toBe('application/json')
-    const doc = JSON.parse(await blobs[0].text())
-    expect(doc.Primitives.colour.primary['10'].$value).toBe('#9D00D6')
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-
-    await userEvent.click(button)
-    await userEvent.keyboard('{Escape}')
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-
+  it('copies from the dialog, and shows a long file as a short preview', async () => {
     const write = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })
-    await userEvent.click(button)
-    await userEvent.click(screen.getByRole('menuitem', { name: /Copy Figma JSON/ }))
-    expect(JSON.parse(write.mock.calls[0][0]).Semantic.colour['bg-fill'].$value).toBe('{Primitives.colour.primary.10}')
+    at('/')
+    await userEvent.click(screen.getByRole('button', { name: 'All modules export settings' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByLabelText('Export preview').textContent).toMatch(/more lines in the file/)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Copy' }))
+    expect(write.mock.calls[0][0]).toContain('--elevation-md:')
+    expect(write.mock.calls[0][0].split('\n').length).toBeGreaterThan(48)
+    expect(await within(dialog).findByRole('button', { name: 'Copied' })).toBeInTheDocument()
+  })
+
+  it('closes with Escape, Cancel, the close button and the backdrop, and gives focus back', async () => {
+    at('/')
+    const opener = screen.getByRole('button', { name: 'All modules export settings' })
+    let n = 0
+    for (const close of [
+      () => userEvent.keyboard('{Escape}'),
+      () => userEvent.click(screen.getByRole('button', { name: 'Cancel' })),
+      () => userEvent.click(screen.getByRole('button', { name: 'Close export settings' })),
+      () => userEvent.click(screen.getByRole('dialog').parentElement!)
+    ]) {
+      await userEvent.click(opener)
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      await close()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(opener, `after closer ${n}`).toHaveFocus()
+      n += 1
+    }
+  })
+
+  it('keeps Tab inside the dialog', async () => {
+    at('/')
+    await userEvent.click(screen.getByRole('button', { name: 'All modules export settings' }))
+    const dialog = screen.getByRole('dialog')
+    for (let i = 0; i < 30; i++) {
+      await userEvent.tab()
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
+    for (let i = 0; i < 5; i++) {
+      await userEvent.tab({ shift: true })
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
   })
 
   it('resets the whole project after confirmation, and not when cancelled', async () => {

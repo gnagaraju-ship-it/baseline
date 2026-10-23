@@ -107,12 +107,12 @@ describe('Spacing screen', () => {
     expect(screen.getByRole('checkbox', { name: '18pt' })).toBeInTheDocument()
   })
 
-  it('exports spacing.css', async () => {
+  it('opens the export settings preselected for Spacing', async () => {
     const click = vi.fn()
     Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() })
     HTMLAnchorElement.prototype.click = click
     setup()
     await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
-    expect(click).toHaveBeenCalled()
+    expect(useProject.getState().exportDialog).toMatchObject({ open: true, modules: ['spacing'] })
   })
 })

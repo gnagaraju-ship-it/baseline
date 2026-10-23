@@ -1,4 +1,4 @@
-import { copyText, downloadText } from '../../lib/browser'
+import { copyText } from '../../lib/browser'
 import { toElevationCss } from '../../lib/elevation'
 import { useProject } from '../../store/project'
 import { ElevationLayout } from './ElevationLayout'
@@ -7,6 +7,7 @@ import { TokenCard } from './TokenCard'
 const HEAD = 'grid grid-cols-[40px_minmax(200px,2.2fr)_1fr_repeat(5,minmax(76px,.8fr))_120px] gap-2.5 px-3 text-[11px] font-semibold tracking-[.06em] text-muted'
 
 export function ElevationPage() {
+  const openExport = useProject((s) => s.openExport)
   const { elevation, addElevation, flashCopied, copied, copyFailed } = useProject()
   const css = toElevationCss(elevation.tokens, elevation.shadow)
 
@@ -15,7 +16,7 @@ export function ElevationPage() {
   }
 
   return (
-    <ElevationLayout exportCount={elevation.tokens.length} onExport={() => downloadText('elevation.css', css)}>
+    <ElevationLayout exportCount={elevation.tokens.length} onExport={() => openExport(['elevation'])}>
       <div className="overflow-x-auto px-7 pb-12 pt-5">
         <div className="flex min-w-[900px] flex-col gap-3">
           <div aria-hidden="true" className={HEAD}>

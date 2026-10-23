@@ -115,7 +115,7 @@ describe('Elevation screen', () => {
     expect(screen.getByText('Enter six hex digits.')).toBeInTheDocument()
   })
 
-  it('copies the CSS and downloads elevation.css', async () => {
+  it('copies the CSS and opens the export settings for Elevation', async () => {
     const write = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })
     const click = vi.fn()
@@ -126,6 +126,6 @@ describe('Elevation screen', () => {
     expect(write.mock.calls[0][0]).toContain('--elevation-xl:')
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
-    expect(click).toHaveBeenCalled()
+    expect(useProject.getState().exportDialog).toMatchObject({ open: true, modules: ['elevation'] })
   })
 })

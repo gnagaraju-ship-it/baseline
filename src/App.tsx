@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { ExportDialog } from './components/ExportDialog'
 import { titleFor } from './lib/titles'
 import { useProject } from './store/project'
 import { ContrastPage } from './modules/contrast/ContrastPage'
@@ -23,6 +24,7 @@ export default function App() {
   }, [pathname])
 
   return (
+    <>
     <Routes>
       <Route path="/" element={<PalettePage />} />
       <Route path="/tokens" element={<TokensPage />} />
@@ -34,5 +36,7 @@ export default function App() {
       <Route path="/elevation" element={<ElevationPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    <ExportDialog />
+    </>
   )
 }

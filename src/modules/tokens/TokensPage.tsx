@@ -1,4 +1,4 @@
-import { copyText, downloadText } from '../../lib/browser'
+import { copyText } from '../../lib/browser'
 import { GROUP_TITLES, toTokenCss, type TokenGroup } from '../../lib/tokens'
 import { useProject } from '../../store/project'
 import { ColourLayout } from '../colour/ColourLayout'
@@ -9,6 +9,7 @@ const GROUPS: TokenGroup[] = ['bg', 'text', 'border']
 const NAMES: Record<string, string> = { primary: 'Primary', secondary: 'Secondary', neutral: 'Neutral', info: 'Info', success: 'Success', caution: 'Caution', warning: 'Warning', critical: 'Critical' }
 
 export function TokensPage() {
+  const openExport = useProject((s) => s.openExport)
   const { palettes, tokens, resolvedCount, missing } = useResolvedTokens()
   const flashCopied = useProject((s) => s.flashCopied)
 
@@ -17,7 +18,7 @@ export function TokensPage() {
   }
 
   return (
-    <ColourLayout current="/tokens" exportCount={resolvedCount} onCopyAll={copyAll} onExport={() => downloadText('semantic-tokens.css', toTokenCss(tokens))}>
+    <ColourLayout current="/tokens" exportCount={resolvedCount} onCopyAll={copyAll} onExport={() => openExport(['ramps', 'semantic'])}>
       <div className="flex flex-col gap-7 px-7 pb-14 pt-5">
         <p className="m-0 text-[13px] text-muted">
           Each token points at a palette step per mode. Click a light or dark value to remap it. Badges show APCA Lc for the best text colour on that token (fills are bold).

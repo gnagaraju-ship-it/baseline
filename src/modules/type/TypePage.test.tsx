@@ -142,7 +142,7 @@ describe('Type scale screen', () => {
     expect(await within(group).findByRole('button', { name: 'Tablet' })).toBeInTheDocument()
   })
 
-  it('shows the specimen on Preview and the CSS on Export, and downloads type.css', async () => {
+  it('shows the specimen on Preview and the CSS on Export, and opens the export settings for Type', async () => {
     const click = vi.fn()
     const create = vi.spyOn(document, 'createElement')
     Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() })
@@ -155,6 +155,6 @@ describe('Type scale screen', () => {
     create.mockRestore()
     HTMLAnchorElement.prototype.click = click
     await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
-    expect(click).toHaveBeenCalled()
+    expect(useProject.getState().exportDialog).toMatchObject({ open: true, modules: ['type'] })
   })
 })

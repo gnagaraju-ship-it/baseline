@@ -1,4 +1,4 @@
-import { copyText, downloadText } from '../../lib/browser'
+import { copyText } from '../../lib/browser'
 import { toCss } from '../../lib/colour'
 import { THRESHOLDS, type Standard } from '../../lib/contrast'
 import { gridColours, scoreFor, thresholdInfo } from '../../lib/contrastGrid'
@@ -12,6 +12,7 @@ const GUIDES: Array<[Standard, string]> = [['apca', 'WCAG 3 · APCA'], ['wcag', 
 const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
 
 export function ContrastPage() {
+  const openExport = useProject((s) => s.openExport)
   const { palettes, rows } = usePalettes()
   const { contrast, setContrastPalette, setContrastStandard, setContrastThreshold, selectContrastCell, flashCopied } = useProject()
   const { standard, cell } = contrast
@@ -32,7 +33,7 @@ export function ContrastPage() {
   const option = (on: boolean) => `rounded-lg border text-left text-[13px] ${on ? 'border-edge bg-surface font-semibold' : 'border-transparent bg-transparent'} text-ink`
 
   return (
-    <ColourLayout current="/contrast" exportCount={rows.length} onCopyAll={copyAll} onExport={() => downloadText('tokens.css', toCss(rows))}>
+    <ColourLayout current="/contrast" exportCount={rows.length} onCopyAll={copyAll} onExport={() => openExport(['ramps'])}>
       <div className="flex flex-col gap-5 px-7 pb-12 pt-5">
         <div role="group" aria-label="Palette" className="flex flex-wrap gap-2">
           {palettes.map((p) => {

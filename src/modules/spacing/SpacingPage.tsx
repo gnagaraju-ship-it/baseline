@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { downloadText } from '../../lib/browser'
 import { BREAKPOINTS } from '../../lib/grid'
 import {
   barWidth, formatSpacing, onValues, parseCustom, scaleSteps, spacingBreakpoints, spacingTokens, toSpacingCss
@@ -11,6 +10,7 @@ const card = 'flex flex-col rounded-[14px] border border-line px-6 py-5'
 const head = 'text-[11px] font-semibold tracking-[.08em] text-muted'
 
 export function SpacingPage() {
+  const openExport = useProject((s) => s.openExport)
   const { spacing, grid, unit, toggleSpacingStep, addSpacingValue } = useProject()
   const [draft, setDraft] = useState('')
   const [invalid, setInvalid] = useState(false)
@@ -32,7 +32,7 @@ export function SpacingPage() {
   }
 
   return (
-    <SpacingLayout css={spacingCss} exportCount={enabled.length} onExport={() => downloadText('spacing.css', spacingCss)}>
+    <SpacingLayout css={spacingCss} exportCount={enabled.length} onExport={() => openExport(['spacing'])}>
       <div className="flex flex-col gap-5 px-7 pb-12 pt-6">
         <section aria-label="Scale" className={`${card} gap-4`}>
           <div>

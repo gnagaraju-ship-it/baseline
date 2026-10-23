@@ -19,7 +19,9 @@ export interface ExportInput {
   elevation: ElevationSettings
 }
 
-export interface ExportSection { title: string; css: string; count: number }
+export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' | 'elevation'
+
+export interface ExportSection { id: ExportModule; title: string; css: string; count: number }
 
 export function exportSections(s: ExportInput): ExportSection[] {
   const palettes = buildPalettes(s.settings)
@@ -32,12 +34,12 @@ export function exportSections(s: ExportInput): ExportSection[] {
   const spaceGroups = spacingTokens(s.grid, spacingBreakpoints(s.spacing, s.grid), enabled)
 
   return [
-    { title: 'Colour: palette ramps', css: toCss(rows), count: rows.length },
-    { title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens), count: resolved.resolvedCount },
-    { title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform)), count: countRows(typeGroups) },
-    { title: 'Grids', css: toGridCss(s.grid), count: Object.values(s.grid.on).filter(Boolean).length },
-    { title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },
-    { title: 'Elevation', css: toElevationCss(s.elevation.tokens, s.elevation.shadow), count: s.elevation.tokens.length }
+    { id: 'ramps', title: 'Colour: palette ramps', css: toCss(rows), count: rows.length },
+    { id: 'semantic', title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens), count: resolved.resolvedCount },
+    { id: 'type', title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform)), count: countRows(typeGroups) },
+    { id: 'grids', title: 'Grids', css: toGridCss(s.grid), count: Object.values(s.grid.on).filter(Boolean).length },
+    { id: 'spacing', title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },
+    { id: 'elevation', title: 'Elevation', css: toElevationCss(s.elevation.tokens, s.elevation.shadow), count: s.elevation.tokens.length }
   ]
 }
 
