@@ -2,6 +2,8 @@
  * Type scale maths. Ported from WEB, APPLE, modern, WEB_PRESETS, RATIOS, makeRow, fmtSize, trLabel and
  * the CSS builder in html/typography.html.
  */
+import { responsiveBlocks } from './breakpointCss'
+
 export type Unit = 'rem' | 'px' | 'pt'
 export type PlatformIndex = 0 | 1 | 2 | 3
 export type AppleStyle = 'hig' | 'modern'
@@ -178,21 +180,40 @@ export function typeFonts(s: TypeSettings): { heading: string; body: string } {
   return isWeb(s.platform) ? { heading: s.headingFont, body: s.bodyFont } : { heading: 'SF Pro Display', body: 'SF Pro Text' }
 }
 
-export function toTypeCss(groups: TypeGroup[], web: boolean, fonts?: { heading: string; body: string }): string {
+/** The declarations that change with the breakpoint: size, line height and tracking of every step. */
+function typeResponsiveLines(groups: TypeGroup[], web: boolean): string[] {
+  return groups.flatMap((g) =>
+    g.rows.flatMap((r) => [
+      `  --type-${r.name}-size: ${web ? `${(r.size / 16).toFixed(3)}rem` : `${r.size}px`};`,
+      `  --type-${r.name}-line: ${r.lh}px;`,
+      `  --type-${r.name}-track: ${r.tr}em;`
+    ])
+  )
+}
+
+/** Declarations that stay the same at every breakpoint: fonts, family, weight and variant weights. */
+function typeFixedLines(groups: TypeGroup[], fonts?: { heading: string; body: string }): string[] {
   const lines: string[] = []
   if (fonts) lines.push(`  --type-font-heading: ${fontStack(fonts.heading)};`, `  --type-font-body: ${fontStack(fonts.body)};`)
   for (const g of groups) {
     for (const r of g.rows) {
       if (fonts) lines.push(`  --type-${r.name}-family: var(--type-font-${r.font});`, `  --type-${r.name}-weight: ${r.weight};`)
-      lines.push(
-        `  --type-${r.name}-size: ${web ? `${(r.size / 16).toFixed(3)}rem` : `${r.size}px`};`,
-        `  --type-${r.name}-line: ${r.lh}px;`,
-        `  --type-${r.name}-track: ${r.tr}em;`
-      )
       for (const v of r.variants) lines.push(`  --type-${v.name}-weight: ${v.weight};`)
     }
   }
-  return `:root {\n${lines.join('\n')}\n}`
+  return lines
+}
+
+/**
+ * Type tokens as CSS. With `byBreakpoint`, sizes, line heights and tracking follow the breakpoint (mobile first, with
+ * media queries at the MD and XXL widths); without it, the given groups are written once.
+ */
+export function toTypeCss(groups: TypeGroup[], web: boolean, fonts?: { heading: string; body: string }, byBreakpoint?: Record<'xxl' | 'md' | 'xs', TypeGroup[]>): string {
+  const fixed = typeFixedLines(groups, fonts)
+  const per = byBreakpoint
+    ? { xxl: typeResponsiveLines(byBreakpoint.xxl, web), md: typeResponsiveLines(byBreakpoint.md, web), xs: typeResponsiveLines(byBreakpoint.xs, web) }
+    : (() => { const l = typeResponsiveLines(groups, web); return { xxl: l, md: l, xs: l } })()
+  return responsiveBlocks(fixed, per)
 }
 
 const SPECIMEN = {

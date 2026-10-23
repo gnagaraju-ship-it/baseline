@@ -1,6 +1,7 @@
 /**
  * Column grid maths. Ported from BPS, PRESETS, fmt and the renderVals maths in html/grids.html.
  */
+import { responsiveBlocks } from './breakpointCss'
 import type { Unit } from './typeScale'
 
 export type BreakpointKey = 'xxl' | 'md' | 'xs'
@@ -164,5 +165,13 @@ export function toGridCss(s: GridSettings): string {
       `  --grid-${bp.key}-column: ${+l.column.toFixed(2)}px;`
     )
   }
-  return `:root {\n${lines.join('\n')}\n}`
+  const fixed = `:root {\n${lines.join('\n')}\n}`
+  // The same layout as plain variables that follow the breakpoint (mobile first), for use in components.
+  const per = Object.fromEntries(
+    BREAKPOINTS.map((bp) => {
+      const l = computeGrid(s, bp.key)
+      return [bp.key, [`  --grid-columns: ${l.columns};`, `  --grid-gutter: ${l.gutter}px;`, `  --grid-margin: ${l.margin}px;`, `  --grid-sidebar: ${l.sidebarWidth}px;`]]
+    })
+  ) as Record<BreakpointKey, string[]>
+  return `${fixed}\n\n${responsiveBlocks([], per)}`
 }

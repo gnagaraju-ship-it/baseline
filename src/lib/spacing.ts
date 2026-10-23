@@ -1,6 +1,7 @@
 /**
  * Spacing scale and tokens. Ported from BASES, TOKENS, initOn, fmt and renderVals in html/spacing.html.
  */
+import { responsiveBlocks } from './breakpointCss'
 import { BREAKPOINTS, computeGrid, type BreakpointKey, type GridSettings } from './grid'
 import type { Unit } from './typeScale'
 
@@ -101,5 +102,12 @@ export function barWidth(px: number): number {
 export function toSpacingCss(enabled: number[], groups: TokenGroup[]): string {
   const lines = enabled.map((v) => `  --space-${v}: ${v}px;`)
   for (const g of groups) for (const r of g.rows) for (const c of r.cells) lines.push(`  --${r.name}-${c.bp}: ${c.value}px;`)
-  return `:root {\n${lines.join('\n')}\n}`
+  const fixed = `:root {\n${lines.join('\n')}\n}`
+  // The same tokens as plain variables that follow the breakpoint (mobile first). A breakpoint without its own value
+  // uses the nearest larger one.
+  const rows = groups.flatMap((g) => g.rows).filter((r) => r.cells.length)
+  if (!rows.length) return fixed
+  const at = (r: TokenRowData, k: BreakpointKey) => (r.cells.find((c) => c.bp === k) ?? r.cells.find((c) => c.bp === 'xxl') ?? r.cells[0]).value
+  const per = Object.fromEntries(BREAKPOINTS.map((bp) => [bp.key, rows.map((r) => `  --${r.name}: ${at(r, bp.key)}px;`)])) as Record<BreakpointKey, string[]>
+  return `${fixed}\n\n${responsiveBlocks([], per)}`
 }

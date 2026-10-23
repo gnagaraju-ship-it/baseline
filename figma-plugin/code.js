@@ -1,6 +1,11 @@
 // Baseline: Import tokens.
-// Reads the design tokens JSON exported from Baseline and creates Figma Variables (Primitives, Semantic with
-// Light and Dark modes, Type, Grid, Spacing) and effect styles (Elevation). Importing again updates in place.
+// Reads the design tokens JSON exported from Baseline and creates Figma Variables and styles:
+//   Primitives  colour ramps                    (one mode)
+//   Semantic    colour tokens                   (modes Light and Dark)
+//   Type        font families and weights       (one mode)
+//   Responsive  type sizes, grid, spacing       (modes XXL, MD and XS, one value per breakpoint)
+//   Spacing     the spacing scale               (one mode)
+// plus text styles (Type) and effect styles (Elevation). Importing again updates in place.
 
 figma.showUI(__html__, { width: 440, height: 560, themeColors: true });
 
@@ -8,10 +13,12 @@ var COLLECTIONS = {
   Primitives: ['Value'],
   Semantic: ['Light', 'Dark'],
   Type: ['Value'],
-  Grid: ['Value'],
+  Responsive: ['XXL', 'MD', 'XS'],
   Spacing: ['Value']
 };
+var BREAKPOINT_MODES = ['XXL', 'MD', 'XS'];
 var ORDER = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing'];
+var RESPONSIVE_TYPE_PARTS = ['size', 'line-height', 'letter-spacing'];
 
 function walk(node, path, out) {
   if (!node || typeof node !== 'object') return;
@@ -25,11 +32,24 @@ function parseColour(text) {
   return { r: n(0), g: n(2), b: n(4), a: h.length >= 8 ? n(6) : 1 };
 }
 
-function varName(path) { return path.slice(1).join('/'); }
+function modesOf(leaf) {
+  var ext = leaf.$extensions && leaf.$extensions['com.figma'];
+  return ext && ext.modes ? ext.modes : null;
+}
+
+// Which collection and variable name a token goes to. Tokens that change by breakpoint live in "Responsive".
+function placement(group, path, leaf) {
+  var p = path.slice(1);
+  var modes = modesOf(leaf);
+  var byBreakpoint = (modes && modes.XXL !== undefined) || (group === 'Type' && RESPONSIVE_TYPE_PARTS.indexOf(p[p.length - 1]) >= 0) || group === 'Grid';
+  if (byBreakpoint) return { collection: 'Responsive', name: group.toLowerCase() + '/' + p.join('/') };
+  return { collection: group, name: p.join('/') };
+}
 
 // Where a variable may be used in Figma's pickers.
 function scopesFor(group, path) {
   if (group === 'Primitives') return [];
+  var p = path.slice(1);
   var last = path[path.length - 1];
   if (group === 'Semantic') {
     if (last.indexOf('text') === 0) return ['TEXT_FILL'];
@@ -37,9 +57,10 @@ function scopesFor(group, path) {
     return ['FRAME_FILL', 'SHAPE_FILL'];
   }
   if (group === 'Type') {
-    if (last === 'family' || path[1] === 'font-family') return ['FONT_FAMILY'];
+    if (last === 'family' || p[0] === 'font-family') return ['FONT_FAMILY'];
     return last === 'size' ? ['FONT_SIZE'] : last === 'line-height' ? ['LINE_HEIGHT'] : last === 'letter-spacing' ? ['LETTER_SPACING'] : last === 'weight' ? ['FONT_WEIGHT'] : ['ALL_SCOPES'];
   }
+  if (group === 'Grid') return last === 'width' ? ['WIDTH_HEIGHT'] : last === 'gutter' || last === 'margin' || last === 'sidebar' || last === 'column' ? ['GAP', 'WIDTH_HEIGHT'] : ['ALL_SCOPES'];
   if (group === 'Spacing') return ['GAP'];
   return ['ALL_SCOPES'];
 }
@@ -55,8 +76,8 @@ function cssName(group, path) {
   if (group === 'Semantic') return '--' + p[1];
   if (group === 'Type' && p[0] === 'font-family') return '--type-font-' + p[1];
   if (group === 'Type') return '--type-' + p[0] + '-' + (p[1] === 'line-height' ? 'line' : p[1] === 'letter-spacing' ? 'track' : p[1]);
-  if (group === 'Grid') return '--grid-' + p[0] + '-' + p[1];
-  if (group === 'Spacing') return p[0] === 'space' ? '--space-' + p[1] : '--' + p[0] + '-' + p[1];
+  if (group === 'Grid') return '--grid-' + p[0];
+  if (group === 'Spacing') return p[0] === 'space' ? '--space-' + p[1] : '--' + p[0];
   return null;
 }
 
@@ -75,20 +96,21 @@ function fontStyleFor(fonts, family, weight) {
   return upright.find(function (x) { return normStyle(x) === 'regular' || normStyle(x) === 'normal'; }) || upright[0] || styles[0];
 }
 
-// Follows {Group.path} aliases inside the document down to a plain value.
-function literal(doc, raw) {
+// Follows {Group.path} aliases inside the document down to a plain value. `mode` picks a breakpoint value.
+function literal(doc, raw, mode) {
   var guard = 0;
   while (typeof raw === 'string' && raw[0] === '{' && guard++ < 10) {
     var node = doc;
     raw.slice(1, -1).split('.').forEach(function (k) { node = node && node[k]; });
-    raw = node && node.$value;
+    var modes = node && modesOf(node);
+    raw = modes && mode && modes[mode] !== undefined ? modes[mode] : node && node.$value;
   }
   return raw;
 }
 
 /**
  * Creates or updates variables and styles for the chosen groups of a design tokens document.
- * Returns { created, updated, styles } counts. Throws a readable Error when the document is not usable.
+ * Returns counts and lists of anything skipped or replaced. Throws a readable Error when the document is not usable.
  */
 async function importTokens(doc, groups) {
   if (!doc || typeof doc !== 'object') throw new Error('This is not a design tokens file.');
@@ -98,8 +120,9 @@ async function importTokens(doc, groups) {
 
   var collections = await figma.variables.getLocalVariableCollectionsAsync();
   var variables = await figma.variables.getLocalVariablesAsync();
-  var created = 0, updated = 0, styles = 0, replaced = [];
+  var created = 0, updated = 0, styles = 0, replaced = [], skipped = [];
   var byCollection = {};
+  var placed = {}; // DTCG path ("Type.heading-xl.size") -> variable
 
   async function collectionFor(name) {
     if (byCollection[name]) return byCollection[name];
@@ -142,12 +165,23 @@ async function importTokens(doc, groups) {
     return v;
   }
 
-  function valueFor(type, raw) {
+  // The variable an alias like {Primitives.colour.neutral.3} points at: made in this run, or already in the file.
+  function aliasTarget(ref) {
+    var key = ref.slice(1, -1);
+    if (placed[key]) return placed[key];
+    var path = key.split('.');
+    var node = doc;
+    path.forEach(function (k) { node = node && node[k]; });
+    if (!node || !('$value' in node)) return null;
+    var where = placement(path[0], path, node);
+    var c = collections.find(function (x) { return x.name === where.collection; });
+    return c ? findVariable(c, where.name) : null;
+  }
+
+  function resolve(type, raw) {
     if (typeof raw === 'string' && raw[0] === '{') {
-      var ref = raw.slice(1, -1).split('.');
-      var group = byCollection[ref[0]];
-      var target = group && findVariable(group, ref.slice(1).join('/'));
-      if (!target) throw new Error('Missing variable for ' + raw + '. Import the Primitives group together with Semantic.');
+      var target = aliasTarget(raw);
+      if (!target) throw new Error('Missing variable for ' + raw + '. Import the group it points at together with this one.');
       return figma.variables.createVariableAlias(target);
     }
     if (type === 'color') return parseColour(raw);
@@ -157,67 +191,77 @@ async function importTokens(doc, groups) {
 
   function isNumber(value) { return typeof value === 'number' && isFinite(value); }
 
-  // The file stores letter spacing in em. A variable bound to a text style is read in pixels, so it is stored as em x font size.
-  function isTracking(path) { return path[path.length - 1] === 'letter-spacing'; }
-  function trackingPx(path, em) {
-    var step = doc.Type && doc.Type[path[1]];
-    var size = step && step.size ? parseFloat(literal(doc, step.size.$value)) : NaN;
+  // Letter spacing is stored in em in the file. A variable bound to a text style is read in pixels, so it holds em x font size
+  // for that breakpoint.
+  function trackingPx(step, em, mode) {
+    var size = NaN;
+    var token = doc.Type && doc.Type[step] && doc.Type[step].size;
+    if (token) {
+      var byMode = modesOf(token);
+      size = parseFloat(literal(doc, byMode && byMode[mode] !== undefined ? byMode[mode] : token.$value, mode));
+    }
     if (!isFinite(size)) size = 16; // no readable size for this step: fall back to a 16px text
     return Math.round(em * size * 1000) / 1000;
   }
 
   // Semantic values alias the primitives. If only Semantic is chosen, the primitives must already be in the file.
-  if (wanted.indexOf('Semantic') >= 0 && wanted.indexOf('Primitives') < 0) {
-    var existingPrimitives = collections.find(function (x) { return x.name === 'Primitives'; });
-    if (!existingPrimitives) throw new Error('Semantic tokens need the Primitives variables. Import the Primitives group too.');
-    byCollection.Primitives = existingPrimitives;
+  if (wanted.indexOf('Semantic') >= 0 && wanted.indexOf('Primitives') < 0 && !collections.find(function (x) { return x.name === 'Primitives'; })) {
+    throw new Error('Semantic tokens need the Primitives variables. Import the Primitives group too.');
   }
-
-  var skipped = [];
-  function ext0(leaf) { return leaf.$extensions && leaf.$extensions['com.figma']; }
 
   for (var g = 0; g < wanted.length; g++) {
     var group = wanted[g];
-    var c = await collectionFor(group);
     var items = [];
     walk(doc[group], [group], items);
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       var type = it.leaf.$type;
       if (type === 'shadow') continue;
-      var name = varName(it.path);
-      // A number that cannot be read is reported by name and skipped, instead of stopping the whole import.
-      var checked = null;
-      if (type !== 'color' && type !== 'fontFamily' && !(ext0(it.leaf) && ext0(it.leaf).modes)) {
-        var raw0 = it.leaf.$value;
-        var isAlias = typeof raw0 === 'string' && raw0[0] === '{';
-        checked = isAlias ? true : isNumber(valueFor(type, raw0));
-        if (!checked) { skipped.push(group + '/' + name + ' (' + JSON.stringify(raw0) + ')'); continue; }
+      var where = placement(group, it.path, it.leaf);
+      var c = await collectionFor(where.collection);
+      var modes = modesOf(it.leaf);
+      var isTracking = group === 'Type' && it.path[it.path.length - 1] === 'letter-spacing';
+      var isResponsive = where.collection === 'Responsive';
+
+      // The value for each mode of the collection.
+      var perMode = {};
+      var bad = null;
+      var modeNames = isResponsive ? BREAKPOINT_MODES : modes ? Object.keys(modes) : [COLLECTIONS[where.collection][0]];
+      for (var mi = 0; mi < modeNames.length; mi++) {
+        var mode = modeNames[mi];
+        var raw = modes && modes[mode] !== undefined ? modes[mode] : it.leaf.$value;
+        var value;
+        if (type !== 'color' && type !== 'fontFamily' && !(typeof raw === 'string' && raw[0] === '{')) {
+          value = resolve(type, raw);
+          if (isTracking && isNumber(value)) value = trackingPx(it.path[1], value, mode);
+          if (!isNumber(value)) { bad = raw; break; }
+        } else {
+          value = resolve(type, raw);
+        }
+        perMode[mode] = value;
       }
-      var v = upsert(c, name, type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
+      // A number that cannot be read is reported by name and skipped, instead of stopping the whole import.
+      if (bad !== null) { skipped.push(where.collection + '/' + where.name + ' (' + JSON.stringify(bad) + ')'); continue; }
+
+      var v = upsert(c, where.name, type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
+      placed[it.path.join('.')] = v;
       if (it.leaf.$description) v.description = it.leaf.$description === 'em' ? 'px = em x font size' : it.leaf.$description;
       try { v.scopes = scopesFor(group, it.path); } catch (e) {}
       var css = cssName(group, it.path);
       if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (e) {} }
-      var ext = it.leaf.$extensions && it.leaf.$extensions['com.figma'];
-      if (ext && ext.modes) {
-        Object.keys(ext.modes).forEach(function (m) { v.setValueForMode(modeId(c, m), valueFor(type, ext.modes[m])); });
-      } else {
-        var value = valueFor(type, it.leaf.$value);
-        if (isTracking(it.path) && group === 'Type' && typeof value === 'number') value = trackingPx(it.path, value);
+      Object.keys(perMode).forEach(function (m) {
         try {
-          v.setValueForMode(modeId(c, COLLECTIONS[group][0]), value);
+          v.setValueForMode(modeId(c, m), perMode[m]);
         } catch (e) {
-          throw new Error(group + '/' + name + ': ' + (e && e.message ? e.message : e));
+          throw new Error(where.collection + '/' + where.name + ': ' + (e && e.message ? e.message : e));
         }
-      }
+      });
     }
   }
 
   // Text styles: one per type step (and weight variant), using the font, bound to the variables above.
   var textStyles = 0, missingFonts = [];
   if (wanted.indexOf('Type') >= 0) {
-    var typeCollection = byCollection.Type;
     var fonts = await figma.listAvailableFontsAsync();
     var existingTextStyles = await figma.getLocalTextStylesAsync();
     var steps = Object.keys(doc.Type).filter(function (k) { return k !== 'font-family' && doc.Type[k].size && doc.Type[k].family; });
@@ -231,12 +275,13 @@ async function importTokens(doc, groups) {
       var ts = existingTextStyles.find(function (x) { return x.name === 'type/' + step; });
       if (!ts) { ts = figma.createTextStyle(); ts.name = 'type/' + step; existingTextStyles.push(ts); }
       ts.fontName = fontName;
-      ts.fontSize = parseFloat(literal(doc, t.size.$value));
-      ts.lineHeight = { unit: 'PIXELS', value: parseFloat(literal(doc, t['line-height'].$value)) };
+      // The style starts at the largest breakpoint; the bound variables switch it with the frame's XXL / MD / XS mode.
+      ts.fontSize = parseFloat(literal(doc, t.size.$value, 'XXL'));
+      ts.lineHeight = { unit: 'PIXELS', value: parseFloat(literal(doc, t['line-height'].$value, 'XXL')) };
       var em = Number(literal(doc, t['letter-spacing'].$value));
-      ts.letterSpacing = { unit: 'PIXELS', value: trackingPx(['Type', step], isFinite(em) ? em : 0) };
+      ts.letterSpacing = { unit: 'PIXELS', value: trackingPx(step, isFinite(em) ? em : 0, 'XXL') };
       [['fontSize', 'size'], ['lineHeight', 'line-height'], ['letterSpacing', 'letter-spacing'], ['fontFamily', 'family'], ['fontWeight', 'weight']].forEach(function (pair) {
-        var bound = findVariable(typeCollection, step + '/' + pair[1]);
+        var bound = placed['Type.' + step + '.' + pair[1]] || aliasTarget('{Type.' + step + '.' + pair[1] + '}');
         if (bound) { try { ts.setBoundVariable(pair[0], bound); } catch (e) {} }
       });
       textStyles++;

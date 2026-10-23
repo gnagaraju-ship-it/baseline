@@ -4,11 +4,12 @@
  * $extensions["com.figma"].modes because the DTCG format has no modes of its own.
  */
 import { buildPalettes, norm, withAlpha } from './colour'
-import { computeGrid, BREAKPOINTS } from './grid'
+import { BREAKPOINTS, type BreakpointKey } from './grid'
 import type { ExportInput } from './exportAll'
 import { onValues, scaleSteps, spacingBreakpoints, spacingTokens } from './spacing'
 import { ALPHA, resolveAll, type ResolvedCell } from './tokens'
-import { computeGroups, isWeb, typeFonts, withGridBreakpoints } from './typeScale'
+import { gridByBreakpoint, typeByBreakpoint, type ByBreakpoint } from './responsive'
+import { isWeb, typeFonts, withGridBreakpoints } from './typeScale'
 
 type Json = Record<string, unknown>
 
@@ -64,42 +65,59 @@ export function buildFigmaTokens(input: ExportInput): Json {
     }
   }
 
+  // Values that change by breakpoint carry Figma modes XXL, MD and XS, the way Semantic colours carry Light and Dark.
+  const byBp = typeByBreakpoint(input.type, input.grid)
   const type = withGridBreakpoints(input.type, input.grid.on.md, input.grid.on.xs)
+  const modes = (v: ByBreakpoint<string | number>) => ({ 'com.figma': { modes: { XXL: v.xxl, MD: v.md, XS: v.xs } } })
+  const rowAt = (bp: BreakpointKey, name: string) => byBp[bp].flatMap((g) => g.rows).find((r) => r.name === name)!
+  const responsiveDimension = (name: string, pick: (r: ReturnType<typeof rowAt>) => number) => ({
+    $type: 'dimension',
+    $value: px(pick(rowAt('xxl', name))),
+    $extensions: modes({ xxl: px(pick(rowAt('xxl', name))), md: px(pick(rowAt('md', name))), xs: px(pick(rowAt('xs', name))) })
+  })
+
   // Fonts are named once under font-family; every step points at its role, so changing the font changes the scale.
   const fonts = typeFonts(type)
   const typeTokens: Json = {
     'font-family': { heading: { $type: 'fontFamily', $value: fonts.heading }, body: { $type: 'fontFamily', $value: fonts.body } }
   }
-  for (const g of computeGroups(type)) {
+  for (const g of byBp.xxl) {
     for (const r of g.rows) {
       typeTokens[r.name] = {
         family: { $type: 'fontFamily', $value: `{Type.font-family.${r.font}}` },
         weight: { $type: 'fontWeight', $value: r.weight },
-        size: dimension(r.size),
-        'line-height': dimension(r.lh),
+        size: responsiveDimension(r.name, (x) => x.size),
+        'line-height': responsiveDimension(r.name, (x) => x.lh),
         'letter-spacing': { $type: 'number', $value: r.tr, $description: 'em' }
       }
       // A weight variant is a full text style: the same size, line height and tracking at another weight.
+      const same = (k: string) => modes({ xxl: `{Type.${r.name}.${k}}`, md: `{Type.${r.name}.${k}}`, xs: `{Type.${r.name}.${k}}` })
       for (const v of r.variants) {
         typeTokens[v.name] = {
           family: { $type: 'fontFamily', $value: `{Type.font-family.${r.font}}` },
           weight: { $type: 'fontWeight', $value: v.weight },
-          size: { $type: 'dimension', $value: `{Type.${r.name}.size}` },
-          'line-height': { $type: 'dimension', $value: `{Type.${r.name}.line-height}` },
+          size: { $type: 'dimension', $value: `{Type.${r.name}.size}`, $extensions: same('size') },
+          'line-height': { $type: 'dimension', $value: `{Type.${r.name}.line-height}`, $extensions: same('line-height') },
           'letter-spacing': { $type: 'number', $value: `{Type.${r.name}.letter-spacing}`, $description: 'em' }
         }
       }
     }
   }
 
-  const grid: Json = {}
-  for (const bp of BREAKPOINTS) {
-    if (!input.grid.on[bp.key]) continue
-    const l = computeGrid(input.grid, bp.key)
-    grid[bp.key] = {
-      width: dimension(bp.width), columns: { $type: 'number', $value: l.columns }, gutter: dimension(l.gutter),
-      margin: dimension(l.margin), sidebar: dimension(l.sidebarWidth), column: dimension(l.column)
-    }
+  const layouts = gridByBreakpoint(input.grid)
+  const gridMode = (kind: 'dimension' | 'number', pick: (l: (typeof layouts)['xxl']) => number, bpValue?: (k: BreakpointKey) => number): Json => {
+    const val = (k: BreakpointKey) => (kind === 'dimension' ? px(bpValue ? bpValue(k) : pick(layouts[k])) : (bpValue ? bpValue(k) : pick(layouts[k])))
+    return { $type: kind, $value: val('xxl'), $extensions: modes({ xxl: val('xxl'), md: val('md'), xs: val('xs') }) }
+  }
+  const widths: ByBreakpoint<number> = { xxl: 1400, md: 768, xs: 390 }
+  for (const bp of BREAKPOINTS) widths[bp.key] = bp.width
+  const grid: Json = {
+    width: gridMode('dimension', () => 0, (k) => widths[k]),
+    columns: gridMode('number', (l) => l.columns),
+    gutter: gridMode('dimension', (l) => l.gutter),
+    margin: gridMode('dimension', (l) => l.margin),
+    sidebar: gridMode('dimension', (l) => l.sidebarWidth),
+    column: gridMode('dimension', (l) => l.column)
   }
 
   const steps = scaleSteps(input.spacing.base, input.spacing.extra)
@@ -109,9 +127,10 @@ export function buildFigmaTokens(input: ExportInput): Json {
   const spacing: Json = { space }
   for (const g of spacingTokens(input.grid, spacingBreakpoints(input.spacing, input.grid), enabled)) {
     for (const r of g.rows) {
-      const perBp: Json = {}
-      for (const c of r.cells) perBp[c.bp] = dimension(c.value)
-      spacing[r.name] = perBp
+      if (!r.cells.length) continue
+      // A breakpoint without its own value (switched off) uses the nearest larger one.
+      const at = (k: BreakpointKey) => (r.cells.find((c) => c.bp === k) ?? r.cells.find((c) => c.bp === 'xxl') ?? r.cells[0]).value
+      spacing[r.name] = { $type: 'dimension', $value: px(at('xxl')), $extensions: modes({ xxl: px(at('xxl')), md: px(at('md')), xs: px(at('xs')) }) }
     }
   }
 

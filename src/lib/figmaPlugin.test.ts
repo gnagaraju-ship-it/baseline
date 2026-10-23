@@ -119,15 +119,15 @@ describe('plugin import', () => {
     await p.send({ type: 'import', doc: p.doc, groups: ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation'] })
     const done = p.posted.find((m) => m.type === 'done')
     expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
-    expect(p.collections.map((c) => c.name)).toEqual(['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing'])
+    expect(p.collections.map((c) => c.name)).toEqual(['Primitives', 'Semantic', 'Type', 'Responsive', 'Spacing'])
     const count = (name: string) => p.variables.filter((v) => v.variableCollectionId === p.collections.find((c) => c.name === name).id).length
     expect(count('Primitives')).toBe(112 + 32)
     expect(count('Semantic')).toBe(58)
-    expect(count('Type')).toBe(2 + 11 * 5)
-    expect(count('Grid')).toBe(18)
-    expect(count('Spacing')).toBe(17 + 36)
+    expect(count('Type')).toBe(2 + 11 * 2)
+    expect(count('Responsive')).toBe(11 * 3 + 6 + 12)
+    expect(count('Spacing')).toBe(17)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [] })
+    expect(done.result).toEqual({ created: 144 + 58 + 24 + 51 + 17, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [] })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -149,7 +149,7 @@ describe('plugin import', () => {
 
   it('sets scopes, CSS names, descriptions and colour values', async () => {
     const p = loadPlugin()
-    await p.send({ type: 'import', doc: p.doc, groups: ['Primitives', 'Semantic', 'Type', 'Spacing'] })
+    await p.send({ type: 'import', doc: p.doc, groups: ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing'] })
     const v = (n: string) => p.variables.find((x) => x.name === n)
     expect(v('colour/primary/10').scopes).toEqual([])
     expect(v('colour/primary/10').codeSyntax.WEB).toBe('var(--primary-10)')
@@ -158,13 +158,14 @@ describe('plugin import', () => {
     expect(v('colour/text').scopes).toEqual(['TEXT_FILL'])
     expect(v('colour/border-brand').scopes).toEqual(['STROKE_COLOR'])
     expect(v('colour/bg-fill').scopes).toEqual(['FRAME_FILL', 'SHAPE_FILL'])
-    expect(v('heading-xl/size').scopes).toEqual(['FONT_SIZE'])
-    expect(v('heading-xl/size').codeSyntax.WEB).toBe('var(--type-heading-xl-size)')
-    expect(v('heading-xl/line-height').codeSyntax.WEB).toBe('var(--type-heading-xl-line)')
-    expect(v('heading-xl/letter-spacing').description).toBe('px = em x font size')
+    expect(v('type/heading-xl/size').scopes).toEqual(['FONT_SIZE'])
+    expect(v('type/heading-xl/size').codeSyntax.WEB).toBe('var(--type-heading-xl-size)')
+    expect(v('type/heading-xl/line-height').codeSyntax.WEB).toBe('var(--type-heading-xl-line)')
+    expect(v('type/heading-xl/letter-spacing').description).toBe('px = em x font size')
     expect(v('space/24').scopes).toEqual(['GAP'])
     expect(v('space/24').codeSyntax.WEB).toBe('var(--space-24)')
-    expect(v('stack-md/xxl').codeSyntax.WEB).toBe('var(--stack-md-xxl)')
+    expect(v('spacing/stack-md').codeSyntax.WEB).toBe('var(--stack-md)')
+    expect(v('grid/columns').codeSyntax.WEB).toBe('var(--grid-columns)')
     expect(v('colour/black-alpha/5').codeSyntax.WEB).toBeUndefined()
   })
 
@@ -189,13 +190,38 @@ describe('plugin import', () => {
     expect(v('body-md/weight').codeSyntax.WEB).toBe('var(--type-body-md-weight)')
   })
 
-  it('stores letter spacing as pixels (em x font size), the way Figma reads a bound variable', async () => {
+  it('stores letter spacing as pixels (em x font size) for each breakpoint, the way Figma reads a bound variable', async () => {
     const p = loadPlugin()
     await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
-    const px = (n: string) => Object.values(p.variables.find((x) => x.name === n)!.valuesByMode)[0]
-    expect(px('heading-xl/letter-spacing')).toBeCloseTo(-0.25, 3)
-    expect(px('label-xs/letter-spacing')).toBeCloseTo(0.1, 3)
-    expect(px('body-md/letter-spacing')).toBe(0)
+    const resp = p.collections.find((c) => c.name === 'Responsive')
+    const at = (n: string, mode: string) => p.variables.find((x) => x.name === n)!.valuesByMode[resp.modes.find((m: any) => m.name === mode).modeId] as number
+    expect(at('type/heading-xl/letter-spacing', 'XXL')).toBeCloseTo(-0.25, 3)
+    expect(at('type/heading-xl/letter-spacing', 'MD')).toBeCloseTo(-0.23, 3)
+    expect(at('type/heading-xl/letter-spacing', 'XS')).toBeCloseTo(-0.21, 3)
+    expect(at('type/label-xs/letter-spacing', 'XS')).toBeCloseTo(0.1, 3)
+    expect(at('type/body-md/letter-spacing', 'MD')).toBe(0)
+  })
+
+  it('puts type sizes, grid and spacing in one Responsive collection with a value for XXL, MD and XS', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type', 'Grid', 'Spacing'] })
+    const resp = p.collections.find((c) => c.name === 'Responsive')
+    expect(resp.modes.map((m: any) => m.name)).toEqual(['XXL', 'MD', 'XS'])
+    const values = (n: string) => resp.modes.map((m: any) => p.variables.find((x) => x.name === n)!.valuesByMode[m.modeId])
+    // headings shrink by the Tablet (-8%) and Mobile (-15%) settings, body text does not
+    expect(values('type/heading-xl/size')).toEqual([25, 23, 21])
+    expect(values('type/heading-xl/line-height')).toEqual([32, 24, 24])
+    expect(values('type/body-md/size')).toEqual([14, 14, 14])
+    expect(values('grid/width')).toEqual([1400, 768, 390])
+    expect(values('grid/columns')).toEqual([12, 8, 4])
+    expect(values('grid/gutter')).toEqual([24, 16, 16])
+    expect(values('grid/sidebar')).toEqual([272, 72, 0])
+    expect(values('spacing/stack-md')).toEqual([16, 16, 12])
+    expect(values('spacing/section-y')).toEqual([96, 64, 48])
+    // the spacing scale itself and the fonts are single-mode collections
+    expect(p.collections.find((c) => c.name === 'Spacing').modes).toHaveLength(1)
+    expect(p.collections.find((c) => c.name === 'Type').modes).toHaveLength(1)
+    expect(p.variables.find((x) => x.name === 'space/24')!.variableCollectionId).toBe(p.collections.find((c) => c.name === 'Spacing').id)
   })
 
   it('creates one text style per step with the right font style, size, line height and bound variables', async () => {
@@ -208,7 +234,9 @@ describe('plugin import', () => {
     expect(heading.lineHeight).toEqual({ unit: 'PIXELS', value: 32 })
     expect(heading.letterSpacing).toEqual({ unit: 'PIXELS', value: -0.25 })
     expect(Object.keys(heading.bound).sort()).toEqual(['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight'])
-    expect(heading.bound.fontSize).toBe(p.variables.find((x) => x.name === 'heading-xl/size').id)
+    expect(heading.bound.fontSize).toBe(p.variables.find((x) => x.name === 'type/heading-xl/size').id)
+    expect(heading.bound.lineHeight).toBe(p.variables.find((x) => x.name === 'type/heading-xl/line-height').id)
+    expect(heading.bound.fontFamily).toBe(p.variables.find((x) => x.name === 'heading-xl/family').id)
     expect(p.textStyles.find((t) => t.name === 'type/body-md').fontName).toEqual({ family: 'Nunito', style: 'Regular' })
     expect(p.loaded.length).toBeGreaterThanOrEqual(11)
     expect(p.posted.at(-1).result).toMatchObject({ textStyles: 11, missingFonts: [] })
@@ -225,8 +253,9 @@ describe('plugin import', () => {
     expect(body.lineHeight).toEqual({ unit: 'PIXELS', value: 24 })
     const heading = p.textStyles.find((t) => t.name === 'type/heading-md-semibold')
     expect(heading.fontName).toEqual({ family: 'Raleway', style: 'SemiBold' })
-    const alias = Object.values(p.variables.find((x) => x.name === 'body-md-semibold/size')!.valuesByMode)[0] as any
-    expect(alias).toEqual({ type: 'VARIABLE_ALIAS', id: p.variables.find((x) => x.name === 'body-md/size')!.id })
+    const resp = p.collections.find((c) => c.name === 'Responsive')
+    const variantSize = p.variables.find((x) => x.name === 'type/body-md-semibold/size')!
+    for (const m of resp.modes) expect(variantSize.valuesByMode[m.modeId]).toEqual({ type: 'VARIABLE_ALIAS', id: p.variables.find((x) => x.name === 'type/body-md/size')!.id })
     expect(p.textStyles).toHaveLength(13)
   })
 
@@ -287,7 +316,7 @@ describe('plugin import', () => {
   it('imports only the chosen groups', async () => {
     const p = loadPlugin()
     await p.send({ type: 'import', doc: p.doc, groups: ['Spacing'] })
-    expect(p.collections.map((c) => c.name)).toEqual(['Spacing'])
+    expect(p.collections.map((c) => c.name)).toEqual(['Spacing', 'Responsive'])
     expect(p.styles).toHaveLength(0)
   })
 
@@ -341,15 +370,17 @@ describe('plugin import', () => {
   it('skips a value that is not a number and names it, instead of failing the whole import', async () => {
     const p = loadPlugin()
     const doc = JSON.parse(JSON.stringify(p.doc))
-    doc.Grid.xxl.column.$value = 'NaNpx'
+    doc.Grid.column.$extensions['com.figma'].modes.MD = 'NaNpx'
     doc.Spacing.space['8'].$value = 'abc'
-    doc.Type['body-md'].size.$value = 'NaNpx'
+    const size = doc.Type['body-md'].size
+    size.$value = 'NaNpx'
+    size.$extensions['com.figma'].modes.XXL = 'NaNpx'
     await p.send({ type: 'import', doc, groups: ['Primitives', 'Type', 'Grid', 'Spacing'] })
     expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
     const done = p.posted.at(-1).result
-    expect(done.skipped).toEqual(['Type/body-md/size ("NaNpx")', 'Grid/xxl/column ("NaNpx")', 'Spacing/space/8 ("abc")'])
-    expect(p.variables.find((v) => v.name === 'xxl/column')).toBeUndefined()
-    expect(p.variables.find((v) => v.name === 'xxl/width')).toBeDefined()
+    expect(done.skipped).toEqual(['Responsive/type/body-md/size ("NaNpx")', 'Responsive/grid/column ("NaNpx")', 'Spacing/space/8 ("abc")'])
+    expect(p.variables.find((v) => v.name === 'grid/column')).toBeUndefined()
+    expect(p.variables.find((v) => v.name === 'grid/width')).toBeDefined()
     // no variable was ever given NaN
     for (const v of p.variables) for (const val of Object.values(v.valuesByMode)) if (typeof val === 'number') expect(Number.isNaN(val)).toBe(false)
   })
@@ -359,10 +390,9 @@ describe('plugin import', () => {
     const doc = JSON.parse(JSON.stringify(p.doc))
     delete doc.Type['heading-xl'].size
     await p.send({ type: 'import', doc, groups: ['Type'] })
-    const v = p.variables.find((x) => x.name === 'heading-xl/letter-spacing')!
-    const val = Object.values(v.valuesByMode)[0] as number
-    expect(Number.isFinite(val)).toBe(true)
-    expect(val).toBeCloseTo(-0.16, 3)
+    const resp = p.collections.find((c) => c.name === 'Responsive')
+    const v = p.variables.find((x) => x.name === 'type/heading-xl/letter-spacing')!
+    for (const m of resp.modes) expect(v.valuesByMode[m.modeId]).toBeCloseTo(-0.16, 3)
   })
 
   it('ignores unknown messages and closes on cancel', async () => {

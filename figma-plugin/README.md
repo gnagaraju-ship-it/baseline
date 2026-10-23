@@ -14,9 +14,19 @@ Imports the design tokens JSON exported from Baseline as Figma Variables and sha
 Importing again updates the variables in place instead of duplicating them.
 
 ## What it creates
-- Collection **Primitives**: colour ramps and alpha scales.
-- Collection **Semantic**: Light and Dark modes, linked to the primitives.
-- Collections **Type**, **Grid**, **Spacing**: numbers.
-- Effect styles **elevation/\***: shadows.
+| Collection | Modes | Holds |
+| --- | --- | --- |
+| **Primitives** | Value | Colour ramps and alpha scales |
+| **Semantic** | Light, Dark | Colour tokens, linked to the primitives |
+| **Type** | Value | Heading and body font families, weight of every step |
+| **Responsive** | XXL, MD, XS | Font size and line height of every step, grid (width, columns, gutter, margin, sidebar, column), spacing tokens such as `stack-md` |
+| **Spacing** | Value | The spacing scale (`space/8`, `space/16` ...) |
 
-Variables get Figma scopes and their CSS name (for example `var(--primary-10)`).
+Plus **text styles** `type/heading-xl` ... (bound to the variables above) and **shadow styles** `elevation/...`.
+
+### Responsive layouts in Figma
+Colours switch by setting a frame's **Semantic** mode to Light or Dark. Sizes switch the same way: select a frame (for example one 1400, 768 or 390 wide), open the right panel's **Layout / Variables** section and set the **Responsive** mode to XXL, MD or XS. Every text using a `type/...` style inside that frame takes that breakpoint's size and line height, and anything bound to `grid/...` or `spacing/...` variables takes its value.
+
+The frame widths are the variables `grid/width` (1400, 768, 390 by default).
+
+Variables get Figma scopes and their CSS name (for example `var(--primary-10)`, `var(--type-heading-xl-size)`).

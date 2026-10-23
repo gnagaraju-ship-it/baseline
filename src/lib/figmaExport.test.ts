@@ -70,20 +70,43 @@ describe('figma / DTCG export', () => {
     expect(d.Primitives.colour.neutral).toBeUndefined()
   })
 
-  it('exports type, grid, spacing and elevation', () => {
+  it('exports type, grid, spacing and elevation, with a value per breakpoint as Figma modes', () => {
     const d = doc()
-    expect(d.Type['heading-xl'].size).toEqual({ $type: 'dimension', $value: '25px' })
-    expect(d.Type['heading-xl']['line-height'].$value).toBe('32px')
+    const modes = (t: any) => t.$extensions['com.figma'].modes
+    expect(d.Type['heading-xl'].size).toMatchObject({ $type: 'dimension', $value: '25px' })
+    expect(modes(d.Type['heading-xl'].size)).toEqual({ XXL: '25px', MD: '23px', XS: '21px' })
+    expect(modes(d.Type['heading-xl']['line-height'])).toEqual({ XXL: '32px', MD: '24px', XS: '24px' })
+    expect(modes(d.Type['body-md'].size)).toEqual({ XXL: '14px', MD: '14px', XS: '14px' })
     expect(d.Type['heading-xl']['letter-spacing']).toMatchObject({ $type: 'number', $value: -0.01 })
-    expect(Object.keys(d.Grid)).toEqual(['xxl', 'md', 'xs'])
-    expect(d.Grid.xxl.columns).toEqual({ $type: 'number', $value: 12 })
-    expect(d.Grid.xxl.column.$value).toBe('69.33px')
+    expect(Object.keys(d.Grid)).toEqual(['width', 'columns', 'gutter', 'margin', 'sidebar', 'column'])
+    expect(d.Grid.columns).toMatchObject({ $type: 'number', $value: 12 })
+    expect(modes(d.Grid.columns)).toEqual({ XXL: 12, MD: 8, XS: 4 })
+    expect(modes(d.Grid.width)).toEqual({ XXL: '1400px', MD: '768px', XS: '390px' })
+    expect(modes(d.Grid.sidebar)).toEqual({ XXL: '272px', MD: '72px', XS: '0px' })
+    expect(d.Grid.column.$value).toBe('69.33px')
     expect(d.Spacing.space['24']).toEqual({ $type: 'dimension', $value: '24px' })
-    expect(d.Spacing['stack-md'].xs.$value).toBe('12px')
+    expect(modes(d.Spacing['stack-md'])).toEqual({ XXL: '16px', MD: '16px', XS: '12px' })
     expect(d.Elevation.md).toEqual({
       $type: 'shadow',
       $value: [{ color: '#0000001F', offsetX: '0px', offsetY: '6px', blur: '16px', spread: '0px' }]
     })
+  })
+
+  it('turning off Tablet or Mobile scaling keeps those modes at the desktop size', () => {
+    const i = input()
+    i.type.tablet.on = false
+    i.type.mobile.on = false
+    const m = (buildFigmaTokens(i) as J).Type['heading-xl'].size.$extensions['com.figma'].modes
+    expect(m).toEqual({ XXL: '25px', MD: '25px', XS: '25px' })
+    const j = input()
+    j.type.mobile.pct = -30
+    expect((buildFigmaTokens(j) as J).Type['heading-xl'].size.$extensions['com.figma'].modes.XS).toBe('18px')
+  })
+
+  it('a grid breakpoint switched off in Grids also stops shrinking Type there', () => {
+    const i = input()
+    i.grid.on = { xxl: true, md: false, xs: true }
+    expect((buildFigmaTokens(i) as J).Type['heading-xl'].size.$extensions['com.figma'].modes).toEqual({ XXL: '25px', MD: '25px', XS: '21px' })
   })
 
   it('exports the heading and body fonts once, and every step with family, weight, size, line height and tracking', () => {
@@ -118,6 +141,7 @@ describe('figma / DTCG export', () => {
     expect(v.weight).toEqual({ $type: 'fontWeight', $value: 600 })
     expect(v.family.$value).toBe('{Type.font-family.body}')
     expect(v.size.$value).toBe('{Type.body-md.size}')
+    expect(v.size.$extensions['com.figma'].modes).toEqual({ XXL: '{Type.body-md.size}', MD: '{Type.body-md.size}', XS: '{Type.body-md.size}' })
     expect(v['line-height'].$value).toBe('{Type.body-md.line-height}')
     expect(v['letter-spacing'].$value).toBe('{Type.body-md.letter-spacing}')
   })
@@ -128,15 +152,16 @@ describe('figma / DTCG export', () => {
     expect((buildFigmaTokens(i) as J).Type['body-md-semibold'].weight).toEqual({ $type: 'fontWeight', $value: 600 })
   })
 
-  it('only includes enabled breakpoints and steps, and uses the shadow colour', () => {
+  it('only includes enabled steps, uses the shadow colour, and lets a breakpoint without spacing use the nearest larger value', () => {
     const i = input()
-    i.grid.on = { xxl: true, md: false, xs: true }
+    i.spacing.same = false
+    i.spacing.bp = { xxl: true, md: false, xs: true }
     i.spacing.on[24] = false
     i.elevation.shadow = '#1E3A8A'
     const d = buildFigmaTokens(i) as J
-    expect(Object.keys(d.Grid)).toEqual(['xxl', 'xs'])
     expect(d.Spacing.space['24']).toBeUndefined()
-    expect(d.Spacing['stack-md'].md).toBeUndefined()
+    expect(d.Spacing['stack-md'].$extensions['com.figma'].modes).toEqual({ XXL: '16px', MD: '16px', XS: '12px' })
+    expect(d.Spacing['stack-lg'].$extensions['com.figma'].modes).toEqual({ XXL: '24px', MD: '24px', XS: '16px' })
     expect(d.Elevation.md.$value[0].color).toBe('#1E3A8A1F')
   })
 

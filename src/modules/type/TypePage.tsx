@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { activeView, computeGroups, countRows, isWeb, toTypeCss, typeFonts, withGridBreakpoints, type ViewKey } from '../../lib/typeScale'
 import { useProject } from '../../store/project'
+import { typeByBreakpoint } from '../../lib/responsive'
 import { PreviewView } from './PreviewView'
 import { ScaleView } from './ScaleView'
 import { TypeLayout, type TypeTab } from './TypeLayout'
@@ -16,8 +17,10 @@ export function TypePage() {
   const setTypeView = useProject((s) => s.setTypeView)
   const web = isWeb(type.platform)
   const groups = useMemo(() => computeGroups(type), [type])
+  const grid = useProject((s) => s.grid)
+  const byBreakpoint = useMemo(() => typeByBreakpoint(rawType, grid), [rawType, grid])
   const count = countRows(groups)
-  const css = toTypeCss(groups, web, typeFonts(type))
+  const css = toTypeCss(groups, web, typeFonts(type), byBreakpoint)
   const views = VIEWS.filter(([k]) => k === 'desktop' || (k === 'tablet' ? type.tablet.on : type.mobile.on))
   const current = activeView(type)
 

@@ -95,6 +95,6 @@ describe('formatting and css', () => {
     expect(css).toContain('--stack-md-xxl: 16px;')
     expect(css).toContain('--stack-md-xs: 12px;')
     expect(css).toContain('--grid-gutter-xxl: 24px;')
-    expect(css).not.toContain('-md:')
+    expect(css).not.toContain('--stack-md-md:')
   })
 })
