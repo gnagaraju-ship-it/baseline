@@ -3,6 +3,10 @@ import { Icon } from '../../components/Icon'
 import {
   DEFAULT_HEX,
   DEFAULT_SECONDARY,
+  DEFAULT_TERTIARY,
+  MAX_UTILITY,
+  defaultUtilityHex,
+  nextUtilityId,
   NEUTRAL_PRESETS,
   neutralMini,
   type NeutralPreset,
@@ -30,7 +34,7 @@ function Divider() {
 }
 
 export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: TokenRow[] }) {
-  const { settings, side, setSide, setText, setSecondary, setNeutralPreset, setNeutralEnabled, setSemanticEnabled } = useProject()
+  const { settings, side, setSide, setText, setSecondary, setTertiary, addUtility, setUtilityHex, renameUtility, removeUtility, setNeutralPreset, setNeutralEnabled, setSemanticEnabled } = useProject()
   const neutral = palettes.find((p) => p.key === 'neutral')
 
   return (
@@ -70,14 +74,38 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
               </button>
             </div>
             <ColourField id="f-primary" label="Primary" value={settings.text.primary} fallback={DEFAULT_HEX.primary} invalidMessage="Enter six hex digits, like #9D00D6." onChange={(v) => setText('primary', v)} />
-            {settings.secondary !== null ? (
-              <>
-                <ColourField id="f-secondary" label="Secondary" value={settings.secondary} fallback={DEFAULT_SECONDARY} invalidMessage="Enter six hex digits." onChange={setSecondary} onRemove={() => setSecondary(null)} />
-                <button type="button" disabled title="Tertiary colour — not in v1" className={`${dashed} opacity-60`}>+ Add tertiary</button>
-              </>
+            {settings.secondary != null ? (
+              <ColourField id="f-secondary" label="Secondary" value={settings.secondary} fallback={DEFAULT_SECONDARY} invalidMessage="Enter six hex digits." onChange={setSecondary} onRemove={() => setSecondary(null)} />
             ) : (
               <button type="button" onClick={() => setSecondary('#' + DEFAULT_SECONDARY.toLowerCase())} className={dashed}>+ Add secondary</button>
             )}
+            {settings.tertiary != null ? (
+              <ColourField id="f-tertiary" label="Tertiary" value={settings.tertiary} fallback={DEFAULT_TERTIARY} invalidMessage="Enter six hex digits." onChange={setTertiary} onRemove={() => setTertiary(null)} />
+            ) : (
+              <button type="button" onClick={() => setTertiary('#' + DEFAULT_TERTIARY.toLowerCase())} className={dashed}>+ Add tertiary</button>
+            )}
+            {settings.utility.map((u) => (
+              <ColourField
+                key={u.id}
+                id={`f-utility-${u.id}`}
+                label={u.name}
+                value={u.hex}
+                fallback={defaultUtilityHex(u.id)}
+                invalidMessage="Enter six hex digits."
+                onChange={(v) => setUtilityHex(u.id, v)}
+                onRename={(n) => renameUtility(u.id, n)}
+                onRemove={() => removeUtility(u.id)}
+              />
+            ))}
+            <button
+              type="button"
+              onClick={addUtility}
+              disabled={settings.utility.length >= MAX_UTILITY}
+              title={settings.utility.length >= MAX_UTILITY ? `Up to ${MAX_UTILITY} utility colours` : 'Adds Utility ' + nextUtilityId(settings.utility)}
+              className={`${dashed} disabled:opacity-60`}
+            >
+              + Add utility colour
+            </button>
           </section>
 
           <Divider />

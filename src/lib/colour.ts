@@ -111,6 +111,10 @@ export const DEFAULT_HEX: Record<TextKey, string> = {
 }
 
 export const DEFAULT_SECONDARY = '4852E5'
+export const DEFAULT_TERTIARY = '0EA5A4'
+export const MAX_UTILITY = 8
+/** Starting colours offered to new utility colours, in order. */
+const UTILITY_HEXES = ['0891B2', '7C3AED', 'DB2777', '65A30D', '0D9488', 'EA580C', '4F46E5', 'CA8A04']
 
 export type NeutralPreset = 'gray' | 'slate' | 'zinc' | 'stone'
 export const NEUTRAL_PRESETS: Record<NeutralPreset, { label: string; hex: string }> = {
@@ -120,7 +124,27 @@ export const NEUTRAL_PRESETS: Record<NeutralPreset, { label: string; hex: string
   stone: { label: 'Stone', hex: '78716C' }
 }
 
-export type PaletteKey = 'primary' | 'secondary' | 'neutral' | SemanticKey
+export type UtilityKey = `utility-${number}`
+export type PaletteKey = 'primary' | 'secondary' | 'tertiary' | 'neutral' | SemanticKey | UtilityKey
+
+/** An extra brand colour the user adds, named Utility 1, Utility 2 ... until they rename it. */
+export interface UtilityColour {
+  id: number
+  name: string
+  /** Raw text as typed; invalid text falls back to the starting colour for this slot. */
+  hex: string
+}
+
+export const utilityKey = (id: number): UtilityKey => `utility-${id}`
+export const utilityName = (u: UtilityColour) => u.name.trim() || `Utility ${u.id}`
+export const defaultUtilityHex = (id: number) => UTILITY_HEXES[(id - 1) % UTILITY_HEXES.length]
+
+/** The lowest number not used by an existing utility colour. */
+export function nextUtilityId(utility: UtilityColour[]): number {
+  let id = 1
+  while (utility.some((u) => u.id === id)) id += 1
+  return id
+}
 
 export interface Palette {
   key: PaletteKey
@@ -138,6 +162,10 @@ export interface PaletteSettings {
   text: Record<TextKey, string>
   /** null = secondary not added. */
   secondary: string | null
+  /** null = tertiary not added. */
+  tertiary: string | null
+  /** Extra colours named Utility 1, Utility 2 ..., up to MAX_UTILITY. */
+  utility: UtilityColour[]
   neutral: { enabled: boolean; preset: NeutralPreset }
   semanticEnabled: boolean
 }
@@ -153,6 +181,8 @@ export function defaultSettings(): PaletteSettings {
       critical: '#DC2626'
     },
     secondary: null,
+    tertiary: null,
+    utility: [],
     neutral: { enabled: true, preset: 'gray' },
     semanticEnabled: true
   }
@@ -168,6 +198,7 @@ interface Def {
 const DEFS: Def[] = [
   { key: 'primary', name: 'Primary', base: 10, group: 'brand' },
   { key: 'secondary', name: 'Secondary', base: 10, group: 'brand' },
+  { key: 'tertiary', name: 'Tertiary', base: 10, group: 'brand' },
   { key: 'neutral', name: 'Neutral', base: 9, group: 'neutral' },
   { key: 'info', name: 'Info', base: 10, group: 'semantic' },
   { key: 'success', name: 'Success', base: 9, group: 'semantic' },
@@ -177,22 +208,31 @@ const DEFS: Def[] = [
 ]
 
 function inputHex(key: PaletteKey, s: PaletteSettings): string {
+  if (key.startsWith('utility-')) {
+    const u = s.utility.find((x) => utilityKey(x.id) === key)
+    return norm(u?.hex) ?? defaultUtilityHex(u?.id ?? 1)
+  }
+  if (key === 'tertiary') return norm(s.tertiary) ?? DEFAULT_TERTIARY
   if (key === 'neutral') return NEUTRAL_PRESETS[s.neutral.preset].hex
   if (key === 'secondary') return norm(s.secondary) ?? DEFAULT_SECONDARY
-  return norm(s.text[key]) ?? DEFAULT_HEX[key]
+  const k = key as TextKey
+  return norm(s.text[k]) ?? DEFAULT_HEX[k]
 }
 
 function rampFor(def: Def, s: PaletteSettings): { hex: string; steps: string[] } {
   const h = inputHex(def.key, s)
   if (def.key === 'neutral' && s.neutral.preset === 'gray') return { hex: h, steps: [...EXACT.neutral] }
-  if ((def.key === 'primary' || def.key === 'info') && h === DEFAULT_HEX[def.key]) return { hex: h, steps: [...EXACT[def.key]] }
+  if ((def.key === 'primary' || def.key === 'info') && h === DEFAULT_HEX[def.key])  return { hex: h, steps: [...EXACT[def.key]] }
   return { hex: h, steps: gen(h, def.base) }
 }
 
 /** The palettes shown for the given settings, in display order. */
 export function buildPalettes(s: PaletteSettings): Palette[] {
-  return DEFS.filter((d) => {
-    if (d.key === 'secondary') return s.secondary !== null
+  const utilities: Def[] = (s.utility ?? []).map((u) => ({ key: utilityKey(u.id), name: utilityName(u), base: 10, group: 'brand' }))
+  const defs = [...DEFS.slice(0, 3), ...utilities, ...DEFS.slice(3)]
+  return defs.filter((d) => {
+    if (d.key === 'secondary') return s.secondary != null
+    if (d.key === 'tertiary') return s.tertiary != null
     if (d.group === 'neutral') return s.neutral.enabled
     if (d.group === 'semantic') return s.semanticEnabled
     return true

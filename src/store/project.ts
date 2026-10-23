@@ -19,7 +19,10 @@ import {
 import { TOKEN_DEFS, overrideKey, type Mode, type PaletteRef } from '../lib/tokens'
 import {
   DEFAULT_SECONDARY,
+  MAX_UTILITY,
   defaultSettings,
+  defaultUtilityHex,
+  nextUtilityId,
   type NeutralPreset,
   type PaletteKey,
   type PaletteSettings,
@@ -103,6 +106,11 @@ interface ProjectState {
   selectContrastCell: (row: number, col: number) => void
   setText: (key: TextKey, value: string) => void
   setSecondary: (value: string | null) => void
+  setTertiary: (value: string | null) => void
+  addUtility: () => void
+  setUtilityHex: (id: number, value: string) => void
+  renameUtility: (id: number, name: string) => void
+  removeUtility: (id: number) => void
   setNeutralPreset: (preset: NeutralPreset) => void
   setNeutralEnabled: (enabled: boolean) => void
   setSemanticEnabled: (enabled: boolean) => void
@@ -226,6 +234,17 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   selectContrastCell: (row, col) => set((s) => ({ contrast: { ...s.contrast, cell: [row, col] } })),
   setText: (key, value) => set((s) => ({ settings: { ...s.settings, text: { ...s.settings.text, [key]: value } } })),
   setSecondary: (value) => set((s) => ({ settings: { ...s.settings, secondary: value } })),
+  setTertiary: (value) => set((s) => ({ settings: { ...s.settings, tertiary: value } })),
+  addUtility: () =>
+    set((s) => {
+      if (s.settings.utility.length >= MAX_UTILITY) return {}
+      const id = nextUtilityId(s.settings.utility)
+      const utility = [...s.settings.utility, { id, name: `Utility ${id}`, hex: '#' + defaultUtilityHex(id).toLowerCase() }].sort((a, b) => a.id - b.id)
+      return { settings: { ...s.settings, utility } }
+    }),
+  setUtilityHex: (id, hex) => set((s) => ({ settings: { ...s.settings, utility: s.settings.utility.map((u) => (u.id === id ? { ...u, hex } : u)) } })),
+  renameUtility: (id, name) => set((s) => ({ settings: { ...s.settings, utility: s.settings.utility.map((u) => (u.id === id ? { ...u, name } : u)) } })),
+  removeUtility: (id) => set((s) => ({ settings: { ...s.settings, utility: s.settings.utility.filter((u) => u.id !== id) } })),
   setNeutralPreset: (preset) => set((s) => ({ settings: { ...s.settings, neutral: { ...s.settings.neutral, preset } } })),
   setNeutralEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, neutral: { ...s.settings.neutral, enabled } } })),
   setSemanticEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, semanticEnabled: enabled } })),
@@ -268,7 +287,12 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'omni-project',
-  version: 1,
+  version: 2,
+  // Version 2 added tertiary and utility colours: older saves get their defaults.
+  migrate: (persisted) => {
+    const p = persisted as { settings?: Record<string, unknown> }
+    return { ...p, settings: { ...defaultSettings(), ...(p.settings ?? {}) } } as never
+  },
   // Only the project data is saved, never the actions or transient UI such as the copied flash and open pickers.
   partialize: (s) => ({
     settings: s.settings,

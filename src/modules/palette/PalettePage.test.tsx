@@ -2,6 +2,8 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildPalettes } from '../../lib/colour'
+import { pickerChips } from '../../lib/tokens'
 import { useProject } from '../../store/project'
 import { PalettePage } from './PalettePage'
 
@@ -69,12 +71,74 @@ describe('Palette screen', () => {
     expect(screen.getByRole('region', { name: 'Neutral' })).toBeInTheDocument()
   })
 
-  it('adds one secondary palette (128 tokens) and disables tertiary', async () => {
+  it('adds a secondary palette (128 tokens) and removes it again', async () => {
     setup()
     await userEvent.click(screen.getByRole('button', { name: '+ Add secondary' }))
     expect(screen.getByRole('region', { name: 'Secondary' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('128')
-    expect(screen.getByRole('button', { name: '+ Add tertiary' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Secondary' }))
+    expect(screen.queryByRole('region', { name: 'Secondary' })).not.toBeInTheDocument()
+  })
+
+  it('adds a tertiary palette independently of secondary', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: '+ Add tertiary' }))
+    expect(screen.getByRole('region', { name: 'Tertiary' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('128')
+    expect(screen.queryByRole('region', { name: 'Secondary' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '+ Add secondary' }))
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('144')
+  })
+
+  it('adds utility colours named Utility 1, Utility 2 and so on, each with its own ramp and export', async () => {
+    setup()
+    const add = screen.getByRole('button', { name: '+ Add utility colour' })
+    await userEvent.click(add)
+    await userEvent.click(add)
+    expect(screen.getByRole('region', { name: 'Utility 1' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Utility 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('144')
+    expect(screen.getByRole('textbox', { name: 'Utility 1 name' })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Utility 1' })).getAllByRole('button').length).toBeGreaterThanOrEqual(16)
+  })
+
+  it('lets the user change a utility colour and its name', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: '+ Add utility colour' }))
+    const hex = screen.getByRole('textbox', { name: 'Utility 1 hex' })
+    expect(hex).toHaveValue('#0891b2')
+    await userEvent.clear(hex)
+    await userEvent.type(hex, '#FF8800')
+    expect(useProject.getState().settings.utility[0].hex).toBe('#FF8800')
+    expect(useProject.getState().settings.utility[0].name).toBe('Utility 1')
+    const name = screen.getByRole('textbox', { name: 'Utility 1 name' })
+    await userEvent.clear(name)
+    await userEvent.type(name, 'Teal accent')
+    expect(screen.getByRole('region', { name: 'Teal accent' })).toBeInTheDocument()
+    expect(useProject.getState().settings.utility[0].id).toBe(1)
+  })
+
+  it('reuses the lowest free number, removes utilities, and stops at eight', async () => {
+    setup()
+    const add = screen.getByRole('button', { name: '+ Add utility colour' })
+    for (let i = 0; i < 3; i++) await userEvent.click(add)
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Utility 2' }))
+    expect(screen.queryByRole('region', { name: 'Utility 2' })).not.toBeInTheDocument()
+    await userEvent.click(add)
+    expect(screen.getByRole('region', { name: 'Utility 2' })).toBeInTheDocument()
+    for (let i = 0; i < 5; i++) await userEvent.click(add)
+    expect(useProject.getState().settings.utility).toHaveLength(8)
+    expect(add).toBeDisabled()
+  })
+
+  it('shows tertiary and utility palettes in the Contrast chips and token picker data', () => {
+    useProject.getState().setTertiary('#0EA5A4')
+    useProject.getState().addUtility()
+    const keys = buildPalettes(useProject.getState().settings).map((p) => p.key)
+    expect(keys).toEqual(['primary', 'tertiary', 'utility-1', 'neutral', 'info', 'success', 'caution', 'warning', 'critical'])
+    expect(pickerChips(buildPalettes(useProject.getState().settings)).map((c) => c.label)).toEqual(
+      ['neutral', 'primary', 'tertiary', 'Utility 1', 'info', 'success', 'caution', 'warning', 'critical', 'black α', 'white α']
+    )
   })
 
   it('copies the CSS variables with Copy all', async () => {

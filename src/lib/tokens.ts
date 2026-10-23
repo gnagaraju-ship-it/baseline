@@ -194,8 +194,9 @@ export function resolveAll(palettes: Palette[], overrides: Record<string, string
 
 /** Palette chips offered by the picker: palettes that exist, then black and white alpha. */
 export function pickerChips(palettes: Palette[]): Array<{ key: PaletteRef; label: string }> {
-  const order: PaletteKey[] = ['neutral', 'primary', 'secondary', 'info', 'success', 'caution', 'warning', 'critical']
-  const present = order.filter((k) => palettes.some((p) => p.key === k)).map((k) => ({ key: k as PaletteRef, label: k }))
+  const first = (['neutral', 'primary'] as PaletteKey[]).map((k) => palettes.find((p) => p.key === k)).filter((p) => p !== undefined)
+  const rest = palettes.filter((p) => p.key !== 'neutral' && p.key !== 'primary')
+  const present = [...first, ...rest].map((p) => ({ key: p.key as PaletteRef, label: p.key.startsWith('utility-') ? p.name : p.key }))
   return [...present, { key: 'blackA', label: 'black α' }, { key: 'whiteA', label: 'white α' }]
 }
 

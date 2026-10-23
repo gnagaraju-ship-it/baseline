@@ -1,6 +1,9 @@
 import { hexToOklch } from './oklch'
 import { describe, expect, it } from 'vitest'
 import {
+  defaultUtilityHex,
+  nextUtilityId,
+  utilityKey,
   DEFAULT_HEX,
   EXACT,
   STEP_COUNT,
@@ -177,5 +180,39 @@ describe('css tokens', () => {
   it('picks five neutral swatches for the preset field', () => {
     const mini = neutralMini([...EXACT.neutral])
     expect(mini).toEqual(['F5F6F8', 'BFC4CC', '606876', '2F3948', '0B1220'])
+  })
+})
+
+describe('tertiary and utility colours', () => {
+  it('adds tertiary after secondary and utilities after that, before neutral', () => {
+    const s = defaultSettings()
+    s.secondary = '#4852E5'
+    s.tertiary = '#0EA5A4'
+    s.utility = [{ id: 1, name: 'Utility 1', hex: '#0891b2' }, { id: 2, name: 'Utility 2', hex: '#7c3aed' }]
+    const p = buildPalettes(s)
+    expect(p.map((x) => x.key)).toEqual(['primary', 'secondary', 'tertiary', 'utility-1', 'utility-2', 'neutral', 'info', 'success', 'caution', 'warning', 'critical'])
+    expect(p.map((x) => x.name).slice(3, 5)).toEqual(['Utility 1', 'Utility 2'])
+    expect(p.reduce((n, x) => n + x.steps.length, 0)).toBe(11 * 16)
+    expect(p[3].steps[9]).toBe('0891B2')
+  })
+  it('falls back to the starting colour for an invalid hex and to "Utility N" for a blank name', () => {
+    const s = defaultSettings()
+    s.utility = [{ id: 3, name: '  ', hex: 'zzz' }]
+    const [, u] = buildPalettes(s)
+    expect(u.key).toBe('utility-3')
+    expect(u.name).toBe('Utility 3')
+    expect(u.hex).toBe(defaultUtilityHex(3))
+  })
+  it('numbers new utility colours with the lowest free number', () => {
+    expect(nextUtilityId([])).toBe(1)
+    expect(nextUtilityId([{ id: 1, name: '', hex: '' }, { id: 3, name: '', hex: '' }])).toBe(2)
+    expect(utilityKey(4)).toBe('utility-4')
+  })
+  it('exports CSS variables named after the utility key', () => {
+    const s = defaultSettings()
+    s.utility = [{ id: 1, name: 'Brand teal', hex: '#0891b2' }]
+    const rows = tokenRows(buildPalettes(s))
+    expect(rows).toHaveLength(128)
+    expect(rows.some((r) => r.name === '--utility-1-10' && r.hex === '0891B2')).toBe(true)
   })
 })

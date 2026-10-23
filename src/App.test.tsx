@@ -135,7 +135,7 @@ describe('persistence', () => {
     useProject.getState().setText('primary', '#0EA5E9')
     useProject.getState().setGridColumns(10)
     const saved = JSON.parse(localStorage.getItem('omni-project')!)
-    expect(saved.version).toBe(1)
+    expect(saved.version).toBe(2)
     expect(saved.state.settings.text.primary).toBe('#0EA5E9')
     expect(saved.state.grid.columns.xxl).toBe(10)
     expect(Object.keys(saved.state).sort()).toEqual(['appTheme', 'contrast', 'elevation', 'grid', 'previewMode', 'settings', 'spacing', 'tokenOverrides', 'type', 'unit'])
