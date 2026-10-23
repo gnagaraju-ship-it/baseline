@@ -1,12 +1,12 @@
-# Omni by Canvs — Product Brief
+# Baseline — Product Brief
 
 Oct 22, 2026 · g.nagaraju@enspirit.co
 
 ## Overview
 
-Omni by Canvs turns a handful of brand inputs into a complete, export-ready design-token system: colour, type, grid, spacing and elevation, in one browser tool.
+Baseline turns a handful of brand inputs into a complete, export-ready design-token system: colour, type, grid, spacing and elevation, in one browser tool.
 
-A designer enters a primary hex, picks a neutral and semantic colours, sets a base font size and ratio, and chooses breakpoints. Omni generates 16-step colour ramps, light and dark semantic tokens, a contrast grid, a type scale, column grids, a spacing scale and shadow levels, then previews them in real UI and exports them as code.
+A designer enters a primary hex, picks a neutral and semantic colours, sets a base font size and ratio, and chooses breakpoints. Baseline generates 16-step colour ramps, light and dark semantic tokens, a contrast grid, a type scale, column grids, a spacing scale and shadow levels, then previews them in real UI and exports them as code.
 
 Positioning: the fastest way to get from a brand colour to a system a developer can ship, with accessibility checked at every step rather than audited at the end.
 
@@ -121,7 +121,7 @@ These appear in the screens as entry points but are not part of the v1 build.
 - Custom neutral ramps, secondary and tertiary brand colours beyond one extra hue.
 - Uploading custom font files (the upload buttons) and fonts outside Google Fonts.
 - Adding custom breakpoints or devices in Grids.
-- Component libraries: Omni ships tokens, not buttons or cards.
+- Component libraries: Baseline ships tokens, not buttons or cards.
 - Two-way sync with Figma or code repositories.
 
 ## Risks and open questions

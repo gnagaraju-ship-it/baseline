@@ -106,14 +106,14 @@ export function buildFigmaTokens(input: ExportInput): Json {
   }
 
   return {
-    $description: 'Omni by Canvs design tokens (W3C Design Tokens format). Figma Light and Dark modes are in $extensions["com.figma"].modes.',
+    $description: 'Baseline design tokens (W3C Design Tokens format). Figma Light and Dark modes are in $extensions["com.figma"].modes.',
     Primitives: { colour: ramps },
     Semantic: { colour: semantic },
     Type: typeTokens,
     Grid: grid,
     Spacing: spacing,
     Elevation: elevation,
-    $extensions: { 'com.omni': { typeUnit: isWeb(type.platform) ? 'web' : 'apple' } }
+    $extensions: { 'com.baseline': { typeUnit: isWeb(type.platform) ? 'web' : 'apple' } }
   }
 }
 

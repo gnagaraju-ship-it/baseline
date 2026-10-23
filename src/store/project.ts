@@ -149,6 +149,18 @@ function systemTheme(): AppTheme {
   }
 }
 
+/** The app was called Omni by Canvs before it became Baseline; keep saved projects from that time. */
+export function migrateOldStorage(storage: Storage = localStorage): void {
+  try {
+    const old = storage.getItem('omni-project')
+    if (old !== null && storage.getItem('baseline-project') === null) storage.setItem('baseline-project', old)
+    if (old !== null) storage.removeItem('omni-project')
+  } catch {
+    // Storage can be blocked; the app then simply starts from its defaults.
+  }
+}
+migrateOldStorage()
+
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
 
 export const useProject = create<ProjectState>()(persist((set) => ({
@@ -328,7 +340,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       elevation: defaultElevationSettings()
     })
 }), {
-  name: 'omni-project',
+  name: 'baseline-project',
   version: 2,
   // Version 2 added tertiary and utility colours: older saves get their defaults.
   migrate: (persisted) => {

@@ -41,7 +41,7 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
     <>
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
         <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
-        <div className="flex-1 text-base font-semibold tracking-[-0.01em]">Omni by Canvs</div>
+        <div className="flex-1 text-base font-semibold tracking-[-0.01em]">Baseline</div>
         <button type="button" disabled aria-label="Rename project" title="Rename project — not in v1" className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-muted opacity-60">
           <Icon name="edit" size={16} />
         </button>
@@ -160,7 +160,7 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
       )}
 
       <div className="flex-1" />
-      <div className="border-t border-line px-5 py-4 text-[13px] text-muted">Omni by Canvs</div>
+      <div className="border-t border-line px-5 py-4 text-[13px] text-muted">Baseline</div>
     </>
   )
 }

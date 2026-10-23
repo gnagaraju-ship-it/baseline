@@ -7,7 +7,7 @@ export function NotFoundPage() {
       panel={
         <div className="flex items-center gap-3 px-5 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
-          <div className="text-base font-semibold">Omni by Canvs</div>
+          <div className="text-base font-semibold">Baseline</div>
         </div>
       }
     >

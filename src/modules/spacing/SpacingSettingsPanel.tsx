@@ -47,7 +47,7 @@ export function SpacingSettingsPanel() {
         </section>
       </div>
       <div className="flex-1" />
-      <div className="border-t border-line px-5 py-4 text-[13px] text-muted">Omni by Canvs</div>
+      <div className="border-t border-line px-5 py-4 text-[13px] text-muted">Baseline</div>
     </>
   )
 }

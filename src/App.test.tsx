@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { titleFor } from './lib/titles'
-import { useProject } from './store/project'
+import { migrateOldStorage, useProject } from './store/project'
 
 function at(path: string) {
   return render(
@@ -29,9 +29,9 @@ describe('app shell', () => {
 
   it('sets the browser tab title per route', () => {
     at('/grids')
-    expect(document.title).toBe('Grids · Omni by Canvs')
-    expect(titleFor('/')).toBe('Palette · Omni by Canvs')
-    expect(titleFor('/nope')).toBe('Page not found · Omni by Canvs')
+    expect(document.title).toBe('Grids · Baseline')
+    expect(titleFor('/')).toBe('Palette · Baseline')
+    expect(titleFor('/nope')).toBe('Page not found · Baseline')
   })
 
   it('shows a not-found page with a way back', () => {
@@ -91,7 +91,7 @@ describe('app shell', () => {
     await userEvent.click(within(dialog).getByRole('checkbox', { name: /Spacing/ }))
     await userEvent.click(within(dialog).getByRole('checkbox', { name: /Elevation/ }))
     await userEvent.click(within(dialog).getByRole('radio', { name: /Design tokens JSON/ }))
-    expect(within(dialog).getByText(/omni-tokens\.json/, { selector: 'span' })).toBeInTheDocument()
+    expect(within(dialog).getByText(/baseline-tokens\.json/, { selector: 'span' })).toBeInTheDocument()
     expect(within(dialog).getByText(/22 tokens/)).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Download' }))
     expect(click).toHaveBeenCalledTimes(1)
@@ -122,7 +122,7 @@ describe('app shell', () => {
     expect(bytes[0]).toBe(0x50)
     expect(bytes[1]).toBe(0x4b)
     const text = new TextDecoder().decode(bytes)
-    for (const n of ['omni-figma-plugin/manifest.json', 'omni-figma-plugin/code.js', 'omni-figma-plugin/ui.html']) expect(text).toContain(n)
+    for (const n of ['baseline-figma-plugin/manifest.json', 'baseline-figma-plugin/code.js', 'baseline-figma-plugin/ui.html']) expect(text).toContain(n)
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
@@ -228,11 +228,25 @@ describe('app shell', () => {
 })
 
 describe('persistence', () => {
+  it('moves a project saved under the old Omni name to the Baseline key, once', () => {
+    localStorage.removeItem('baseline-project')
+    localStorage.setItem('omni-project', '{"version":2,"state":{"unit":"px"}}')
+    migrateOldStorage()
+    expect(localStorage.getItem('baseline-project')).toBe('{"version":2,"state":{"unit":"px"}}')
+    expect(localStorage.getItem('omni-project')).toBeNull()
+    // an existing Baseline project is never overwritten
+    localStorage.setItem('omni-project', '{"version":2,"state":{"unit":"pt"}}')
+    migrateOldStorage()
+    expect(localStorage.getItem('baseline-project')).toBe('{"version":2,"state":{"unit":"px"}}')
+    expect(localStorage.getItem('omni-project')).toBeNull()
+  })
+
+
   it('saves project data, and only data, to localStorage', () => {
     useProject.getState().reset()
     useProject.getState().setText('primary', '#0EA5E9')
     useProject.getState().setGridColumns(10)
-    const saved = JSON.parse(localStorage.getItem('omni-project')!)
+    const saved = JSON.parse(localStorage.getItem('baseline-project')!)
     expect(saved.version).toBe(2)
     expect(saved.state.settings.text.primary).toBe('#0EA5E9')
     expect(saved.state.grid.columns.xxl).toBe(10)
@@ -242,12 +256,12 @@ describe('persistence', () => {
 
   it('restores saved data on rehydrate and reset clears it', async () => {
     useProject.getState().reset()
-    localStorage.setItem('omni-project', JSON.stringify({ version: 1, state: { unit: 'px', settings: { ...useProject.getState().settings, secondary: '4852E5' } } }))
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 1, state: { unit: 'px', settings: { ...useProject.getState().settings, secondary: '4852E5' } } }))
     await useProject.persist.rehydrate()
     expect(useProject.getState().unit).toBe('px')
     expect(useProject.getState().settings.secondary).toBe('4852E5')
     expect(useProject.getState().grid.columns.xxl).toBe(12)
     useProject.getState().reset()
-    expect(JSON.parse(localStorage.getItem('omni-project')!).state.unit).toBe('rem')
+    expect(JSON.parse(localStorage.getItem('baseline-project')!).state.unit).toBe('rem')
   })
 })

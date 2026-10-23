@@ -23,7 +23,7 @@ describe('normaliseSelection', () => {
 describe('buildExport', () => {
   it('css: only the chosen modules, with counts', () => {
     const e = buildExport(input(), 'css', ['type', 'grids'])
-    expect(e.filename).toBe('omni-tokens.css')
+    expect(e.filename).toBe('baseline-tokens.css')
     expect(e.mime).toBe('text/css')
     expect(e.count).toBe(11 + 3)
     expect(e.text).toContain('--type-body-md-size')
@@ -46,7 +46,7 @@ describe('buildExport', () => {
   it('json: only the chosen groups plus the file description', () => {
     const e = buildExport(input(), 'json', ['spacing', 'elevation'])
     const doc = JSON.parse(e.text)
-    expect(e.filename).toBe('omni-tokens.json')
+    expect(e.filename).toBe('baseline-tokens.json')
     expect(e.mime).toBe('application/json')
     expect(Object.keys(doc).filter((k) => !k.startsWith('$'))).toEqual(['Spacing', 'Elevation'])
     expect(doc.$description).toContain('com.figma')

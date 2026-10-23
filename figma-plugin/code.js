@@ -1,5 +1,5 @@
-// Omni by Canvs: Import tokens.
-// Reads the design tokens JSON exported from Omni and creates Figma Variables (Primitives, Semantic with
+// Baseline: Import tokens.
+// Reads the design tokens JSON exported from Baseline and creates Figma Variables (Primitives, Semantic with
 // Light and Dark modes, Type, Grid, Spacing) and effect styles (Elevation). Importing again updates in place.
 
 figma.showUI(__html__, { width: 440, height: 560, themeColors: true });
@@ -176,7 +176,7 @@ figma.ui.onmessage = async function (msg) {
   try {
     var result = await importTokens(msg.doc, msg.groups);
     figma.ui.postMessage({ type: 'done', result: result });
-    figma.notify('Omni: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : ''));
+    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : ''));
   } catch (e) {
     figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
   }

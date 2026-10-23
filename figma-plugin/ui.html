@@ -29,8 +29,8 @@
 </style>
 </head>
 <body>
-  <h1>Import Omni tokens</h1>
-  <p>Choose the <b>omni-tokens.json</b> you exported from Omni by Canvs, then import it as Figma Variables and shadow styles.</p>
+  <h1>Import Baseline tokens</h1>
+  <p>Choose the <b>baseline-tokens.json</b> you exported from Baseline, then import it as Figma Variables and shadow styles.</p>
 
   <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a tokens JSON file">
     <b id="dropTitle">Choose a JSON file</b>
@@ -90,7 +90,7 @@
     try {
       var parsed = JSON.parse(text);
       var found = ORDER.filter(function (g) { return parsed[g] && count(parsed[g]) > 0; });
-      if (!found.length) throw new Error('No Omni token groups were found in this file. Export it from Omni with the JSON format.');
+      if (!found.length) throw new Error('No Baseline token groups were found in this file. Export it from Baseline with the JSON format.');
       doc = parsed;
       $('fileName').textContent = name || 'Pasted JSON';
       $('groups').innerHTML = '';

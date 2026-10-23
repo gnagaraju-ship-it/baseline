@@ -12,5 +12,5 @@ export const ROUTE_TITLES: Record<string, string> = {
 
 export function titleFor(pathname: string): string {
   const t = ROUTE_TITLES[pathname]
-  return t ? `${t} · Omni by Canvs` : 'Page not found · Omni by Canvs'
+  return t ? `${t} · Baseline` : 'Page not found · Baseline'
 }

@@ -1,5 +1,5 @@
 /**
- * Colour maths for Omni palettes.
+ * Colour maths for Baseline palettes.
  * Ported from the reference logic in html/index.html (EXACT, gen, ramp) and html/contrast.html.
  * Hex values are stored upper-case without the leading "#", as in the mockups.
  */

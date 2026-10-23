@@ -95,7 +95,7 @@ describe('theme switch', () => {
   it('saves the choice, keeps it when the project is reset, and is independent of the UI preview mode', async () => {
     at('/preview')
     await userEvent.click(screen.getByRole('button', { name: 'Toggle dark mode' }))
-    expect(JSON.parse(localStorage.getItem('omni-project')!).state.appTheme).toBe('dark')
+    expect(JSON.parse(localStorage.getItem('baseline-project')!).state.appTheme).toBe('dark')
     useProject.getState().reset()
     expect(useProject.getState().appTheme).toBe('dark')
     expect(useProject.getState().previewMode).toBe('light')

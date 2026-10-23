@@ -1,6 +1,6 @@
 {
-  "name": "Omni by Canvs: Import tokens",
-  "id": "omni-by-canvs-import",
+  "name": "Baseline: Import tokens",
+  "id": "baseline-import-tokens",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",

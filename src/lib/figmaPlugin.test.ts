@@ -193,7 +193,7 @@ describe('plugin import', () => {
     expect(p.variables.filter((v) => v.name.startsWith('colour/bg')).length).toBeGreaterThan(30)
   })
 
-  it('reports readable errors for files that are not Omni tokens, or nothing selected', async () => {
+  it('reports readable errors for files that are not Baseline tokens, or nothing selected', async () => {
     const p = loadPlugin()
     await p.send({ type: 'import', doc: { hello: 'world' }, groups: ['Primitives'] })
     expect(p.posted.at(-1).message).toMatch(/Nothing to import/)

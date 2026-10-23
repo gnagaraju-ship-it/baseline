@@ -1,6 +1,6 @@
-# Omni by Canvs — project guide for Claude Code
+# Baseline — project guide for Claude Code
 
-Omni is a browser tool that turns brand inputs into an export-ready design-token system
+Baseline is a browser tool that turns brand inputs into an export-ready design-token system
 (colour, type, grid, spacing, elevation). Read `docs/product-brief.md` first — it is the source of truth for scope.
 
 ## Reference material (not production code)

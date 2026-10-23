@@ -18,8 +18,8 @@ export const EXPORT_MODULES: ReadonlyArray<{ id: ExportModule; label: string; no
 export const ALL_MODULES: ExportModule[] = EXPORT_MODULES.map((m) => m.id)
 
 export const FORMATS: ReadonlyArray<{ id: ExportFormat; label: string; file: string; note: string }> = [
-  { id: 'css', label: 'CSS variables', file: 'omni-tokens.css', note: 'Custom properties on :root, with a dark block' },
-  { id: 'json', label: 'Design tokens JSON (W3C)', file: 'omni-tokens.json', note: 'For the Omni Figma plugin, Tokens Studio and Style Dictionary' }
+  { id: 'css', label: 'CSS variables', file: 'baseline-tokens.css', note: 'Custom properties on :root, with a dark block' },
+  { id: 'json', label: 'Design tokens JSON (W3C)', file: 'baseline-tokens.json', note: 'For the Baseline Figma plugin, Tokens Studio and Style Dictionary' }
 ]
 
 /** Semantic tokens point at the ramps, so choosing them always brings the ramps along. */
