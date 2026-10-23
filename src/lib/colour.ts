@@ -4,6 +4,8 @@
  * Hex values are stored upper-case without the leading "#", as in the mockups.
  */
 
+import { fitToGamut, hexToOklch, oklchToHex } from './oklch'
+
 export const STEP_COUNT = 16
 
 export type RGB = [number, number, number]
@@ -33,20 +35,58 @@ export function mix(hexColour: string, target: number, amount: number): string {
   return hex(rgb(hexColour).map((v) => v + (target - v) * amount))
 }
 
+/** Chroma of the hand-tuned Primary ramp: the profile every generated ramp follows. */
+const REF_C = [0.016, 0.03, 0.049, 0.075, 0.109, 0.149, 0.196, 0.247, 0.263, 0.265, 0.226, 0.196, 0.166, 0.137, 0.11, 0.089]
+const REF_BASE = 9
+/** Lightness at the first and last step of the hand-tuned Primary ramp. */
+const L_MAX = 0.98
+const L_MIN = 0.18
+
+/** Reference chroma at a fractional step position (0..15), linearly interpolated. */
+function refChroma(pos: number): number {
+  const lo = Math.floor(pos)
+  const hi = Math.min(STEP_COUNT - 1, lo + 1)
+  return REF_C[lo] + (REF_C[hi] - REF_C[lo]) * (pos - lo)
+}
+
+/**
+ * Lightness for a step on one side of the base. `t` runs 0 at the base to 1 at the end of the ramp, `n` is the
+ * number of steps on this side and `slope` the step size wanted next to the base. The curve is a quadratic ease
+ * that leaves the base at that slope and still lands exactly on `end`, so spacing is smooth across the base
+ * even when the base colour is very light (yellow) or very dark.
+ */
+function sideLightness(base: number, end: number, t: number, n: number, slope: number): number {
+  const d = end - base
+  if (Math.abs(d) < 1e-6) return base
+  const a = Math.max(0.3, Math.min(2, (slope * n) / Math.abs(d)))
+  return base + d * (a * t + (1 - a) * t * t)
+}
+
 /**
  * Generate a 16-step ramp whose step `base` (1-based) is exactly `hexColour`.
- * Lighter steps blend toward white, darker steps toward black.
- * NOTE: blending is linear in RGB, which is the "muddy dark steps" risk named in the brief;
- * it is isolated here so the algorithm can be replaced without touching screens.
+ * Works in OKLCH: the hue stays that of the input, lightness eases from the input's lightness to the light and
+ * dark ends of the Primary ramp, and chroma follows the Primary ramp's profile so dark steps keep their colour
+ * instead of turning grey or khaki. Out-of-gamut colours lose chroma only.
  */
 export function gen(hexColour: string, base: number): string[] {
-  const out: string[] = []
   const b = base - 1
-  const n = STEP_COUNT - 1 - b
+  const { L: L0, C: C0, H } = hexToOklch(hexColour)
+  const lightEnd = Math.max(L_MAX, L0)
+  const darkEnd = Math.min(L_MIN, L0)
+  const lightN = b
+  const darkN = STEP_COUNT - 1 - b
+  const slope = ((lightEnd - L0) / Math.max(1, lightN) + (L0 - darkEnd) / Math.max(1, darkN)) / 2
+  const out: string[] = []
   for (let i = 0; i < STEP_COUNT; i++) {
-    if (i < b) out.push(mix(hexColour, 255, 0.96 * Math.pow(1 - i / b, 0.9)))
-    else if (i === b) out.push(hexColour)
-    else out.push(mix(hexColour, 0, 0.84 * Math.pow((i - b) / n, 0.95)))
+    if (i === b) {
+      out.push(hexColour)
+      continue
+    }
+    const light = i < b
+    const t = light ? (b - i) / lightN : (i - b) / darkN
+    const L = light ? sideLightness(L0, lightEnd, t, lightN, slope) : sideLightness(L0, darkEnd, t, darkN, slope)
+    const pos = light ? REF_BASE - t * REF_BASE : REF_BASE + t * (STEP_COUNT - 1 - REF_BASE)
+    out.push(oklchToHex(fitToGamut({ L, C: C0 * (refChroma(pos) / REF_C[REF_BASE]), H })))
   }
   return out
 }

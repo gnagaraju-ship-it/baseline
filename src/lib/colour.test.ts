@@ -1,3 +1,4 @@
+import { hexToOklch } from './oklch'
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_HEX,
@@ -38,6 +39,48 @@ describe('hex helpers', () => {
     expect(mix('000000', 255, 1)).toBe('FFFFFF')
     expect(mix('FFFFFF', 0, 1)).toBe('000000')
     expect(mix('336699', 255, 0)).toBe('336699')
+  })
+})
+
+describe('gen ramps in OKLCH', () => {
+  const cases: Array<[string, string, number]> = [
+    ['caution', 'EAB308', 9], ['warning', 'F97316', 9], ['success', '1F9D55', 9], ['critical', 'DC2626', 9],
+    ['sky primary', '0EA5E9', 10], ['slate', '64748B', 9], ['stone', '78716C', 9], ['violet', '7C3AED', 10]
+  ]
+  for (const [name, colour, base] of cases) {
+    describe(name, () => {
+      const ramp = gen(colour, base)
+      const o = ramp.map(hexToOklch)
+      const dL = o.slice(1).map((x, i) => o[i].L - x.L)
+      it('has 16 valid hex steps and the input exactly at the base step', () => {
+        expect(ramp).toHaveLength(16)
+        expect(ramp.every((h) => /^[0-9A-F]{6}$/.test(h))).toBe(true)
+        expect(ramp[base - 1]).toBe(colour)
+      })
+      it('gets darker at every step with no jump', () => {
+        expect(dL.every((d) => d > 0)).toBe(true)
+        expect(Math.max(...dL)).toBeLessThan(0.125)
+        const atBase = [dL[base - 2], dL[base - 1]]
+        expect(Math.max(...atBase) / Math.min(...atBase)).toBeLessThan(3)
+      })
+      it('keeps the hue of the input on chromatic steps', () => {
+        const h0 = hexToOklch(colour)
+        if (h0.C < 0.05) return
+        for (const x of o) {
+          if (x.C < 0.03) continue
+          const d = Math.abs(x.H - h0.H)
+          expect(Math.min(d, 360 - d)).toBeLessThan(6)
+        }
+      })
+      it('keeps colour in the dark end instead of going grey', () => {
+        const c0 = hexToOklch(colour).C
+        expect(o[15].C).toBeGreaterThan(c0 * 0.2)
+      })
+    })
+  }
+  it('is lighter than the old RGB blend would be at the first step and never muddier', () => {
+    const light = gen('EAB308', 9).map(hexToOklch)
+    expect(light[0].L).toBeGreaterThan(0.97)
   })
 })
 
