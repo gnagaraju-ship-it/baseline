@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { downloadText } from '../lib/browser'
-import { exportAll } from '../lib/exportAll'
 import { useProject } from '../store/project'
+import { ExportMenu } from './ExportMenu'
 import { Icon, type IconName } from './Icon'
 
 const COLOUR_ROUTES = ['/', '/tokens', '/contrast']
@@ -39,11 +38,6 @@ export function Rail() {
   const { pathname } = useLocation()
   const project = useProject()
 
-  function exportEverything() {
-    const { css } = exportAll(project)
-    downloadText('omni-tokens.css', css)
-  }
-
   function resetProject() {
     if (window.confirm('Reset the whole project to its defaults? Your colours, type, grid, spacing and elevation settings will be lost.')) project.reset()
   }
@@ -64,7 +58,7 @@ export function Rail() {
       <RailLink to="/preview" label="UI preview" icon="monitor" active={pathname === '/preview'} />
       <RailStub label="Documentation" icon="docs" />
       <div className="flex-1" />
-      <RailButton label="Download all modules" icon="download" title={`Export all modules — ${exportAll(project).count} tokens in one CSS file`} onClick={exportEverything} />
+      <ExportMenu />
       <RailButton label="Reset project" icon="reset" onClick={resetProject} />
       <RailStub label="Toggle dark mode" icon="moon" />
     </nav>

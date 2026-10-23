@@ -51,9 +51,37 @@ describe('app shell', () => {
     const { click, blobs } = stubDownload()
     at('/elevation')
     await userEvent.click(screen.getByRole('button', { name: 'Download all modules' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /Download CSS/ }))
     expect(click).toHaveBeenCalled()
     const text = await blobs[0].text()
     for (const m of ['--primary-10:', '--bg-fill:', '--type-body-md-size', '--grid-xxl-width', '--space-24', '--elevation-md']) expect(text).toContain(m)
+  })
+
+  it('offers Figma JSON from the same menu, closes on Escape, and copies it', async () => {
+    const { click, blobs } = stubDownload()
+    at('/grids')
+    const button = screen.getByRole('button', { name: 'Download all modules' })
+    await userEvent.click(button)
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual([
+      expect.stringContaining('Download CSS'), expect.stringContaining('Download Figma JSON'), expect.stringContaining('Copy Figma JSON')
+    ])
+    await userEvent.click(screen.getByRole('menuitem', { name: /Download Figma JSON/ }))
+    expect(click).toHaveBeenCalledTimes(1)
+    expect(blobs[0].type).toBe('application/json')
+    const doc = JSON.parse(await blobs[0].text())
+    expect(doc.Primitives.colour.primary['10'].$value).toBe('#9D00D6')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+
+    await userEvent.click(button)
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+
+    const write = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true })
+    await userEvent.click(button)
+    await userEvent.click(screen.getByRole('menuitem', { name: /Copy Figma JSON/ }))
+    expect(JSON.parse(write.mock.calls[0][0]).Semantic.colour['bg-fill'].$value).toBe('{Primitives.colour.primary.10}')
   })
 
   it('resets the whole project after confirmation, and not when cancelled', async () => {
