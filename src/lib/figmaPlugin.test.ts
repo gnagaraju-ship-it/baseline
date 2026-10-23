@@ -121,7 +121,7 @@ describe('plugin import', () => {
     expect(count('Grid')).toBe(18)
     expect(count('Spacing')).toBe(17 + 36)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [] })
+    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [] })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -305,6 +305,33 @@ describe('plugin import', () => {
     await p.send({ type: 'import', doc: p.doc, groups: [] })
     expect(p.posted.at(-1).message).toMatch(/Nothing to import/)
     expect(p.variables).toHaveLength(0)
+  })
+
+  it('skips a value that is not a number and names it, instead of failing the whole import', async () => {
+    const p = loadPlugin()
+    const doc = JSON.parse(JSON.stringify(p.doc))
+    doc.Grid.xxl.column.$value = 'NaNpx'
+    doc.Spacing.space['8'].$value = 'abc'
+    doc.Type['body-md'].size.$value = 'NaNpx'
+    await p.send({ type: 'import', doc, groups: ['Primitives', 'Type', 'Grid', 'Spacing'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    const done = p.posted.at(-1).result
+    expect(done.skipped).toEqual(['Type/body-md/size ("NaNpx")', 'Grid/xxl/column ("NaNpx")', 'Spacing/space/8 ("abc")'])
+    expect(p.variables.find((v) => v.name === 'xxl/column')).toBeUndefined()
+    expect(p.variables.find((v) => v.name === 'xxl/width')).toBeDefined()
+    // no variable was ever given NaN
+    for (const v of p.variables) for (const val of Object.values(v.valuesByMode)) if (typeof val === 'number') expect(Number.isNaN(val)).toBe(false)
+  })
+
+  it('never writes NaN: tracking falls back when a step has no readable size', async () => {
+    const p = loadPlugin()
+    const doc = JSON.parse(JSON.stringify(p.doc))
+    delete doc.Type['heading-xl'].size
+    await p.send({ type: 'import', doc, groups: ['Type'] })
+    const v = p.variables.find((x) => x.name === 'heading-xl/letter-spacing')!
+    const val = Object.values(v.valuesByMode)[0] as number
+    expect(Number.isFinite(val)).toBe(true)
+    expect(val).toBeCloseTo(-0.16, 3)
   })
 
   it('ignores unknown messages and closes on cancel', async () => {

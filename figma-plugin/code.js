@@ -148,10 +148,14 @@ async function importTokens(doc, groups) {
     return typeof raw === 'number' ? raw : parseFloat(raw);
   }
 
+  function isNumber(value) { return typeof value === 'number' && isFinite(value); }
+
   // The file stores letter spacing in em. A variable bound to a text style is read in pixels, so it is stored as em x font size.
   function isTracking(path) { return path[path.length - 1] === 'letter-spacing'; }
   function trackingPx(path, em) {
-    var size = parseFloat(literal(doc, doc.Type[path[1]].size.$value));
+    var step = doc.Type && doc.Type[path[1]];
+    var size = step && step.size ? parseFloat(literal(doc, step.size.$value)) : NaN;
+    if (!isFinite(size)) size = 16; // no readable size for this step: fall back to a 16px text
     return Math.round(em * size * 1000) / 1000;
   }
 
@@ -162,6 +166,9 @@ async function importTokens(doc, groups) {
     byCollection.Primitives = existingPrimitives;
   }
 
+  var skipped = [];
+  function ext0(leaf) { return leaf.$extensions && leaf.$extensions['com.figma']; }
+
   for (var g = 0; g < wanted.length; g++) {
     var group = wanted[g];
     var c = await collectionFor(group);
@@ -171,7 +178,16 @@ async function importTokens(doc, groups) {
       var it = items[i];
       var type = it.leaf.$type;
       if (type === 'shadow') continue;
-      var v = upsert(c, varName(it.path), type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
+      var name = varName(it.path);
+      // A number that cannot be read is reported by name and skipped, instead of stopping the whole import.
+      var checked = null;
+      if (type !== 'color' && type !== 'fontFamily' && !(ext0(it.leaf) && ext0(it.leaf).modes)) {
+        var raw0 = it.leaf.$value;
+        var isAlias = typeof raw0 === 'string' && raw0[0] === '{';
+        checked = isAlias ? true : isNumber(valueFor(type, raw0));
+        if (!checked) { skipped.push(group + '/' + name + ' (' + JSON.stringify(raw0) + ')'); continue; }
+      }
+      var v = upsert(c, name, type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
       if (it.leaf.$description) v.description = it.leaf.$description === 'em' ? 'px = em x font size' : it.leaf.$description;
       try { v.scopes = scopesFor(group, it.path); } catch (e) {}
       var css = cssName(group, it.path);
@@ -182,7 +198,11 @@ async function importTokens(doc, groups) {
       } else {
         var value = valueFor(type, it.leaf.$value);
         if (isTracking(it.path) && group === 'Type' && typeof value === 'number') value = trackingPx(it.path, value);
-        v.setValueForMode(modeId(c, COLLECTIONS[group][0]), value);
+        try {
+          v.setValueForMode(modeId(c, COLLECTIONS[group][0]), value);
+        } catch (e) {
+          throw new Error(group + '/' + name + ': ' + (e && e.message ? e.message : e));
+        }
       }
     }
   }
@@ -206,7 +226,8 @@ async function importTokens(doc, groups) {
       ts.fontName = fontName;
       ts.fontSize = parseFloat(literal(doc, t.size.$value));
       ts.lineHeight = { unit: 'PIXELS', value: parseFloat(literal(doc, t['line-height'].$value)) };
-      ts.letterSpacing = { unit: 'PIXELS', value: trackingPx(['Type', step], Number(literal(doc, t['letter-spacing'].$value))) };
+      var em = Number(literal(doc, t['letter-spacing'].$value));
+      ts.letterSpacing = { unit: 'PIXELS', value: trackingPx(['Type', step], isFinite(em) ? em : 0) };
       [['fontSize', 'size'], ['lineHeight', 'line-height'], ['letterSpacing', 'letter-spacing'], ['fontFamily', 'family'], ['fontWeight', 'weight']].forEach(function (pair) {
         var bound = findVariable(typeCollection, step + '/' + pair[1]);
         if (bound) { try { ts.setBoundVariable(pair[0], bound); } catch (e) {} }
@@ -233,7 +254,7 @@ async function importTokens(doc, groups) {
     });
   }
 
-  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts };
+  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped };
 }
 
 figma.ui.onmessage = async function (msg) {
@@ -242,7 +263,7 @@ figma.ui.onmessage = async function (msg) {
   try {
     var result = await importTokens(msg.doc, msg.groups);
     figma.ui.postMessage({ type: 'done', result: result });
-    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : ''));
+    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : '') + (result.skipped && result.skipped.length ? '. Skipped ' + result.skipped.length + ' values that were not numbers' : ''));
   } catch (e) {
     figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
   }

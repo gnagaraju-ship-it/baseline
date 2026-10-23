@@ -145,7 +145,7 @@
     if (!m) return;
     if (m.type === 'done') {
       var r = m.result;
-      setStatus('ok', 'Done. ' + r.created + ' variables created, ' + r.updated + ' updated' + (r.styles ? ', ' + r.styles + ' shadow styles' : '') + (r.textStyles ? ', ' + r.textStyles + ' text styles' : '') + '. Open the Variables panel to see them.' + (r.missingFonts && r.missingFonts.length ? ' No text styles were made for ' + r.missingFonts.join(', ') + ' because Figma does not have that font.' : ''));
+      setStatus('ok', 'Done. ' + r.created + ' variables created, ' + r.updated + ' updated' + (r.styles ? ', ' + r.styles + ' shadow styles' : '') + (r.textStyles ? ', ' + r.textStyles + ' text styles' : '') + '. Open the Variables panel to see them.' + (r.missingFonts && r.missingFonts.length ? ' No text styles were made for ' + r.missingFonts.join(', ') + ' because Figma does not have that font.' : '') + (r.skipped && r.skipped.length ? ' Skipped ' + r.skipped.length + ' values that were not numbers: ' + r.skipped.slice(0, 3).join('; ') + (r.skipped.length > 3 ? '…' : '') : ''));
       refresh();
     } else if (m.type === 'error') {
       setStatus('err', m.message);
