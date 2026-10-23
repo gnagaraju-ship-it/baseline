@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { copyText, downloadText } from '../lib/browser'
+import { copyText, downloadBytes, downloadText } from '../lib/browser'
+import { PLUGIN_ZIP, pluginZip } from '../lib/figmaPlugin'
 import { exportSections } from '../lib/exportAll'
 import { EXPORT_MODULES, FORMATS, buildExport, normaliseSelection, ALL_MODULES } from '../lib/exportBuilder'
 import { useProject } from '../store/project'
@@ -83,14 +84,20 @@ export function ExportDialog() {
                   <span className="flex flex-col"><span className="text-[13px] font-semibold">{f.label}</span><span className="text-xs text-muted">{f.note}</span></span>
                 </label>
               ))}
-              {d.format === 'figma' && (
-                <ol aria-label="How to import into Figma" className="m-0 flex list-decimal flex-col gap-1 rounded-[10px] bg-soft py-3 pl-8 pr-3 text-xs leading-[1.5] text-ink-3">
-                  <li>Download the script.</li>
-                  <li>In the Figma desktop app: Plugins, Development, New plugin, choose Empty and a folder.</li>
-                  <li>Open that folder&rsquo;s <code className="font-mono">code.js</code>, replace its contents with the script, save.</li>
-                  <li>Plugins, Development, run your plugin. Variables and shadow styles appear in the file.</li>
-                  <li className="list-none -ml-4 text-muted">Or paste it into the free Scripter plugin and press Run. Running it again updates in place.</li>
-                </ol>
+              {d.format === 'json' && (
+                <div className="flex flex-col gap-2 rounded-[10px] bg-soft p-3 text-xs leading-[1.5] text-ink-3">
+                  <b className="text-[13px] font-semibold text-ink">Import into Figma</b>
+                  <ol aria-label="How to import into Figma" className="m-0 flex list-decimal flex-col gap-1 pl-4">
+                    <li>Download the plugin and unzip it (once).</li>
+                    <li>In the Figma desktop app: Plugins, Development, Import plugin from manifest, choose <code className="font-mono">manifest.json</code>.</li>
+                    <li>Download the JSON here.</li>
+                    <li>Run the plugin from Plugins, Development, choose the JSON and press Import.</li>
+                  </ol>
+                  <button type="button" onClick={() => downloadBytes(PLUGIN_ZIP, pluginZip())} className="flex h-9 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink">
+                    <Icon name="download" size={14} />
+                    Download Figma plugin ({PLUGIN_ZIP})
+                  </button>
+                </div>
               )}
             </fieldset>
 

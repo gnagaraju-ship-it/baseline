@@ -1,24 +1,17 @@
-/**
- * A self-contained Figma plugin script that creates the tokens as Figma Variables and effect styles.
- * Figma cannot import a design-tokens JSON file by itself, so this runs inside Figma (as a development plugin
- * or in the free Scripter plugin) and uses the Plugin API directly. Running it again updates what it created.
- */
-import type { ExportInput, ExportModule } from './exportAll'
-import { buildFigmaTokens } from './figmaExport'
+// Omni by Canvs: Import tokens.
+// Reads the design tokens JSON exported from Omni and creates Figma Variables (Primitives, Semantic with
+// Light and Dark modes, Type, Grid, Spacing) and effect styles (Elevation). Importing again updates in place.
 
-const GROUP: Record<ExportModule, string> = {
-  ramps: 'Primitives', semantic: 'Semantic', type: 'Type', grids: 'Grid', spacing: 'Spacing', elevation: 'Elevation'
-}
+figma.showUI(__html__, { width: 440, height: 560, themeColors: true });
 
-/** The part that runs in Figma. It reads DOC (the design tokens document) and writes Variables and styles. */
-const RUNTIME = String.raw`
-const COLLECTIONS = {
+var COLLECTIONS = {
   Primitives: ['Value'],
   Semantic: ['Light', 'Dark'],
   Type: ['Value'],
   Grid: ['Value'],
   Spacing: ['Value']
 };
+var ORDER = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing'];
 
 function walk(node, path, out) {
   if (!node || typeof node !== 'object') return;
@@ -35,21 +28,22 @@ function parseColour(text) {
 function varName(path) { return path.slice(1).join('/'); }
 
 // Where a variable may be used in Figma's pickers.
-function scopesFor(group, path, type) {
+function scopesFor(group, path) {
   if (group === 'Primitives') return [];
+  var last = path[path.length - 1];
   if (group === 'Semantic') {
-    var n = path[path.length - 1];
-    if (n.indexOf('text') === 0) return ['TEXT_FILL'];
-    if (n.indexOf('border') === 0) return ['STROKE_COLOR'];
+    if (last.indexOf('text') === 0) return ['TEXT_FILL'];
+    if (last.indexOf('border') === 0) return ['STROKE_COLOR'];
     return ['FRAME_FILL', 'SHAPE_FILL'];
   }
-  var last = path[path.length - 1];
-  if (group === 'Type') return last === 'size' ? ['FONT_SIZE'] : last === 'line-height' ? ['LINE_HEIGHT'] : last === 'letter-spacing' ? ['LETTER_SPACING'] : last === 'weight' ? ['FONT_WEIGHT'] : ['ALL_SCOPES'];
+  if (group === 'Type') {
+    return last === 'size' ? ['FONT_SIZE'] : last === 'line-height' ? ['LINE_HEIGHT'] : last === 'letter-spacing' ? ['LETTER_SPACING'] : last === 'weight' ? ['FONT_WEIGHT'] : ['ALL_SCOPES'];
+  }
   if (group === 'Spacing') return ['GAP'];
   return ['ALL_SCOPES'];
 }
 
-// The CSS custom property this value is exported as, so designers and developers use the same name.
+// The CSS custom property a value is exported as, so designers and developers use the same name.
 function cssName(group, path) {
   var p = path.slice(1);
   if (group === 'Primitives') {
@@ -64,21 +58,30 @@ function cssName(group, path) {
   return null;
 }
 
-(async function () {
+/**
+ * Creates or updates variables and styles for the chosen groups of a design tokens document.
+ * Returns { created, updated, styles } counts. Throws a readable Error when the document is not usable.
+ */
+async function importTokens(doc, groups) {
+  if (!doc || typeof doc !== 'object') throw new Error('This is not a design tokens file.');
+  var wanted = ORDER.filter(function (g) { return doc[g] && groups.indexOf(g) >= 0; });
+  var wantsElevation = doc.Elevation && groups.indexOf('Elevation') >= 0;
+  if (!wanted.length && !wantsElevation) throw new Error('Nothing to import: no known groups were selected.');
+
   var collections = await figma.variables.getLocalVariableCollectionsAsync();
   var variables = await figma.variables.getLocalVariablesAsync();
-  var made = 0, effectStyles = 0;
+  var created = 0, updated = 0, styles = 0;
   var byCollection = {};
 
   async function collectionFor(name) {
     if (byCollection[name]) return byCollection[name];
-    var wanted = COLLECTIONS[name];
+    var modes = COLLECTIONS[name];
     var c = collections.find(function (x) { return x.name === name; });
     if (!c) {
       c = figma.variables.createVariableCollection(name);
-      c.renameMode(c.modes[0].modeId, wanted[0]);
+      c.renameMode(c.modes[0].modeId, modes[0]);
     }
-    wanted.forEach(function (m) {
+    modes.forEach(function (m) {
       if (!c.modes.find(function (x) { return x.name === m; })) c.addMode(m);
     });
     byCollection[name] = c;
@@ -96,40 +99,45 @@ function cssName(group, path) {
 
   function upsert(c, name, type) {
     var v = findVariable(c, name);
-    if (v) return v;
+    if (v) { updated++; return v; }
     try { v = figma.variables.createVariable(name, c, type); }
     catch (e) { v = figma.variables.createVariable(name, c.id, type); }
     variables.push(v);
-    made++;
+    created++;
     return v;
   }
 
   function valueFor(type, raw) {
     if (typeof raw === 'string' && raw[0] === '{') {
       var ref = raw.slice(1, -1).split('.');
-      var target = findVariable(byCollection[ref[0]], ref.slice(1).join('/'));
-      if (!target) throw new Error('Missing variable for ' + raw);
+      var group = byCollection[ref[0]];
+      var target = group && findVariable(group, ref.slice(1).join('/'));
+      if (!target) throw new Error('Missing variable for ' + raw + '. Import the Primitives group together with Semantic.');
       return figma.variables.createVariableAlias(target);
     }
     if (type === 'color') return parseColour(raw);
     return typeof raw === 'number' ? raw : parseFloat(raw);
   }
 
-  var order = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing'];
-  for (var g = 0; g < order.length; g++) {
-    var group = order[g];
-    if (!DOC[group]) continue;
+  // Semantic values alias the primitives. If only Semantic is chosen, the primitives must already be in the file.
+  if (wanted.indexOf('Semantic') >= 0 && wanted.indexOf('Primitives') < 0) {
+    var existingPrimitives = collections.find(function (x) { return x.name === 'Primitives'; });
+    if (!existingPrimitives) throw new Error('Semantic tokens need the Primitives variables. Import the Primitives group too.');
+    byCollection.Primitives = existingPrimitives;
+  }
+
+  for (var g = 0; g < wanted.length; g++) {
+    var group = wanted[g];
     var c = await collectionFor(group);
     var items = [];
-    walk(DOC[group], [group], items);
-    // Primitives first inside a run so aliases always find their target.
+    walk(doc[group], [group], items);
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       var type = it.leaf.$type;
       if (type === 'shadow') continue;
       var v = upsert(c, varName(it.path), type === 'color' ? 'COLOR' : 'FLOAT');
       if (it.leaf.$description) v.description = it.leaf.$description;
-      try { v.scopes = scopesFor(group, it.path, type); } catch (e) {}
+      try { v.scopes = scopesFor(group, it.path); } catch (e) {}
       var css = cssName(group, it.path);
       if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (e) {} }
       var ext = it.leaf.$extensions && it.leaf.$extensions['com.figma'];
@@ -141,40 +149,35 @@ function cssName(group, path) {
     }
   }
 
-  if (DOC.Elevation) {
-    var styles = await figma.getLocalEffectStylesAsync();
+  if (wantsElevation) {
+    var existing = await figma.getLocalEffectStylesAsync();
     var shadows = [];
-    walk(DOC.Elevation, ['Elevation'], shadows);
+    walk(doc.Elevation, ['Elevation'], shadows);
     shadows.forEach(function (s) {
       var name = 'elevation/' + s.path.slice(1).join('/');
-      var style = styles.find(function (x) { return x.name === name; });
-      if (!style) { style = figma.createEffectStyle(); style.name = name; effectStyles++; }
+      var style = existing.find(function (x) { return x.name === name; });
+      if (!style) { style = figma.createEffectStyle(); style.name = name; }
+      styles++;
       style.effects = s.leaf.$value.map(function (l) {
-        var col = parseColour(l.color);
         return {
-          type: 'DROP_SHADOW', color: col, offset: { x: parseFloat(l.offsetX), y: parseFloat(l.offsetY) },
+          type: 'DROP_SHADOW', color: parseColour(l.color), offset: { x: parseFloat(l.offsetX), y: parseFloat(l.offsetY) },
           radius: parseFloat(l.blur), spread: parseFloat(l.spread), visible: true, blendMode: 'NORMAL'
         };
       });
     });
   }
 
-  var message = 'Omni: ' + made + ' new variables' + (effectStyles ? ', ' + effectStyles + ' effect styles' : '') + '. Existing ones were updated.';
-  figma.notify(message, { timeout: 6000 });
-  try { figma.closePlugin(); } catch (e) {}
-})().catch(function (e) { figma.notify('Omni import failed: ' + e.message, { error: true }); try { figma.closePlugin(); } catch (x) {} });
-`
-
-export function figmaPluginScript(input: ExportInput, selection: ExportModule[]): string {
-  const doc = buildFigmaTokens(input) as Record<string, unknown>
-  const keep = new Set(selection.map((m) => GROUP[m]))
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(doc)) if (!k.startsWith('$') && keep.has(k)) out[k] = v
-  return [
-    '// Omni by Canvs: creates your tokens as Figma Variables and effect styles.',
-    '// Run it as a development plugin (code.js) or paste it into the Scripter plugin. Running it again updates in place.',
-    `const DOC = ${JSON.stringify(out)};`,
-    RUNTIME.trim(),
-    ''
-  ].join('\n')
+  return { created: created, updated: updated, styles: styles };
 }
+
+figma.ui.onmessage = async function (msg) {
+  if (msg.type === 'cancel') { figma.closePlugin(); return; }
+  if (msg.type !== 'import') return;
+  try {
+    var result = await importTokens(msg.doc, msg.groups);
+    figma.ui.postMessage({ type: 'done', result: result });
+    figma.notify('Omni: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : ''));
+  } catch (e) {
+    figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
+  }
+};

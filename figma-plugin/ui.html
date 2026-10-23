@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font: 12px/1.5 Inter, system-ui, sans-serif; color: var(--figma-color-text, #18181b); background: var(--figma-color-bg, #fff); }
+  h1 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+  p { margin: 0 0 12px; color: var(--figma-color-text-secondary, #52525b); }
+  .drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 96px; padding: 12px; border: 1px dashed var(--figma-color-border-strong, #a1a1aa); border-radius: 8px; text-align: center; cursor: pointer; }
+  .drop.over { border-color: var(--figma-color-border-brand, #0d99ff); background: var(--figma-color-bg-brand-tertiary, #e5f4ff); }
+  .drop b { font-weight: 600; }
+  .drop small { color: var(--figma-color-text-secondary, #52525b); }
+  textarea { width: 100%; height: 64px; margin-top: 8px; padding: 8px; font: 11px/1.4 ui-monospace, monospace; color: inherit; background: var(--figma-color-bg-secondary, #f4f4f5); border: 1px solid var(--figma-color-border, #e4e4e7); border-radius: 6px; resize: vertical; }
+  .groups { margin: 12px 0; display: flex; flex-direction: column; gap: 2px; }
+  .groups label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+  .groups label:hover { background: var(--figma-color-bg-hover, #f4f4f5); }
+  .groups .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--figma-color-text-secondary, #52525b); }
+  .groups .hint { color: var(--figma-color-text-secondary, #52525b); }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  button { flex: 1; height: 32px; border-radius: 6px; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer; border: 1px solid var(--figma-color-border, #e4e4e7); background: transparent; color: inherit; }
+  button.primary { border: 0; background: var(--figma-color-bg-brand, #0d99ff); color: var(--figma-color-text-onbrand, #fff); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .status { margin-top: 12px; padding: 10px 12px; border-radius: 6px; }
+  .status.ok { background: var(--figma-color-bg-success-tertiary, #e3f9e9); color: var(--figma-color-text-success, #14532d); }
+  .status.err { background: var(--figma-color-bg-danger-tertiary, #ffe5e5); color: var(--figma-color-text-danger, #7f1d1d); }
+  .file { margin-bottom: 8px; font-weight: 600; word-break: break-all; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <h1>Import Omni tokens</h1>
+  <p>Choose the <b>omni-tokens.json</b> you exported from Omni by Canvs, then import it as Figma Variables and shadow styles.</p>
+
+  <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a tokens JSON file">
+    <b id="dropTitle">Choose a JSON file</b>
+    <small>or drop it here</small>
+    <input id="file" type="file" accept=".json,application/json" hidden>
+  </div>
+  <textarea id="paste" placeholder="…or paste the JSON here" aria-label="Paste the tokens JSON"></textarea>
+
+  <div id="summary" hidden>
+    <div id="fileName" class="file"></div>
+    <div id="groups" class="groups" role="group" aria-label="What to import"></div>
+  </div>
+
+  <div id="status" class="status" role="status" hidden></div>
+
+  <div class="row">
+    <button id="close" type="button">Close</button>
+    <button id="import" class="primary" type="button" disabled>Import</button>
+  </div>
+
+<script>
+  var LABELS = {
+    Primitives: 'Colour ramps (Primitives)',
+    Semantic: 'Semantic tokens (Light and Dark)',
+    Type: 'Type scale',
+    Grid: 'Grids',
+    Spacing: 'Spacing',
+    Elevation: 'Elevation (shadow styles)'
+  };
+  var ORDER = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation'];
+  var doc = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function count(node) {
+    if (!node || typeof node !== 'object') return 0;
+    if ('$value' in node) return 1;
+    return Object.keys(node).reduce(function (n, k) { return k[0] === '$' ? n : n + count(node[k]); }, 0);
+  }
+
+  function setStatus(kind, text) {
+    var s = $('status');
+    if (!text) { s.hidden = true; return; }
+    s.hidden = false;
+    s.className = 'status ' + kind;
+    s.textContent = text;
+  }
+
+  function chosen() {
+    return Array.prototype.slice.call(document.querySelectorAll('#groups input:checked')).map(function (i) { return i.value; });
+  }
+
+  function refresh() { $('import').disabled = !doc || chosen().length === 0; }
+
+  function load(text, name) {
+    setStatus('', '');
+    try {
+      var parsed = JSON.parse(text);
+      var found = ORDER.filter(function (g) { return parsed[g] && count(parsed[g]) > 0; });
+      if (!found.length) throw new Error('No Omni token groups were found in this file. Export it from Omni with the JSON format.');
+      doc = parsed;
+      $('fileName').textContent = name || 'Pasted JSON';
+      $('groups').innerHTML = '';
+      found.forEach(function (g) {
+        var label = document.createElement('label');
+        var box = document.createElement('input');
+        box.type = 'checkbox'; box.value = g; box.checked = true;
+        box.addEventListener('change', refresh);
+        var text = document.createElement('span'); text.textContent = LABELS[g];
+        var n = document.createElement('span'); n.className = 'n'; n.textContent = count(parsed[g]);
+        label.appendChild(box); label.appendChild(text); label.appendChild(n);
+        $('groups').appendChild(label);
+      });
+      $('summary').hidden = false;
+    } catch (e) {
+      doc = null;
+      $('summary').hidden = true;
+      setStatus('err', e.message && e.message.indexOf('JSON') >= 0 && e.name === 'SyntaxError' ? 'That is not valid JSON.' : e.message);
+    }
+    refresh();
+  }
+
+  function readFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () { load(String(reader.result), file.name); };
+    reader.readAsText(file);
+  }
+
+  var drop = $('drop');
+  drop.addEventListener('click', function () { $('file').click(); });
+  drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } });
+  $('file').addEventListener('change', function (e) { readFile(e.target.files[0]); });
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+  drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); readFile(e.dataTransfer.files[0]); });
+  $('paste').addEventListener('input', function (e) {
+    var v = e.target.value.trim();
+    if (v) load(v, 'Pasted JSON'); else { doc = null; $('summary').hidden = true; refresh(); }
+  });
+
+  $('import').addEventListener('click', function () {
+    $('import').disabled = true;
+    setStatus('', 'Importing…');
+    $('status').className = 'status';
+    parent.postMessage({ pluginMessage: { type: 'import', doc: doc, groups: chosen() } }, '*');
+  });
+  $('close').addEventListener('click', function () { parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*'); });
+
+  window.onmessage = function (e) {
+    var m = e.data.pluginMessage;
+    if (!m) return;
+    if (m.type === 'done') {
+      var r = m.result;
+      setStatus('ok', 'Done. ' + r.created + ' variables created, ' + r.updated + ' updated' + (r.styles ? ', ' + r.styles + ' shadow styles' : '') + '. Open the Variables panel to see them.');
+      refresh();
+    } else if (m.type === 'error') {
+      setStatus('err', m.message);
+      refresh();
+    }
+  };
+</script>
+</body>
+</html>

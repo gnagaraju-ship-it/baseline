@@ -18,3 +18,14 @@ export function downloadText(filename: string, text: string, mime = 'text/css'):
   a.remove()
   URL.revokeObjectURL(url)
 }
+
+export function downloadBytes(filename: string, bytes: Uint8Array, mime = 'application/zip'): void {
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: mime }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.append(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
