@@ -37,6 +37,7 @@ function scopesFor(group, path) {
     return ['FRAME_FILL', 'SHAPE_FILL'];
   }
   if (group === 'Type') {
+    if (last === 'family' || path[1] === 'font-family') return ['FONT_FAMILY'];
     return last === 'size' ? ['FONT_SIZE'] : last === 'line-height' ? ['LINE_HEIGHT'] : last === 'letter-spacing' ? ['LETTER_SPACING'] : last === 'weight' ? ['FONT_WEIGHT'] : ['ALL_SCOPES'];
   }
   if (group === 'Spacing') return ['GAP'];
@@ -52,10 +53,37 @@ function cssName(group, path) {
     return key.slice(-6) === '-alpha' ? '--' + key.slice(0, -6) + '-' + step + '-alpha' : '--' + key + '-' + step;
   }
   if (group === 'Semantic') return '--' + p[1];
+  if (group === 'Type' && p[0] === 'font-family') return '--type-font-' + p[1];
   if (group === 'Type') return '--type-' + p[0] + '-' + (p[1] === 'line-height' ? 'line' : p[1] === 'letter-spacing' ? 'track' : p[1]);
   if (group === 'Grid') return '--grid-' + p[0] + '-' + p[1];
   if (group === 'Spacing') return p[0] === 'space' ? '--space-' + p[1] : '--' + p[0] + '-' + p[1];
   return null;
+}
+
+var WEIGHT_NAMES = { 100: 'thin', 200: 'extralight', 300: 'light', 400: 'regular', 500: 'medium', 600: 'semibold', 700: 'bold', 800: 'extrabold', 900: 'black' };
+
+function normStyle(text) { return String(text).toLowerCase().replace(/[^a-z]/g, ''); }
+
+// The font style that matches a numeric weight, for example 600 matches "Semi Bold" or "SemiBold". Italics are skipped.
+function fontStyleFor(fonts, family, weight) {
+  var styles = fonts.filter(function (f) { return f.fontName.family === family; }).map(function (f) { return f.fontName.style; });
+  if (!styles.length) return null;
+  var wanted = WEIGHT_NAMES[Math.round(weight / 100) * 100] || 'regular';
+  var exact = styles.find(function (x) { return normStyle(x) === wanted; });
+  if (exact) return exact;
+  var upright = styles.filter(function (x) { return !/italic|oblique/i.test(x); });
+  return upright.find(function (x) { return normStyle(x) === 'regular' || normStyle(x) === 'normal'; }) || upright[0] || styles[0];
+}
+
+// Follows {Group.path} aliases inside the document down to a plain value.
+function literal(doc, raw) {
+  var guard = 0;
+  while (typeof raw === 'string' && raw[0] === '{' && guard++ < 10) {
+    var node = doc;
+    raw.slice(1, -1).split('.').forEach(function (k) { node = node && node[k]; });
+    raw = node && node.$value;
+  }
+  return raw;
 }
 
 /**
@@ -116,7 +144,15 @@ async function importTokens(doc, groups) {
       return figma.variables.createVariableAlias(target);
     }
     if (type === 'color') return parseColour(raw);
+    if (type === 'fontFamily') return String(raw);
     return typeof raw === 'number' ? raw : parseFloat(raw);
+  }
+
+  // The file stores letter spacing in em. A variable bound to a text style is read in pixels, so it is stored as em x font size.
+  function isTracking(path) { return path[path.length - 1] === 'letter-spacing'; }
+  function trackingPx(path, em) {
+    var size = parseFloat(literal(doc, doc.Type[path[1]].size.$value));
+    return Math.round(em * size * 1000) / 1000;
   }
 
   // Semantic values alias the primitives. If only Semantic is chosen, the primitives must already be in the file.
@@ -135,8 +171,8 @@ async function importTokens(doc, groups) {
       var it = items[i];
       var type = it.leaf.$type;
       if (type === 'shadow') continue;
-      var v = upsert(c, varName(it.path), type === 'color' ? 'COLOR' : 'FLOAT');
-      if (it.leaf.$description) v.description = it.leaf.$description;
+      var v = upsert(c, varName(it.path), type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
+      if (it.leaf.$description) v.description = it.leaf.$description === 'em' ? 'px = em x font size' : it.leaf.$description;
       try { v.scopes = scopesFor(group, it.path); } catch (e) {}
       var css = cssName(group, it.path);
       if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (e) {} }
@@ -144,8 +180,38 @@ async function importTokens(doc, groups) {
       if (ext && ext.modes) {
         Object.keys(ext.modes).forEach(function (m) { v.setValueForMode(modeId(c, m), valueFor(type, ext.modes[m])); });
       } else {
-        v.setValueForMode(modeId(c, COLLECTIONS[group][0]), valueFor(type, it.leaf.$value));
+        var value = valueFor(type, it.leaf.$value);
+        if (isTracking(it.path) && group === 'Type' && typeof value === 'number') value = trackingPx(it.path, value);
+        v.setValueForMode(modeId(c, COLLECTIONS[group][0]), value);
       }
+    }
+  }
+
+  // Text styles: one per type step (and weight variant), using the font, bound to the variables above.
+  var textStyles = 0, missingFonts = [];
+  if (wanted.indexOf('Type') >= 0) {
+    var typeCollection = byCollection.Type;
+    var fonts = await figma.listAvailableFontsAsync();
+    var existingTextStyles = await figma.getLocalTextStylesAsync();
+    var steps = Object.keys(doc.Type).filter(function (k) { return k !== 'font-family' && doc.Type[k].size && doc.Type[k].family; });
+    for (var si = 0; si < steps.length; si++) {
+      var step = steps[si], t = doc.Type[step];
+      var family = String(literal(doc, t.family.$value)), weight = Number(literal(doc, t.weight.$value));
+      var styleName = fontStyleFor(fonts, family, weight);
+      if (!styleName) { if (missingFonts.indexOf(family) < 0) missingFonts.push(family); continue; }
+      var fontName = { family: family, style: styleName };
+      await figma.loadFontAsync(fontName);
+      var ts = existingTextStyles.find(function (x) { return x.name === 'type/' + step; });
+      if (!ts) { ts = figma.createTextStyle(); ts.name = 'type/' + step; existingTextStyles.push(ts); }
+      ts.fontName = fontName;
+      ts.fontSize = parseFloat(literal(doc, t.size.$value));
+      ts.lineHeight = { unit: 'PIXELS', value: parseFloat(literal(doc, t['line-height'].$value)) };
+      ts.letterSpacing = { unit: 'PIXELS', value: trackingPx(['Type', step], Number(literal(doc, t['letter-spacing'].$value))) };
+      [['fontSize', 'size'], ['lineHeight', 'line-height'], ['letterSpacing', 'letter-spacing'], ['fontFamily', 'family'], ['fontWeight', 'weight']].forEach(function (pair) {
+        var bound = findVariable(typeCollection, step + '/' + pair[1]);
+        if (bound) { try { ts.setBoundVariable(pair[0], bound); } catch (e) {} }
+      });
+      textStyles++;
     }
   }
 
@@ -167,7 +233,7 @@ async function importTokens(doc, groups) {
     });
   }
 
-  return { created: created, updated: updated, styles: styles };
+  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts };
 }
 
 figma.ui.onmessage = async function (msg) {
@@ -176,7 +242,7 @@ figma.ui.onmessage = async function (msg) {
   try {
     var result = await importTokens(msg.doc, msg.groups);
     figma.ui.postMessage({ type: 'done', result: result });
-    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : ''));
+    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : ''));
   } catch (e) {
     figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
   }

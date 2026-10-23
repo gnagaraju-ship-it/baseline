@@ -55,7 +55,7 @@
   var LABELS = {
     Primitives: 'Colour ramps (Primitives)',
     Semantic: 'Semantic tokens (Light and Dark)',
-    Type: 'Type scale',
+    Type: 'Type scale (variables and text styles)',
     Grid: 'Grids',
     Spacing: 'Spacing',
     Elevation: 'Elevation (shadow styles)'
@@ -145,7 +145,7 @@
     if (!m) return;
     if (m.type === 'done') {
       var r = m.result;
-      setStatus('ok', 'Done. ' + r.created + ' variables created, ' + r.updated + ' updated' + (r.styles ? ', ' + r.styles + ' shadow styles' : '') + '. Open the Variables panel to see them.');
+      setStatus('ok', 'Done. ' + r.created + ' variables created, ' + r.updated + ' updated' + (r.styles ? ', ' + r.styles + ' shadow styles' : '') + (r.textStyles ? ', ' + r.textStyles + ' text styles' : '') + '. Open the Variables panel to see them.' + (r.missingFonts && r.missingFonts.length ? ' No text styles were made for ' + r.missingFonts.join(', ') + ' because Figma does not have that font.' : ''));
       refresh();
     } else if (m.type === 'error') {
       setStatus('err', m.message);

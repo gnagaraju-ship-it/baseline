@@ -6,7 +6,7 @@ import { toElevationCss, type ElevationSettings } from './elevation'
 import { toGridCss, type GridSettings } from './grid'
 import { onValues, scaleSteps, spacingBreakpoints, spacingTokens, toSpacingCss, type SpacingSettings } from './spacing'
 import { resolveAll, toTokenCss } from './tokens'
-import { computeGroups, countRows, isWeb, toTypeCss, withGridBreakpoints, type TypeSettings } from './typeScale'
+import { computeGroups, countRows, isWeb, toTypeCss, typeFonts, withGridBreakpoints, type TypeSettings } from './typeScale'
 
 export interface ExportInput {
   settings: PaletteSettings
@@ -36,7 +36,7 @@ export function exportSections(s: ExportInput): ExportSection[] {
   return [
     { id: 'ramps', title: 'Colour: palette ramps', css: toCss(rows), count: rows.length },
     { id: 'semantic', title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens), count: resolved.resolvedCount },
-    { id: 'type', title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform)), count: countRows(typeGroups) },
+    { id: 'type', title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform), typeFonts(type)), count: countRows(typeGroups) },
     { id: 'grids', title: 'Grids', css: toGridCss(s.grid), count: Object.values(s.grid.on).filter(Boolean).length },
     { id: 'spacing', title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },
     { id: 'elevation', title: 'Elevation', css: toElevationCss(s.elevation.tokens, s.elevation.shadow), count: s.elevation.tokens.length }

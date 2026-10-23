@@ -129,7 +129,9 @@ export function computeGroups(s: TypeSettings): TypeGroup[] {
       rows: g.steps.map(([name, step]) => {
         let size = Math.round(s.base * Math.pow(s.ratio, step))
         if (g.font === 'heading') size = Math.round(size * f)
-        const lh = Math.max(s.grid, Math.round((size * g.lhFactor) / s.grid) * s.grid)
+        let lh = Math.max(s.grid, Math.round((size * g.lhFactor) / s.grid) * s.grid)
+        // A line can never be shorter than its own text: snap up to the next grid step instead.
+        if (lh < size) lh = Math.ceil(size / s.grid) * s.grid
         return makeRow(s, name, size, lh, g.tracking, g.weight, g.font)
       })
     }))
@@ -171,10 +173,17 @@ export function rowFamily(s: TypeSettings, row: TypeRow): string {
   return fontStack(row.font === 'heading' ? s.headingFont : s.bodyFont)
 }
 
-export function toTypeCss(groups: TypeGroup[], web: boolean): string {
+/** The font family names used by the heading and body roles. Apple platforms use SF Pro. */
+export function typeFonts(s: TypeSettings): { heading: string; body: string } {
+  return isWeb(s.platform) ? { heading: s.headingFont, body: s.bodyFont } : { heading: 'SF Pro Display', body: 'SF Pro Text' }
+}
+
+export function toTypeCss(groups: TypeGroup[], web: boolean, fonts?: { heading: string; body: string }): string {
   const lines: string[] = []
+  if (fonts) lines.push(`  --type-font-heading: ${fontStack(fonts.heading)};`, `  --type-font-body: ${fontStack(fonts.body)};`)
   for (const g of groups) {
     for (const r of g.rows) {
+      if (fonts) lines.push(`  --type-${r.name}-family: var(--type-font-${r.font});`, `  --type-${r.name}-weight: ${r.weight};`)
       lines.push(
         `  --type-${r.name}-size: ${web ? `${(r.size / 16).toFixed(3)}rem` : `${r.size}px`};`,
         `  --type-${r.name}-line: ${r.lh}px;`,

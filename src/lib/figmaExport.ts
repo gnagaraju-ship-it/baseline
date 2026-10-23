@@ -8,7 +8,7 @@ import { computeGrid, BREAKPOINTS } from './grid'
 import type { ExportInput } from './exportAll'
 import { onValues, scaleSteps, spacingBreakpoints, spacingTokens } from './spacing'
 import { ALPHA, resolveAll, type ResolvedCell } from './tokens'
-import { computeGroups, isWeb, withGridBreakpoints } from './typeScale'
+import { computeGroups, isWeb, typeFonts, withGridBreakpoints } from './typeScale'
 
 type Json = Record<string, unknown>
 
@@ -65,11 +65,30 @@ export function buildFigmaTokens(input: ExportInput): Json {
   }
 
   const type = withGridBreakpoints(input.type, input.grid.on.md, input.grid.on.xs)
-  const typeTokens: Json = {}
+  // Fonts are named once under font-family; every step points at its role, so changing the font changes the scale.
+  const fonts = typeFonts(type)
+  const typeTokens: Json = {
+    'font-family': { heading: { $type: 'fontFamily', $value: fonts.heading }, body: { $type: 'fontFamily', $value: fonts.body } }
+  }
   for (const g of computeGroups(type)) {
     for (const r of g.rows) {
-      typeTokens[r.name] = { size: dimension(r.size), 'line-height': dimension(r.lh), 'letter-spacing': { $type: 'number', $value: r.tr, $description: 'em' } }
-      for (const v of r.variants) typeTokens[v.name] = { weight: { $type: 'fontWeight', $value: v.weight } }
+      typeTokens[r.name] = {
+        family: { $type: 'fontFamily', $value: `{Type.font-family.${r.font}}` },
+        weight: { $type: 'fontWeight', $value: r.weight },
+        size: dimension(r.size),
+        'line-height': dimension(r.lh),
+        'letter-spacing': { $type: 'number', $value: r.tr, $description: 'em' }
+      }
+      // A weight variant is a full text style: the same size, line height and tracking at another weight.
+      for (const v of r.variants) {
+        typeTokens[v.name] = {
+          family: { $type: 'fontFamily', $value: `{Type.font-family.${r.font}}` },
+          weight: { $type: 'fontWeight', $value: v.weight },
+          size: { $type: 'dimension', $value: `{Type.${r.name}.size}` },
+          'line-height': { $type: 'dimension', $value: `{Type.${r.name}.line-height}` },
+          'letter-spacing': { $type: 'number', $value: `{Type.${r.name}.letter-spacing}`, $description: 'em' }
+        }
+      }
     }
   }
 

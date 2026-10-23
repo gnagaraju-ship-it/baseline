@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  activeView, computeGroups, countRows, defaultTypeSettings, effectiveUnit, fontStack, formatSize, specimenRows, toTypeCss, trackingLabel, type TypeSettings
+  activeView, computeGroups, countRows, defaultTypeSettings, effectiveUnit, fontStack, formatSize, specimenRows, toTypeCss, trackingLabel, typeFonts, type TypeSettings
 } from './typeScale'
 
 const row = (s: TypeSettings, name: string) => computeGroups(s).flatMap((g) => g.rows).find((r) => r.name === name)!
@@ -47,6 +47,21 @@ describe('web scale', () => {
     const o = { ...s, overrides: { 'body-md': { lh: 30, tr: 0.02 } } }
     expect(row(o, 'body-md')).toMatchObject({ lh: 30, tr: 0.02, overridden: true })
     expect(row(o, 'body-lg').overridden).toBe(false)
+  })
+})
+
+describe('line height is never shorter than the text', () => {
+  it('snaps up to the next grid step when the nearest one would be shorter than the font size', () => {
+    const s = { ...defaultTypeSettings(), base: 14, ratio: 1.25 }
+    const all = computeGroups(s).flatMap((g) => g.rows)
+    for (const r of all) expect(r.lh).toBeGreaterThanOrEqual(r.size)
+    expect(all.find((r) => r.name === 'label-sm')).toMatchObject({ size: 9, lh: 16 })
+    expect(all.find((r) => r.name === 'label-xs')).toMatchObject({ size: 7, lh: 8 })
+  })
+  it('holds for every base, ratio and grid', () => {
+    for (const base of [10, 12, 14, 16, 18, 24]) for (const ratio of [1.067, 1.125, 1.2, 1.25, 1.333, 1.5, 1.618]) for (const grid of [4, 8]) {
+      for (const r of computeGroups({ ...defaultTypeSettings(), base, ratio, grid }).flatMap((g) => g.rows)) expect(r.lh).toBeGreaterThanOrEqual(r.size)
+    }
   })
 })
 
@@ -99,6 +114,26 @@ describe('formatting', () => {
   it('builds a font stack, with SF Pro using the system font', () => {
     expect(fontStack('DM Sans')).toBe("'DM Sans Variable', 'DM Sans', system-ui, sans-serif")
     expect(fontStack('SF Pro Text')).toContain('-apple-system')
+  })
+})
+
+describe('css export: fonts and weights', () => {
+  it('names the heading and body fonts once and points every step at its role, with its weight', () => {
+    const s = defaultTypeSettings()
+    const css = toTypeCss(computeGroups(s), true, typeFonts(s))
+    expect(css).toContain("--type-font-heading: 'Raleway Variable', 'Raleway', system-ui, sans-serif;")
+    expect(css).toContain("--type-font-body: 'Nunito Variable', 'Nunito', system-ui, sans-serif;")
+    expect(css).toContain('--type-heading-xl-family: var(--type-font-heading);')
+    expect(css).toContain('--type-heading-xl-weight: 500;')
+    expect(css).toContain('--type-body-md-family: var(--type-font-body);')
+    expect(css).toContain('--type-body-md-weight: 400;')
+    expect(css).toContain('--type-label-xs-weight: 500;')
+  })
+  it('uses SF Pro on Apple platforms and still works without fonts', () => {
+    const s = { ...defaultTypeSettings(), platform: 2 as const }
+    expect(typeFonts(s)).toEqual({ heading: 'SF Pro Display', body: 'SF Pro Text' })
+    expect(toTypeCss(computeGroups(s), false, typeFonts(s))).toContain('--type-font-heading: -apple-system')
+    expect(toTypeCss(computeGroups(defaultTypeSettings()), true)).not.toContain('--type-font-heading')
   })
 })
 

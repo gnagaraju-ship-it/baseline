@@ -86,6 +86,42 @@ describe('figma / DTCG export', () => {
     })
   })
 
+  it('exports the heading and body fonts once, and every step with family, weight, size, line height and tracking', () => {
+    const d = doc()
+    expect(d.Type['font-family']).toEqual({ heading: { $type: 'fontFamily', $value: 'Raleway' }, body: { $type: 'fontFamily', $value: 'Nunito' } })
+    const step = d.Type['heading-xl']
+    expect(Object.keys(step)).toEqual(['family', 'weight', 'size', 'line-height', 'letter-spacing'])
+    expect(step.family).toEqual({ $type: 'fontFamily', $value: '{Type.font-family.heading}' })
+    expect(step.weight).toEqual({ $type: 'fontWeight', $value: 500 })
+    expect(d.Type['body-md'].family.$value).toBe('{Type.font-family.body}')
+    expect(d.Type['body-md'].weight.$value).toBe(400)
+    expect(d.Type['label-xs'].weight.$value).toBe(500)
+    expect(Object.keys(d.Type)).toHaveLength(1 + 11)
+    expect(lookup(d, step.family.$value)?.$value).toBe('Raleway')
+  })
+
+  it('follows the chosen fonts, and uses SF Pro on Apple platforms', () => {
+    const i = input()
+    i.type.headingFont = 'Playfair Display'
+    i.type.bodyFont = 'Lora'
+    expect((buildFigmaTokens(i) as J).Type['font-family'].heading.$value).toBe('Playfair Display')
+    expect((buildFigmaTokens(i) as J).Type['font-family'].body.$value).toBe('Lora')
+    i.type.platform = 2
+    const a = buildFigmaTokens(i) as J
+    expect(a.Type['font-family']).toEqual({ heading: { $type: 'fontFamily', $value: 'SF Pro Display' }, body: { $type: 'fontFamily', $value: 'SF Pro Text' } })
+  })
+
+  it('weight variants are complete text styles that alias the base step for size, line height and tracking', () => {
+    const i = input()
+    i.type.variants = { 'body-md': [600] }
+    const v = (buildFigmaTokens(i) as J).Type['body-md-semibold']
+    expect(v.weight).toEqual({ $type: 'fontWeight', $value: 600 })
+    expect(v.family.$value).toBe('{Type.font-family.body}')
+    expect(v.size.$value).toBe('{Type.body-md.size}')
+    expect(v['line-height'].$value).toBe('{Type.body-md.line-height}')
+    expect(v['letter-spacing'].$value).toBe('{Type.body-md.letter-spacing}')
+  })
+
   it('weight variants become fontWeight tokens', () => {
     const i = input()
     i.type.variants = { 'body-md': [600] }

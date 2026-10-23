@@ -14,6 +14,13 @@ const input = (): ExportInput => ({
 })
 const file = (n: string) => PLUGIN_FILES.find((f) => f.name === `${PLUGIN_FOLDER}/${n}`)!.data
 
+const font = (family: string, styles: string[]) => styles.map((style) => ({ fontName: { family, style } }))
+const FONTS = [
+  ...font('Raleway', ['Regular', 'Medium', 'SemiBold', 'Bold', 'Italic', 'Medium Italic']),
+  ...font('Nunito', ['Regular', 'Medium', 'Semi Bold', 'Bold']),
+  ...font('Inter', ['Regular'])
+]
+
 // --- a small in-memory Figma to run the plugin code against ---------------------------------------------------
 function mockFigma() {
   let id = 0
@@ -22,11 +29,24 @@ function mockFigma() {
   const styles: any[] = []
   const posted: any[] = []
   const notes: string[] = []
+  const textStyles: any[] = []
+  const loaded: any[] = []
   const figma: any = {
     showUI: () => {},
     notify: (m: string) => notes.push(m),
     closePlugin: () => {},
     ui: { postMessage: (m: any) => posted.push(m), onmessage: null as any },
+    listAvailableFontsAsync: async () => FONTS,
+    loadFontAsync: async (f: any) => { loaded.push(f) },
+    getLocalTextStylesAsync: async () => textStyles.slice(),
+    createTextStyle: () => {
+      const t: any = {
+        id: `T${++id}`, name: '', bound: {} as Record<string, any>,
+        setBoundVariable(field: string, v: any) { this.bound[field] = v.id }
+      }
+      textStyles.push(t)
+      return t
+    },
     createEffectStyle: () => { const s = { id: `S${++id}`, name: '', effects: [] }; styles.push(s); return s },
     getLocalEffectStylesAsync: async () => styles.slice(),
     variables: {
@@ -53,7 +73,7 @@ function mockFigma() {
       createVariableAlias: (v: any) => ({ type: 'VARIABLE_ALIAS', id: v.id })
     }
   }
-  return { figma, collections, variables, styles, posted, notes }
+  return { figma, collections, variables, styles, posted, notes, textStyles, loaded }
 }
 
 function loadPlugin() {
@@ -97,11 +117,11 @@ describe('plugin import', () => {
     const count = (name: string) => p.variables.filter((v) => v.variableCollectionId === p.collections.find((c) => c.name === name).id).length
     expect(count('Primitives')).toBe(112 + 32)
     expect(count('Semantic')).toBe(58)
-    expect(count('Type')).toBe(33)
+    expect(count('Type')).toBe(2 + 11 * 5)
     expect(count('Grid')).toBe(18)
     expect(count('Spacing')).toBe(17 + 36)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 33 + 18 + 53, updated: 0, styles: 5 })
+    expect(done.result).toEqual({ created: 144 + 58 + 57 + 18 + 53, updated: 0, styles: 5, textStyles: 11, missingFonts: [] })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -135,11 +155,94 @@ describe('plugin import', () => {
     expect(v('heading-xl/size').scopes).toEqual(['FONT_SIZE'])
     expect(v('heading-xl/size').codeSyntax.WEB).toBe('var(--type-heading-xl-size)')
     expect(v('heading-xl/line-height').codeSyntax.WEB).toBe('var(--type-heading-xl-line)')
-    expect(v('heading-xl/letter-spacing').description).toBe('em')
+    expect(v('heading-xl/letter-spacing').description).toBe('px = em x font size')
     expect(v('space/24').scopes).toEqual(['GAP'])
     expect(v('space/24').codeSyntax.WEB).toBe('var(--space-24)')
     expect(v('stack-md/xxl').codeSyntax.WEB).toBe('var(--stack-md-xxl)')
     expect(v('colour/black-alpha/5').codeSyntax.WEB).toBeUndefined()
+  })
+
+  it('creates font family (text) and font weight variables, and points every step at its font role', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    const v = (n: string) => p.variables.find((x) => x.name === n)
+    const value = (n: string) => Object.values(v(n).valuesByMode)[0] as any
+    expect(v('font-family/heading').resolvedType).toBe('STRING')
+    expect(value('font-family/heading')).toBe('Raleway')
+    expect(value('font-family/body')).toBe('Nunito')
+    expect(v('font-family/heading').scopes).toEqual(['FONT_FAMILY'])
+    expect(v('font-family/heading').codeSyntax.WEB).toContain('--type-font-heading')
+    expect(v('heading-xl/family').resolvedType).toBe('STRING')
+    expect(value('heading-xl/family')).toEqual({ type: 'VARIABLE_ALIAS', id: v('font-family/heading').id })
+    expect(value('body-md/family')).toEqual({ type: 'VARIABLE_ALIAS', id: v('font-family/body').id })
+    expect(v('heading-xl/family').codeSyntax.WEB).toBe('var(--type-heading-xl-family)')
+    expect(v('heading-xl/weight').resolvedType).toBe('FLOAT')
+    expect(value('heading-xl/weight')).toBe(500)
+    expect(value('body-md/weight')).toBe(400)
+    expect(v('body-md/weight').scopes).toEqual(['FONT_WEIGHT'])
+    expect(v('body-md/weight').codeSyntax.WEB).toBe('var(--type-body-md-weight)')
+  })
+
+  it('stores letter spacing as pixels (em x font size), the way Figma reads a bound variable', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    const px = (n: string) => Object.values(p.variables.find((x) => x.name === n)!.valuesByMode)[0]
+    expect(px('heading-xl/letter-spacing')).toBeCloseTo(-0.25, 3)
+    expect(px('label-xs/letter-spacing')).toBeCloseTo(0.1, 3)
+    expect(px('body-md/letter-spacing')).toBe(0)
+  })
+
+  it('creates one text style per step with the right font style, size, line height and bound variables', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    expect(p.textStyles).toHaveLength(11)
+    const heading = p.textStyles.find((t) => t.name === 'type/heading-xl')
+    expect(heading.fontName).toEqual({ family: 'Raleway', style: 'Medium' })
+    expect(heading.fontSize).toBe(25)
+    expect(heading.lineHeight).toEqual({ unit: 'PIXELS', value: 32 })
+    expect(heading.letterSpacing).toEqual({ unit: 'PIXELS', value: -0.25 })
+    expect(Object.keys(heading.bound).sort()).toEqual(['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight'])
+    expect(heading.bound.fontSize).toBe(p.variables.find((x) => x.name === 'heading-xl/size').id)
+    expect(p.textStyles.find((t) => t.name === 'type/body-md').fontName).toEqual({ family: 'Nunito', style: 'Regular' })
+    expect(p.loaded.length).toBeGreaterThanOrEqual(11)
+    expect(p.posted.at(-1).result).toMatchObject({ textStyles: 11, missingFonts: [] })
+  })
+
+  it('makes a text style for a weight variant, matching "Semi Bold" and "SemiBold" font styles', async () => {
+    const i = input()
+    i.type.variants = { 'body-md': [600], 'heading-md': [600] }
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(buildExport(i, 'json', ALL_MODULES).text), groups: ['Type'] })
+    const body = p.textStyles.find((t) => t.name === 'type/body-md-semibold')
+    expect(body.fontName).toEqual({ family: 'Nunito', style: 'Semi Bold' })
+    expect(body.fontSize).toBe(14)
+    expect(body.lineHeight).toEqual({ unit: 'PIXELS', value: 24 })
+    const heading = p.textStyles.find((t) => t.name === 'type/heading-md-semibold')
+    expect(heading.fontName).toEqual({ family: 'Raleway', style: 'SemiBold' })
+    const alias = Object.values(p.variables.find((x) => x.name === 'body-md-semibold/size')!.valuesByMode)[0] as any
+    expect(alias).toEqual({ type: 'VARIABLE_ALIAS', id: p.variables.find((x) => x.name === 'body-md/size')!.id })
+    expect(p.textStyles).toHaveLength(13)
+  })
+
+  it('skips text styles for fonts Figma does not have, and says which', async () => {
+    const i = input()
+    i.type.headingFont = 'Fraunces'
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(buildExport(i, 'json', ALL_MODULES).text), groups: ['Type'] })
+    expect(p.posted.at(-1).result.missingFonts).toEqual(['Fraunces'])
+    expect(p.textStyles).toHaveLength(7)
+    expect(p.textStyles.every((t) => t.fontName.family === 'Nunito')).toBe(true)
+    expect(p.variables.find((x) => x.name === 'font-family/heading')).toBeDefined()
+  })
+
+  it('updates text styles in place on a second import', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: p.doc, groups: ['Type'] })
+    const i = input()
+    i.type.bodyFont = 'Inter'
+    await p.send({ type: 'import', doc: JSON.parse(buildExport(i, 'json', ALL_MODULES).text), groups: ['Type'] })
+    expect(p.textStyles).toHaveLength(11)
+    expect(p.textStyles.find((t) => t.name === 'type/body-md').fontName).toEqual({ family: 'Inter', style: 'Regular' })
   })
 
   it('updates in place when run again, and writes the new values', async () => {
