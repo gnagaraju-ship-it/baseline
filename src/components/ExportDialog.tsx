@@ -83,6 +83,15 @@ export function ExportDialog() {
                   <span className="flex flex-col"><span className="text-[13px] font-semibold">{f.label}</span><span className="text-xs text-muted">{f.note}</span></span>
                 </label>
               ))}
+              {d.format === 'figma' && (
+                <ol aria-label="How to import into Figma" className="m-0 flex list-decimal flex-col gap-1 rounded-[10px] bg-soft py-3 pl-8 pr-3 text-xs leading-[1.5] text-ink-3">
+                  <li>Download the script.</li>
+                  <li>In the Figma desktop app: Plugins, Development, New plugin, choose Empty and a folder.</li>
+                  <li>Open that folder&rsquo;s <code className="font-mono">code.js</code>, replace its contents with the script, save.</li>
+                  <li>Plugins, Development, run your plugin. Variables and shadow styles appear in the file.</li>
+                  <li className="list-none -ml-4 text-muted">Or paste it into the free Scripter plugin and press Run. Running it again updates in place.</li>
+                </ol>
+              )}
             </fieldset>
 
             <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
