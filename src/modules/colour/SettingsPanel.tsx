@@ -22,7 +22,7 @@ const SEMANTIC: Array<{ key: SemanticKey; label: string }> = [
 ]
 
 const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
-const dashed = 'h-10 rounded-[10px] border border-dashed border-[#D4D4D8] bg-transparent px-3.5 text-left text-[13px] text-muted'
+const dashed = 'h-10 rounded-[10px] border border-dashed border-edge bg-transparent px-3.5 text-left text-[13px] text-muted'
 const linkBtn = 'border-0 bg-transparent py-1.5 text-[13px] text-muted hover:text-ink'
 
 function Divider() {
@@ -36,9 +36,9 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
   return (
     <>
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
-        <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-ink"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
         <div className="flex-1 text-base font-semibold tracking-[-0.01em]">Omni by Canvs</div>
-        <button type="button" disabled aria-label="Rename project" title="Rename project — not in v1" className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-white text-muted opacity-60">
+        <button type="button" disabled aria-label="Rename project" title="Rename project — not in v1" className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-muted opacity-60">
           <Icon name="edit" size={16} />
         </button>
       </div>
@@ -65,7 +65,7 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <h3 className={h3}>Brand</h3>
-              <button type="button" disabled aria-label="Pick colour from image" title="Pick colour from image — not in v1" className="flex h-8 w-8 items-center justify-center rounded-[7px] border border-line bg-white text-muted opacity-60">
+              <button type="button" disabled aria-label="Pick colour from image" title="Pick colour from image — not in v1" className="flex h-8 w-8 items-center justify-center rounded-[7px] border border-line bg-surface text-muted opacity-60">
                 <Icon name="image" size={15} />
               </button>
             </div>
@@ -89,11 +89,11 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
             </div>
             {settings.neutral.enabled ? (
               <div className="flex flex-col gap-3">
-                <div role="group" aria-label="Neutral source" className="inline-flex gap-0.5 self-start rounded-[9px] bg-[#F0F0F2] p-[3px]">
-                  <button type="button" aria-pressed="true" className="h-8 rounded-[7px] border-0 bg-white px-3.5 text-[13px] font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,.08)]">Preset</button>
+                <div role="group" aria-label="Neutral source" className="inline-flex gap-0.5 self-start rounded-[9px] bg-line-faint p-[3px]">
+                  <button type="button" aria-pressed="true" className="h-8 rounded-[7px] border-0 bg-surface px-3.5 text-[13px] font-medium text-ink shadow-[0_1px_2px_rgba(0,0,0,.08)]">Preset</button>
                   <button type="button" disabled aria-pressed="false" title="Custom neutral — not in v1" className="h-8 rounded-[7px] border-0 bg-transparent px-3.5 text-[13px] text-muted opacity-60">Custom</button>
                 </div>
-                <div className="relative flex h-11 items-center gap-2.5 rounded-[10px] border border-line bg-white pl-2.5">
+                <div className="relative flex h-11 items-center gap-2.5 rounded-[10px] border border-line bg-surface pl-2.5">
                   <div aria-hidden="true" className="flex gap-0.5 rounded-md border border-line-faint p-[3px]">
                     {neutral && neutralMini(neutral.steps).map((c, i) => <span key={i} className="h-5 w-3 rounded-[3px]" style={{ background: `#${c}` }} />)}
                   </div>

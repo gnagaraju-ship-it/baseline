@@ -53,6 +53,9 @@ interface ProjectState {
   openToken: { name: string; mode: Mode } | null
   pickerPalette: PaletteRef | null
   contrast: ContrastState
+  /** Theme of the tool itself (the UI preview has its own Light / Dark for the design system). */
+  appTheme: AppTheme
+  setAppTheme: (theme: AppTheme) => void
   previewMode: PreviewMode
   setPreviewMode: (mode: PreviewMode) => void
   /** Shared by Type, Grids and Spacing. */
@@ -113,6 +116,17 @@ interface ProjectState {
   reset: () => void
 }
 
+export type AppTheme = 'light' | 'dark'
+
+/** First visit follows the operating system; after that the saved choice wins. */
+function systemTheme(): AppTheme {
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  } catch {
+    return 'light'
+  }
+}
+
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
 
 export const useProject = create<ProjectState>()(persist((set) => ({
@@ -125,6 +139,8 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   openToken: null,
   pickerPalette: null,
   contrast: defaultContrast(),
+  appTheme: systemTheme(),
+  setAppTheme: (appTheme) => set({ appTheme }),
   previewMode: 'light',
   setPreviewMode: (previewMode) => set({ previewMode }),
   unit: 'rem',
@@ -259,6 +275,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     tokenOverrides: s.tokenOverrides,
     contrast: s.contrast,
     previewMode: s.previewMode,
+    appTheme: s.appTheme,
     unit: s.unit,
     type: s.type,
     grid: s.grid,

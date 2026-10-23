@@ -10,7 +10,7 @@ interface Props {
 
 export function DetailCard({ standard, text, bg, score }: Props) {
   return (
-    <div aria-live="polite" aria-label="Selected pair" className="flex flex-col gap-3 rounded-xl bg-ink p-3.5 text-[#FAFAFA]">
+    <div aria-live="polite" aria-label="Selected pair" className="flex flex-col gap-3 rounded-xl bg-night p-3.5 text-[#FAFAFA]">
       <div className="flex justify-between text-[13px]">
         <span className="font-semibold">{text.label} on {bg.label}</span>
         <span className="font-mono text-[#D4D4D8]">{detailText(standard, score)}</span>

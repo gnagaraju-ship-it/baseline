@@ -3,7 +3,7 @@ import { BREAKPOINTS, GRID_PRESETS, breakpoint, type GridPresetKey } from '../..
 import { useProject } from '../../store/project'
 
 const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
-const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#3F3F46]'}`
+const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`
 const label11 = 'text-[11px] font-semibold tracking-[.06em] text-muted'
 
 const PLATFORMS: Array<[string, string]> = [
@@ -24,7 +24,7 @@ export function GridsSettings() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
         <div className="text-base font-semibold">Grids</div>
       </div>
 
@@ -34,11 +34,11 @@ export function GridsSettings() {
             <h3 className={h3}>Platform</h3>
             <span className="rounded border border-line px-1.5 py-0.5 text-[10px] font-semibold tracking-[.06em] text-muted">PROJECT</span>
           </div>
-          <div role="group" aria-label="Platform" className="grid grid-cols-4 gap-1 rounded-[10px] border border-line bg-white p-1">
+          <div role="group" aria-label="Platform" className="grid grid-cols-4 gap-1 rounded-[10px] border border-line bg-surface p-1">
             {PLATFORMS.map(([label, d], i) => {
               const on = g.platform === i
               return (
-                <button key={label} type="button" aria-label={label} aria-pressed={on} title={label} onClick={() => s.setGridPlatform(i)} className={`flex h-9 items-center justify-center rounded-[7px] border ${on ? 'border-[#F5B49A] bg-accent-tint text-accent-text' : 'border-transparent bg-transparent text-muted'}`}>
+                <button key={label} type="button" aria-label={label} aria-pressed={on} title={label} onClick={() => s.setGridPlatform(i)} className={`flex h-9 items-center justify-center rounded-[7px] border ${on ? 'border-accent-ring bg-accent-tint text-accent-text' : 'border-transparent bg-transparent text-muted'}`}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
                 </button>
               )
@@ -51,8 +51,8 @@ export function GridsSettings() {
           {FLAGS.map(([flag, label]) => (
             <div key={flag} className="flex min-h-8 items-center justify-between">
               <span id={`tg-${flag}`} className="text-[13px]">{label}</span>
-              <button type="button" role="switch" aria-checked={g[flag]} aria-labelledby={`tg-${flag}`} onClick={() => s.toggleGridFlag(flag)} className={`flex h-5 w-9 rounded-full border-0 p-0.5 ${g[flag] ? 'justify-end bg-accent' : 'justify-start bg-[#D4D4D8]'}`}>
-                <span className="h-4 w-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
+              <button type="button" role="switch" aria-checked={g[flag]} aria-labelledby={`tg-${flag}`} onClick={() => s.toggleGridFlag(flag)} className={`flex h-5 w-9 rounded-full border-0 p-0.5 ${g[flag] ? 'justify-end bg-accent' : 'justify-start bg-edge'}`}>
+                <span className="h-4 w-4 rounded-full bg-surface shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
               </button>
             </div>
           ))}
@@ -79,7 +79,7 @@ export function GridsSettings() {
               <span className="text-[11px] text-muted">px</span>
             </div>
           ))}
-          <button type="button" disabled title="Custom breakpoints — not in v1" className="h-[34px] self-start rounded-lg border border-line bg-white px-3 text-xs text-[#3F3F46] opacity-60">+ Add breakpoint or device</button>
+          <button type="button" disabled title="Custom breakpoints — not in v1" className="h-[34px] self-start rounded-lg border border-line bg-surface px-3 text-xs text-ink-3 opacity-60">+ Add breakpoint or device</button>
         </section>
 
         <section className="flex flex-col gap-2.5">

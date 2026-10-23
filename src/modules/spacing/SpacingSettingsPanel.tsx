@@ -3,7 +3,7 @@ import { SPACING_BASES, spacingBreakpoints, type SpacingBase } from '../../lib/s
 import { useProject } from '../../store/project'
 
 const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
-const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#3F3F46]'}`
+const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`
 
 export function SpacingSettingsPanel() {
   const { spacing, grid, setSpacingBase, setSpacingSame, toggleSpacingBreakpoint } = useProject()
@@ -12,7 +12,7 @@ export function SpacingSettingsPanel() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
         <div className="text-base font-semibold">Spacing</div>
       </div>
 
@@ -30,8 +30,8 @@ export function SpacingSettingsPanel() {
           <div className="flex justify-between"><h3 className={h3}>Breakpoints</h3><span className="text-[11px] text-muted">{active.length} ON</span></div>
           <div className="flex items-center justify-between">
             <span id="same-grid" className="text-[13px] font-medium">Same as Grid</span>
-            <button type="button" role="switch" aria-checked={spacing.same} aria-labelledby="same-grid" onClick={() => setSpacingSame(!spacing.same)} className={`flex h-5 w-9 rounded-full border-0 p-0.5 ${spacing.same ? 'justify-end bg-accent' : 'justify-start bg-[#D4D4D8]'}`}>
-              <span className="h-4 w-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
+            <button type="button" role="switch" aria-checked={spacing.same} aria-labelledby="same-grid" onClick={() => setSpacingSame(!spacing.same)} className={`flex h-5 w-9 rounded-full border-0 p-0.5 ${spacing.same ? 'justify-end bg-accent' : 'justify-start bg-edge'}`}>
+              <span className="h-4 w-4 rounded-full bg-surface shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
             </button>
           </div>
           <p className="m-0 text-xs leading-[1.55] text-muted">

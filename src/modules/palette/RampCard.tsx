@@ -4,7 +4,7 @@ import { toCss, tokenRows, type Palette } from '../../lib/colour'
 import { luminance } from '../../lib/contrast'
 import { useProject } from '../../store/project'
 
-const iconBtn = 'flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-white text-muted hover:bg-soft'
+const iconBtn = 'flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-muted hover:bg-soft'
 
 export function RampCard({ palette }: { palette: Palette }) {
   const selected = useProject((s) => s.selected)
@@ -18,7 +18,7 @@ export function RampCard({ palette }: { palette: Palette }) {
   }
 
   return (
-    <section aria-label={palette.name} className="rounded-[14px] border border-line bg-white shadow-[0_1px_2px_rgba(24,24,27,.04)]">
+    <section aria-label={palette.name} className="rounded-[14px] border border-line bg-surface shadow-[0_1px_2px_rgba(24,24,27,.04)]">
       <header className="flex items-center gap-3 border-b border-line-faint py-2.5 pl-5 pr-3">
         <span className="h-4 w-4 rounded" style={{ background: `#${palette.hex}` }} />
         <h2 className="m-0 text-base font-semibold tracking-[-0.01em]">{palette.name}</h2>
@@ -39,8 +39,8 @@ export function RampCard({ palette }: { palette: Palette }) {
                 onClick={() => select(palette.key, i)}
                 aria-pressed={on}
                 aria-label={`${palette.name} ${i + 1}, #${h}`}
-                className="relative flex flex-col overflow-hidden rounded-md border bg-white p-0 text-left transition-[transform,box-shadow] duration-150"
-                style={{ borderColor: on ? '#18181B' : '#EFEFF1', transform: on ? 'translateY(-4px)' : 'none', boxShadow: on ? '0 8px 18px rgba(24,24,27,.18)' : 'none', zIndex: on ? 2 : 1 }}
+                className="relative flex flex-col overflow-hidden rounded-md border bg-surface p-0 text-left transition-[transform,box-shadow] duration-150"
+                style={{ borderColor: on ? 'var(--color-ink)' : 'var(--color-line-faint)', transform: on ? 'translateY(-4px)' : 'none', boxShadow: on ? '0 8px 18px rgba(24,24,27,.18)' : 'none', zIndex: on ? 2 : 1 }}
               >
                 <span className="block h-[68px]" style={{ background: `#${h}` }} />
                 {i === palette.base - 1 && <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full" style={{ background: luminance(h) > 0.4 ? '#18181B' : '#FFFFFF' }} />}

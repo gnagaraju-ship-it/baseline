@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { titleFor } from './lib/titles'
+import { useProject } from './store/project'
 import { ContrastPage } from './modules/contrast/ContrastPage'
 import { PalettePage } from './modules/palette/PalettePage'
 import { PreviewPage } from './modules/preview/PreviewPage'
@@ -13,6 +14,10 @@ import { TokensPage } from './modules/tokens/TokensPage'
 
 export default function App() {
   const { pathname } = useLocation()
+  const appTheme = useProject((s) => s.appTheme)
+  useEffect(() => {
+    document.documentElement.dataset.theme = appTheme
+  }, [appTheme])
   useEffect(() => {
     document.title = titleFor(pathname)
   }, [pathname])

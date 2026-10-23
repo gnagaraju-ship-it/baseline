@@ -22,7 +22,7 @@ export function ColourField({ id, label, value, fallback, onChange, invalidMessa
         <label htmlFor={id} className="text-[13px] font-medium text-ink-2">{label}</label>
         <span className="flex items-center gap-1 text-[11px] font-semibold tracking-[.04em] text-muted"><Icon name="updown" size={10} strokeWidth={2.2} />HEX</span>
       </div>
-      <div className={`field flex h-11 items-center gap-2.5 rounded-[10px] border bg-white px-1.5 ${valid ? 'border-line' : 'border-[#DC2626]'}`}>
+      <div className={`field flex h-11 items-center gap-2.5 rounded-[10px] border bg-surface px-1.5 ${valid ? 'border-line' : 'border-danger'}`}>
         <input className="chip-input" type="color" value={picker} onChange={(e) => onChange(e.target.value.toUpperCase())} aria-label={`${label} colour picker`} />
         <input id={id} className="hexin min-w-0 flex-1 border-0 bg-transparent font-mono text-[13px] text-ink" type="text" value={value} onChange={(e) => onChange(e.target.value)} spellCheck={false} aria-invalid={!valid} />
         {onRemove && (

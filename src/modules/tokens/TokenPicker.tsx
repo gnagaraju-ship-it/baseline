@@ -38,7 +38,7 @@ export function TokenPicker({ token, mode, palettes }: Props) {
 
   return (
     <div className="flex justify-end px-4 pb-[18px] pt-1">
-      <div role="dialog" aria-label={`${def.name}, ${mode} mode`} className="flex w-[min(560px,100%)] flex-col gap-3 rounded-xl border border-line bg-white p-3.5 shadow-[0_12px_32px_rgba(24,24,27,.14)]">
+      <div role="dialog" aria-label={`${def.name}, ${mode} mode`} className="flex w-[min(560px,100%)] flex-col gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-[0_12px_32px_rgba(24,24,27,.14)]">
         <div className="flex items-center gap-2">
           <span className="flex-1 font-mono text-[13px] font-semibold">{def.name}</span>
           <span className="rounded-[5px] border border-line px-1.5 py-[3px] text-[10px] font-semibold tracking-[.08em] text-muted">{mode.toUpperCase()}</span>
@@ -50,7 +50,7 @@ export function TokenPicker({ token, mode, palettes }: Props) {
           {chips.map((c) => {
             const on = c.key === active
             return (
-              <button key={c.key} type="button" aria-pressed={on} onClick={() => setPickerPalette(c.key)} className={`h-7 rounded-full border px-2.5 text-xs ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-3'}`}>
+              <button key={c.key} type="button" aria-pressed={on} onClick={() => setPickerPalette(c.key)} className={`h-7 rounded-full border px-2.5 text-xs ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`}>
                 {c.label}
               </button>
             )
@@ -68,8 +68,8 @@ export function TokenPicker({ token, mode, palettes }: Props) {
                 aria-label={`${refLabel(`${active}-${i + 1}`)}`}
                 aria-pressed={selected}
                 onClick={() => setTokenOverride(def.name, mode, `${active}-${i + 1}`)}
-                className="flex flex-col items-center gap-[3px] rounded-[9px] bg-white p-1"
-                style={{ border: `2px solid ${selected ? '#18181B' : 'transparent'}` }}
+                className="flex flex-col items-center gap-[3px] rounded-[9px] bg-surface p-1"
+                style={{ border: `2px solid ${selected ? 'var(--color-ink)' : 'transparent'}` }}
               >
                 <span className="h-[34px] w-full rounded-md shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]" style={{ background: paint?.css }} />
                 <span className="text-[11px] font-semibold text-ink-2">{i + 1}</span>

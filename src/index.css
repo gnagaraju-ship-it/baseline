@@ -19,7 +19,7 @@
 @import "@fontsource-variable/source-serif-4";
 @import "@fontsource-variable/bricolage-grotesque";
 
-@theme {
+@theme static {
   --font-sans: "Inter Variable", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
 
@@ -29,16 +29,70 @@
   --color-line: #e4e4e7;
   --color-line-soft: #eaeaec;
   --color-line-faint: #f0f0f2;
+  --color-edge: #d4d4d8;
   --color-ink: #18181b;
   --color-ink-2: #27272a;
   --color-ink-3: #3f3f46;
+  --color-on-ink: #ffffff;
   --color-muted: #52525b;
+  --color-subtle: #71717a;
   --color-soft: #f4f4f5;
   --color-accent: #e2531b;
   --color-accent-text: #c2410c;
   --color-accent-tint: #fff1eb;
+  --color-accent-wash: #fff7f3;
+  --color-accent-edge: #fbd5c4;
+  --color-accent-ring: #f5b49a;
+  --color-accent-ring-strong: #f08a5d;
+  --color-accent-band: #ffe4da;
+  --color-accent-bar: #fdba9a;
   --color-btn: #d2400b;
   --color-danger: #b91c1c;
+  --color-warn-bg: #fffbeb;
+  --color-warn-edge: #fcd34d;
+  --color-warn-text: #92400e;
+  --color-warn-chip: #fef3c7;
+  --color-ok: #15803d;
+  --color-mid: #a16207;
+  --color-bad: #b91c1c;
+  /* Blocks that stay dark in both themes: logo tile, code blocks, the selected-pair card. */
+  --color-night: #18181b;
+  --color-code: #e4e4e7;
+}
+
+/* Dark theme for the tool. The design-system previews (ramps, charts, grid fills) keep the user's own colours. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ground: #09090b;
+  --color-surface: #121214;
+  --color-panel: #0e0e10;
+  --color-line: #27272a;
+  --color-line-soft: #202023;
+  --color-line-faint: #1b1b1e;
+  --color-edge: #3f3f46;
+  --color-ink: #fafafa;
+  --color-ink-2: #e4e4e7;
+  --color-ink-3: #d4d4d8;
+  --color-on-ink: #09090b;
+  --color-muted: #a1a1aa;
+  --color-subtle: #8b8b94;
+  --color-soft: #1c1c1f;
+  --color-accent-text: #fb923c;
+  --color-accent-tint: #2a160d;
+  --color-accent-wash: #1d120c;
+  --color-accent-edge: #5c2d17;
+  --color-accent-ring: #7c3a1d;
+  --color-accent-ring-strong: #c2571f;
+  --color-accent-band: #3a1d10;
+  --color-accent-bar: #8a4424;
+  --color-danger: #f87171;
+  --color-warn-bg: #2a2008;
+  --color-warn-edge: #78560f;
+  --color-warn-text: #fcd34d;
+  --color-warn-chip: #3a2c0a;
+  --color-ok: #4ade80;
+  --color-mid: #facc15;
+  --color-bad: #f87171;
 }
 
 @layer base {
@@ -55,7 +109,7 @@
 .chip-input::-webkit-color-swatch-wrapper { padding: 0; }
 .chip-input::-webkit-color-swatch { border: none; border-radius: 7px; }
 .chip-input::-moz-color-swatch { border: none; border-radius: 7px; }
-.field:focus-within { border-color: #a1a1aa; }
+.field:focus-within { border-color: var(--color-subtle); }
 .hexin:focus { outline: none; }
 
-.inp { box-sizing: border-box; height: 40px; border: 1px solid var(--color-line); border-radius: 8px; padding: 0 10px; background: #fff; color: var(--color-ink); font-size: 13px; }
+.inp { box-sizing: border-box; height: 40px; border: 1px solid var(--color-line); border-radius: 8px; padding: 0 10px; background: var(--color-surface); color: var(--color-ink); font-size: 13px; }

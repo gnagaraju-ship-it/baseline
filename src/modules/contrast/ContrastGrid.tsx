@@ -30,7 +30,7 @@ export function ContrastGrid({ label, colours, standard, threshold, cell, onSele
   }
 
   return (
-    <div className="min-w-0 flex-[999_1_520px] overflow-x-auto rounded-[14px] border border-line bg-white p-3">
+    <div className="min-w-0 flex-[999_1_520px] overflow-x-auto rounded-[14px] border border-line bg-surface p-3">
       <div role="grid" aria-label={label} className="flex min-w-[720px] flex-col gap-0.5">
         <div role="row" className={`${COLS} pb-1`}>
           <span />
@@ -63,12 +63,12 @@ export function ContrastGrid({ label, colours, standard, threshold, cell, onSele
                   aria-label={`${r.label} text on ${c.label}: ${same ? 'same colour' : cellText(standard, score)}${ok ? ', meets threshold' : ''}`}
                   onClick={() => onSelect(ri, ci)}
                   onKeyDown={(e) => onKeyDown(e, ri, ci)}
-                  className="h-8 rounded border-0 p-0 font-mono text-[10.5px] hover:outline-2 hover:-outline-offset-2 hover:outline-[#A1A1AA]"
+                  className="h-8 rounded border-0 p-0 font-mono text-[10.5px] hover:outline-2 hover:-outline-offset-2 hover:outline-edge"
                   style={{
-                    background: ok ? `#${c.hex}` : '#F4F4F5',
-                    color: ok ? `#${r.hex}` : '#52525B',
+                    background: ok ? `#${c.hex}` : 'var(--color-soft)',
+                    color: ok ? `#${r.hex}` : 'var(--color-muted)',
                     fontWeight: ok ? 600 : 400,
-                    boxShadow: sel ? '0 0 0 2px #FFFFFF, 0 0 0 4px #18181B' : 'none'
+                    boxShadow: sel ? '0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-ink)' : 'none'
                   }}
                 >
                   {same ? '—' : cellText(standard, score)}

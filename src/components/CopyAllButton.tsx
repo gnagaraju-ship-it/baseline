@@ -13,7 +13,7 @@ export function CopyAllButton({ css }: { css: string }) {
       onClick={async () => {
         flashCopied(await copyText(css))
       }}
-      className="flex h-10 items-center gap-2 rounded-[9px] border border-line bg-white px-3.5 text-[13px] font-medium text-ink"
+      className="flex h-10 items-center gap-2 rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink"
     >
       <Icon name="copy" size={15} strokeWidth={1.7} />
       {copied ? 'Copied' : failed ? 'Copy failed' : 'Copy all'}

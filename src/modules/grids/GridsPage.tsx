@@ -20,7 +20,7 @@ export function GridsPage() {
           {enabled.map((b) => {
             const on = grid.active === b.key
             return (
-              <button key={b.key} type="button" aria-pressed={on} onClick={() => setActive(b.key)} className={`flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-semibold ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#3F3F46]'}`}>
+              <button key={b.key} type="button" aria-pressed={on} onClick={() => setActive(b.key)} className={`flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-semibold ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`}>
                 {b.label}<span className="font-mono font-normal opacity-80">{b.width}</span>
               </button>
             )
@@ -34,7 +34,7 @@ export function GridsPage() {
             <h1 className="m-0 mb-1.5 text-[22px] font-semibold tracking-[-0.01em]">{gridTitle(layout, grid.sidebar)}</h1>
             <p className="m-0 text-[13px] text-muted">{gridDescription(layout, grid, unit)}</p>
           </div>
-          <span className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs text-[#3F3F46]">Sidebar: {chip.state} <span className="font-mono text-muted">{chip.width}</span></span>
+          <span className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs text-ink-3">Sidebar: {chip.state} <span className="font-mono text-muted">{chip.width}</span></span>
         </div>
 
         <GridOverlay layout={layout} unit={unit} floating={grid.floating} />

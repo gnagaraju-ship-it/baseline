@@ -17,8 +17,8 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
   const chosen = settings.variants[row.name] ?? []
 
   return (
-    <div className="overflow-hidden rounded-[10px] border bg-white" style={{ borderColor: open ? '#F08A5D' : '#E4E4E7', boxShadow: open ? '0 0 0 3px #FFE4DA' : 'none' }}>
-      <button type="button" onClick={onToggle} aria-expanded={open} className={`${GRID} min-h-16 w-full border-0 px-4 py-3 text-left hover:bg-panel ${open ? 'bg-[#FFF7F3]' : 'bg-white'}`}>
+    <div className="overflow-hidden rounded-[10px] border bg-surface" style={{ borderColor: open ? 'var(--color-accent-ring-strong)' : 'var(--color-line)', boxShadow: open ? '0 0 0 3px var(--color-accent-band)' : 'none' }}>
+      <button type="button" onClick={onToggle} aria-expanded={open} className={`${GRID} min-h-16 w-full border-0 px-4 py-3 text-left hover:bg-panel ${open ? 'bg-accent-wash' : 'bg-surface'}`}>
         <span className="font-mono text-sm text-muted">{row.name}</span>
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-ink" style={{ ...sampleStyle, fontWeight: row.weight }}>The quick brown fox</span>
         <span className="grid grid-cols-3 gap-x-3.5 text-right">
@@ -33,13 +33,13 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
       </button>
 
       {open && (
-        <div className="flex flex-col gap-3 border-t border-[#FBD5C4] bg-[#FFF7F3] px-4 pb-4 pt-3.5">
+        <div className="flex flex-col gap-3 border-t border-accent-edge bg-accent-wash px-4 pb-4 pt-3.5">
           <div className="text-[10.5px] font-bold tracking-[.08em] text-muted">WEIGHT VARIANTS</div>
           <div role="group" aria-label="Weight variants" className="flex flex-wrap gap-1.5">
             {WEIGHTS.map(([name, w]) => {
               const on = chosen.includes(w)
               return (
-                <button key={w} type="button" aria-pressed={on} onClick={() => toggleVariant(row.name, w)} className={`flex h-[30px] items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#3F3F46]'}`}>
+                <button key={w} type="button" aria-pressed={on} onClick={() => toggleVariant(row.name, w)} className={`flex h-[30px] items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`}>
                   {name}<span className="font-mono font-normal opacity-75">{w}</span>
                 </button>
               )
@@ -63,7 +63,7 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
       )}
 
       {row.variants.map((v) => (
-        <div key={v.name} className={`${GRID} border-t border-line-faint bg-[#FCFCFC] py-2.5 pl-9 pr-4`}>
+        <div key={v.name} className={`${GRID} border-t border-line-faint bg-panel py-2.5 pl-9 pr-4`}>
           <span className="font-mono text-xs text-muted">{v.name}</span>
           <span className="overflow-hidden text-ellipsis whitespace-nowrap" style={{ ...sampleStyle, fontWeight: v.weight }}>The quick brown fox</span>
           <span className="text-right font-mono text-xs font-semibold">{formatSize(row.size, u, web)} · {row.lh}px · {v.weight}</span>

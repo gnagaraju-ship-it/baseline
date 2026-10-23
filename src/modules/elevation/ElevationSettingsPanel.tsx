@@ -11,7 +11,7 @@ export function ElevationSettingsPanel() {
   const item = (k: ElevationPresetKey) => {
     const on = elevation.preset === k
     return (
-      <button key={k} type="button" aria-pressed={on} onClick={() => applyElevationPreset(k)} className={`flex h-[38px] items-center justify-between rounded-lg border-0 px-3 text-[13px] hover:bg-soft ${on ? 'bg-accent font-semibold text-white hover:bg-accent' : 'bg-transparent font-normal text-[#27272A]'}`}>
+      <button key={k} type="button" aria-pressed={on} onClick={() => applyElevationPreset(k)} className={`flex h-[38px] items-center justify-between rounded-lg border-0 px-3 text-[13px] hover:bg-soft ${on ? 'bg-accent font-semibold text-white hover:bg-accent' : 'bg-transparent font-normal text-ink-2'}`}>
         {ELEVATION_PRESETS[k].label}
         <span className="text-[11px] opacity-85">{ELEVATION_PRESETS[k].levels.length}</span>
       </button>
@@ -21,7 +21,7 @@ export function ElevationSettingsPanel() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
         <div className="text-base font-semibold">Elevation</div>
       </div>
 

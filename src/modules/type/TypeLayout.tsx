@@ -56,7 +56,7 @@ export function TypeLayout({ css, tab, onTab, count, onExport, children }: Props
           <button type="button" onClick={onExport} className="flex h-10 items-center gap-2 rounded-[9px] border-0 bg-btn pl-3.5 pr-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(210,64,11,.3)]">
             <Icon name="export" size={15} strokeWidth={1.8} />
             Export
-            <span className="inline-flex h-5 items-center rounded-[5px] bg-white/20 px-1.5 text-[11px] font-semibold">{count}</span>
+            <span className="inline-flex h-5 items-center rounded-[5px] bg-surface/20 px-1.5 text-[11px] font-semibold">{count}</span>
           </button>
         </div>
       </div>

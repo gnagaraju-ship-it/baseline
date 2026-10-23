@@ -30,7 +30,7 @@ export function TokenCard({ level, index, shadow }: { level: Level; index: numbe
   const full = `elevation-${level.name}`
 
   return (
-    <section aria-label={full} className="grid grid-cols-[40px_minmax(200px,2.2fr)_minmax(0,5fr)_120px] items-stretch rounded-xl border border-line bg-white">
+    <section aria-label={full} className="grid grid-cols-[40px_minmax(200px,2.2fr)_minmax(0,5fr)_120px] items-stretch rounded-xl border border-line bg-surface">
       <div className="flex items-center justify-center border-r border-line-faint">
         <button type="button" onClick={() => removeElevation(index)} aria-label={`Delete ${full}`} className="flex h-8 w-8 items-center justify-center rounded-[7px] border-0 bg-transparent text-muted hover:bg-soft">
           <Icon name="trash" size={15} strokeWidth={1.6} />
@@ -41,11 +41,11 @@ export function TokenCard({ level, index, shadow }: { level: Level; index: numbe
           <label htmlFor={`tok-${index}`} className="text-muted">elevation-</label>
           <NameField id={`tok-${index}`} value={level.name} onCommit={(t) => renameElevation(index, t)} />
         </div>
-        <button type="button" onClick={() => addElevationLayer(index)} className="h-[30px] self-start rounded-[7px] border border-line bg-white px-2.5 text-xs text-[#3F3F46]">+ Layer</button>
+        <button type="button" onClick={() => addElevationLayer(index)} className="h-[30px] self-start rounded-[7px] border border-line bg-surface px-2.5 text-xs text-ink-3">+ Layer</button>
       </div>
       <div className="flex flex-col">
         {level.layers.map((l, j) => (
-          <div key={j} className={`${ROW} flex-1 items-center border-b border-[#F4F4F5] px-3 py-3.5`}>
+          <div key={j} className={`${ROW} flex-1 items-center border-b border-line-faint px-3 py-3.5`}>
             <span className="flex items-center gap-1.5 font-mono text-xs text-muted">
               Layer {j + 1}
               {level.layers.length > 1 && (
@@ -61,14 +61,14 @@ export function TokenCard({ level, index, shadow }: { level: Level; index: numbe
                   bare
                   onCommit={(n) => setElevationField(index, j, field, String(n ?? 0))}
                 />
-                <span className="text-[10px] text-[#71717A]">{unit}</span>
+                <span className="text-[10px] text-subtle">{unit}</span>
               </div>
             ))}
           </div>
         ))}
       </div>
       <div className="flex items-center justify-center rounded-r-xl border-l border-line-faint bg-panel p-[18px]">
-        <div aria-hidden="true" data-testid={`preview-${level.name}`} className="h-14 w-14 rounded-[10px] bg-white" style={{ boxShadow: shadowCss(level.layers, shadow) }} />
+        <div aria-hidden="true" data-testid={`preview-${level.name}`} className="h-14 w-14 rounded-[10px] bg-surface" style={{ boxShadow: shadowCss(level.layers, shadow) }} />
       </div>
     </section>
   )

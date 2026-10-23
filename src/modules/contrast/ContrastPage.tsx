@@ -29,7 +29,7 @@ export function ContrastPage() {
     flashCopied(await copyText(toCss(rows)))
   }
 
-  const option = (on: boolean) => `rounded-lg border text-left text-[13px] ${on ? 'border-[#D4D4D8] bg-white font-semibold' : 'border-transparent bg-transparent'} text-ink`
+  const option = (on: boolean) => `rounded-lg border text-left text-[13px] ${on ? 'border-edge bg-surface font-semibold' : 'border-transparent bg-transparent'} text-ink`
 
   return (
     <ColourLayout current="/contrast" exportCount={rows.length} onCopyAll={copyAll} onExport={() => downloadText('tokens.css', toCss(rows))}>
@@ -43,9 +43,9 @@ export function ContrastPage() {
                 type="button"
                 aria-pressed={on}
                 onClick={() => setContrastPalette(p.key)}
-                className={`flex h-[34px] items-center gap-2 rounded-full border pl-2.5 pr-3.5 text-[13px] font-medium ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#27272A]'}`}
+                className={`flex h-[34px] items-center gap-2 rounded-full border pl-2.5 pr-3.5 text-[13px] font-medium ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-2'}`}
               >
-                <span className="h-3 w-3 rounded-full" style={{ background: `#${p.hex}`, boxShadow: `0 0 0 2px ${on ? '#3F3F46' : '#FFFFFF'}` }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: `#${p.hex}`, boxShadow: `0 0 0 2px ${on ? 'var(--color-ink-3)' : 'var(--color-surface)'}` }} />
                 {p.name}
               </button>
             )
@@ -65,7 +65,7 @@ export function ContrastPage() {
               {THRESHOLDS[standard].map(([min, label]) => (
                 <button key={label} type="button" aria-pressed={min === threshold} onClick={() => setContrastThreshold(min)} className={`h-9 px-3 ${option(min === threshold)}`}>{label}</button>
               ))}
-              <div className="mt-1.5 rounded-lg bg-soft px-3 py-2.5 text-xs text-[#3F3F46]">
+              <div className="mt-1.5 rounded-lg bg-soft px-3 py-2.5 text-xs text-ink-3">
                 <b>{standard === 'apca' ? 'Lc ' : ''}{info.label}</b> — {info.description}
               </div>
             </div>

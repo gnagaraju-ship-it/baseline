@@ -16,12 +16,12 @@ function Cell({ token, mode, open }: { token: ResolvedToken; mode: Mode; open: b
       aria-expanded={open}
       aria-label={`${token.def.name}, ${mode} mode: ${cell.available ? cell.label : `${cell.label} (unavailable)`}. Change`}
       onClick={() => (open ? closePicker() : openPicker(token.def.name, mode, cell.palette))}
-      className={`flex h-11 items-center gap-2.5 border-0 pl-4 pr-3 text-left hover:bg-[#F7F7F8] ${open ? 'bg-soft' : 'bg-transparent'}`}
+      className={`flex h-11 items-center gap-2.5 border-0 pl-4 pr-3 text-left hover:bg-panel ${open ? 'bg-soft' : 'bg-transparent'}`}
     >
       <span className="h-[18px] w-[18px] flex-none rounded-[5px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.1)]" style={{ background: cell.paint }} />
       <span className={`flex-1 font-mono text-xs ${cell.available ? 'text-ink-3' : 'italic text-muted'}`}>{cell.label}{cell.available ? '' : ' · unavailable'}</span>
       {cell.lc !== null && (
-        <span className={`min-w-[22px] rounded-[5px] border px-1.5 py-px text-center font-mono text-[11px] ${fill ? 'border-[#A1A1AA] font-bold text-ink' : 'border-line font-normal text-muted'}`}>{cell.lc}</span>
+        <span className={`min-w-[22px] rounded-[5px] border px-1.5 py-px text-center font-mono text-[11px] ${fill ? 'border-edge font-bold text-ink' : 'border-line font-normal text-muted'}`}>{cell.lc}</span>
       )}
     </button>
   )

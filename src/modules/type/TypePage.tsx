@@ -32,7 +32,7 @@ export function TypePage() {
           {web && views.length > 1 && (
             <div role="group" aria-label="Breakpoint" className="inline-flex gap-0.5 rounded-[9px] bg-line-faint p-[3px]">
               {views.map(([k, label]) => (
-                <button key={k} type="button" aria-pressed={current === k} onClick={() => setTypeView(k)} className={`h-8 rounded-[7px] border-0 px-3.5 text-[13px] font-medium ${current === k ? 'bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,.08)]' : 'bg-transparent text-muted'}`}>
+                <button key={k} type="button" aria-pressed={current === k} onClick={() => setTypeView(k)} className={`h-8 rounded-[7px] border-0 px-3.5 text-[13px] font-medium ${current === k ? 'bg-surface text-ink shadow-[0_1px_2px_rgba(0,0,0,.08)]' : 'bg-transparent text-muted'}`}>
                   {label}
                 </button>
               ))}
@@ -42,7 +42,7 @@ export function TypePage() {
 
         {tab === 'scale' && <ScaleView key={type.platform} groups={groups} settings={type} />}
         {tab === 'preview' && <PreviewView groups={groups} settings={type} />}
-        {tab === 'export' && <pre aria-label="Type CSS" className="m-0 overflow-x-auto whitespace-pre-wrap rounded-xl bg-ink px-5 py-[18px] font-mono text-[12.5px] leading-[1.7] text-line">{css}</pre>}
+        {tab === 'export' && <pre aria-label="Type CSS" className="m-0 overflow-x-auto whitespace-pre-wrap rounded-xl bg-night px-5 py-[18px] font-mono text-[12.5px] leading-[1.7] text-code">{css}</pre>}
       </div>
     </TypeLayout>
   )

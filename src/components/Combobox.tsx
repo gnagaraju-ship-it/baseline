@@ -108,7 +108,7 @@ export function Combobox({ id, value, disabled = false, groupsFor, onSelect, emp
           role="listbox"
           aria-label="Suggestions"
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute left-0 right-0 top-[44px] z-20 max-h-72 overflow-y-auto rounded-[10px] border border-line bg-white py-1 shadow-[0_8px_24px_rgba(24,24,27,.12)]"
+          className="absolute left-0 right-0 top-[44px] z-20 max-h-72 overflow-y-auto rounded-[10px] border border-line bg-surface py-1 shadow-[0_8px_24px_rgba(24,24,27,.12)]"
         >
           {flat.length === 0 && <div className="px-3 py-2 text-[13px] text-muted">{emptyText}</div>}
           {groups.map((g, gi) => (

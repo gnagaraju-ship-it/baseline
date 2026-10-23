@@ -35,7 +35,7 @@ export function PreviewPage() {
                   disabled={!on}
                   aria-pressed={on ? true : undefined}
                   title={on ? undefined : `${t} preview — not in v1`}
-                  className={`h-[34px] rounded-full border px-3.5 text-[13px] ${on ? 'border-ink bg-ink font-medium text-white' : 'border-line bg-white text-[#3F3F46] opacity-50'}`}
+                  className={`h-[34px] rounded-full border px-3.5 text-[13px] ${on ? 'border-ink bg-ink font-medium text-on-ink' : 'border-line bg-surface text-ink-3 opacity-50'}`}
                 >
                   {t}
                 </button>
@@ -45,7 +45,7 @@ export function PreviewPage() {
           <div className="flex items-center gap-3.5 text-[13px] text-muted">
             <div role="group" aria-label="Theme" className="inline-flex gap-0.5 rounded-[9px] bg-line-faint p-[3px]">
               {MODES.map(([m, label]) => (
-                <button key={m} type="button" aria-pressed={previewMode === m} onClick={() => setPreviewMode(m)} className={`h-[30px] rounded-[7px] border-0 px-3 text-[13px] font-medium text-ink ${previewMode === m ? 'bg-white' : 'bg-transparent'}`}>
+                <button key={m} type="button" aria-pressed={previewMode === m} onClick={() => setPreviewMode(m)} className={`h-[30px] rounded-[7px] border-0 px-3 text-[13px] font-medium text-ink ${previewMode === m ? 'bg-surface' : 'bg-transparent'}`}>
                   {label}
                 </button>
               ))}

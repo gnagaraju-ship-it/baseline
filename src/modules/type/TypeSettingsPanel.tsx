@@ -5,7 +5,7 @@ import { useProject } from '../../store/project'
 import { NumberField } from '../../components/NumberField'
 
 const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
-const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-white' : 'border-line bg-white text-[#3F3F46]'}`
+const pill = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`
 
 const PLATFORM_ICONS: string[] = [
   'M3 5h18v12H3zM8 21h8M12 17v4',
@@ -33,7 +33,7 @@ export function TypeSettingsPanel() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
         <div className="text-base font-semibold">Type Scale</div>
       </div>
 
@@ -43,7 +43,7 @@ export function TypeSettingsPanel() {
             <h3 className={h3}>Platform</h3>
             <span className="rounded border border-line px-1.5 py-0.5 text-[10px] font-semibold tracking-[.06em] text-muted">PROJECT</span>
           </div>
-          <div role="group" aria-label="Platform" className="grid grid-cols-4 gap-1 rounded-[10px] border border-line bg-white p-1">
+          <div role="group" aria-label="Platform" className="grid grid-cols-4 gap-1 rounded-[10px] border border-line bg-surface p-1">
             {PLATFORMS.map((label, i) => {
               const on = t.platform === i
               return (
@@ -54,7 +54,7 @@ export function TypeSettingsPanel() {
                   aria-pressed={on}
                   title={label}
                   onClick={() => s.setTypePlatform(i as PlatformIndex)}
-                  className={`flex h-9 items-center justify-center rounded-[7px] border ${on ? 'border-[#F5B49A] bg-accent-tint text-accent-text' : 'border-transparent bg-transparent text-muted'}`}
+                  className={`flex h-9 items-center justify-center rounded-[7px] border ${on ? 'border-accent-ring bg-accent-tint text-accent-text' : 'border-transparent bg-transparent text-muted'}`}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PLATFORM_ICONS[i]} /></svg>
                 </button>
@@ -116,18 +116,18 @@ export function TypeSettingsPanel() {
         {web && (
           <section className="flex flex-col gap-3">
             <h3 className={h3}>Responsive</h3>
-            <div className="flex items-center gap-2 text-[13px] font-medium">Desktop <span className="rounded-full bg-ink px-2 py-[3px] text-[10px] font-bold tracking-[.06em] text-white">BASE</span></div>
+            <div className="flex items-center gap-2 text-[13px] font-medium">Desktop <span className="rounded-full bg-ink px-2 py-[3px] text-[10px] font-bold tracking-[.06em] text-on-ink">BASE</span></div>
             {(['tablet', 'mobile'] as const).map((k) => {
               const gridOn = s.grid.on[k === 'tablet' ? 'md' : 'xs']
               const v = { ...t[k], on: t[k].on && gridOn }
               const label = k === 'tablet' ? 'Tablet' : 'Mobile'
               return (
                 <div key={k} className="grid grid-cols-[36px_1fr_44px_96px] items-center gap-2.5">
-                  <button type="button" role="switch" aria-checked={v.on} aria-label={`${label} scaling`} disabled={!gridOn} title={gridOn ? undefined : `${label} is off in Grids`} onClick={() => s.setResponsive(k, { on: !v.on })} className={`flex h-5 w-9 border-0 p-0.5 ${v.on ? 'justify-end bg-accent' : 'justify-start bg-[#D4D4D8]'} rounded-full`}>
-                    <span className="h-4 w-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
+                  <button type="button" role="switch" aria-checked={v.on} aria-label={`${label} scaling`} disabled={!gridOn} title={gridOn ? undefined : `${label} is off in Grids`} onClick={() => s.setResponsive(k, { on: !v.on })} className={`flex h-5 w-9 border-0 p-0.5 ${v.on ? 'justify-end bg-accent' : 'justify-start bg-edge'} rounded-full`}>
+                    <span className="h-4 w-4 rounded-full bg-surface shadow-[0_1px_2px_rgba(0,0,0,.2)]" />
                   </button>
                   <label htmlFor={`rs-${k}`} className="text-[13px]">{label}{!gridOn && <span className="block text-[10px] text-muted">off in Grids</span>}</label>
-                  <span className="text-right font-mono text-xs text-[#3F3F46]">{v.pct}%</span>
+                  <span className="text-right font-mono text-xs text-ink-3">{v.pct}%</span>
                   <input id={`rs-${k}`} type="range" min={-30} max={0} step={1} value={v.pct} disabled={!v.on} onChange={(e) => s.setResponsive(k, { pct: Number(e.target.value) })} className="m-0 w-full accent-accent" />
                 </div>
               )

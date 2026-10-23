@@ -26,11 +26,11 @@ export function ElevationPage() {
 
           {elevation.tokens.map((t, i) => <TokenCard key={i} level={t} index={i} shadow={elevation.shadow} />)}
 
-          <button type="button" onClick={addElevation} className="h-11 rounded-xl border border-dashed border-[#D4D4D8] bg-transparent text-[13px] text-[#3F3F46]">+ Add level</button>
+          <button type="button" onClick={addElevation} className="h-11 rounded-xl border border-dashed border-edge bg-transparent text-[13px] text-ink-3">+ Add level</button>
 
-          <div className="relative mt-2 rounded-[10px] bg-ink px-4 py-3.5">
-            <button type="button" onClick={copyCss} className="absolute right-3 top-3 h-8 rounded-md border border-[#3F3F46] bg-transparent px-2.5 text-xs text-line">{copied ? 'Copied' : copyFailed ? 'Copy failed' : 'Copy CSS'}</button>
-            <pre aria-label="Elevation CSS" className="m-0 overflow-x-auto whitespace-pre-wrap pr-24 font-mono text-xs leading-[1.7] text-line">{css}</pre>
+          <div className="relative mt-2 rounded-[10px] bg-night px-4 py-3.5">
+            <button type="button" onClick={copyCss} className="absolute right-3 top-3 h-8 rounded-md border border-[#3F3F46] bg-transparent px-2.5 text-xs text-code">{copied ? 'Copied' : copyFailed ? 'Copy failed' : 'Copy CSS'}</button>
+            <pre aria-label="Elevation CSS" className="m-0 overflow-x-auto whitespace-pre-wrap pr-24 font-mono text-xs leading-[1.7] text-code">{css}</pre>
           </div>
         </div>
       </div>

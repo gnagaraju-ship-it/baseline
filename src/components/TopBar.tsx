@@ -40,14 +40,14 @@ export function TopBar({ tabs, current, copyLabel, exportCount, onCopyAll, onExp
         })}
       </nav>
       <div className="flex gap-2 py-2.5">
-        <button type="button" onClick={onCopyAll} className="flex h-10 items-center gap-2 rounded-[9px] border border-line bg-white px-3.5 text-[13px] font-medium text-ink">
+        <button type="button" onClick={onCopyAll} className="flex h-10 items-center gap-2 rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink">
           <Icon name="copy" size={15} strokeWidth={1.7} />
           {copyLabel}
         </button>
         <button type="button" onClick={onExport} className="flex h-10 items-center gap-2 rounded-[9px] border-0 bg-btn pl-3.5 pr-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(210,64,11,.3)]">
           <Icon name="export" size={15} strokeWidth={1.8} />
           Export
-          <span className="inline-flex h-5 items-center rounded-[5px] bg-white/20 px-1.5 text-[11px] font-semibold">{exportCount}</span>
+          <span className="inline-flex h-5 items-center rounded-[5px] bg-surface/20 px-1.5 text-[11px] font-semibold">{exportCount}</span>
         </button>
       </div>
     </div>

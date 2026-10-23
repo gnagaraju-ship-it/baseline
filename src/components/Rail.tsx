@@ -6,7 +6,7 @@ import { Icon, type IconName } from './Icon'
 const COLOUR_ROUTES = ['/', '/tokens', '/contrast']
 
 const base = 'flex h-11 w-11 items-center justify-center rounded-[10px] border border-transparent text-muted no-underline hover:bg-soft'
-const on = 'border-line bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,.05)]'
+const on = 'border-line bg-surface text-ink shadow-[0_1px_2px_rgba(0,0,0,.05)]'
 
 function RailLink({ to, label, icon, active }: { to: string; label: string; icon: IconName; active: boolean }) {
   return (
@@ -44,7 +44,7 @@ export function Rail() {
 
   return (
     <nav aria-label="Workspace" className="flex w-16 flex-none flex-col items-center gap-1.5 border-r border-line-soft py-3.5">
-      <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-ink">
+      <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-night">
         <span className="h-3.5 w-3.5 rounded bg-[#FF5A1F]" />
       </div>
       <RailStub label="Projects" icon="folder" />
@@ -60,7 +60,16 @@ export function Rail() {
       <div className="flex-1" />
       <ExportMenu />
       <RailButton label="Reset project" icon="reset" onClick={resetProject} />
-      <RailStub label="Toggle dark mode" icon="moon" />
+      <button
+        type="button"
+        aria-label="Toggle dark mode"
+        aria-pressed={project.appTheme === 'dark'}
+        title={project.appTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        onClick={() => project.setAppTheme(project.appTheme === 'dark' ? 'light' : 'dark')}
+        className={`${base} cursor-pointer bg-transparent`}
+      >
+        <Icon name={project.appTheme === 'dark' ? 'sun' : 'moon'} />
+      </button>
     </nav>
   )
 }

@@ -24,7 +24,7 @@ export function TokensPage() {
         </p>
 
         {missing.length > 0 && (
-          <div role="status" className="rounded-[10px] border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-[13px] text-[#92400E]">
+          <div role="status" className="rounded-[10px] border border-warn-edge bg-warn-bg px-4 py-3 text-[13px] text-warn-text">
             Some tokens point at palettes that are removed: {missing.map((k) => NAMES[k]).join(', ')}. Add them back in the Brand panel to resolve those tokens; unresolved tokens are left out of the CSS.
           </div>
         )}
