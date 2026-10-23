@@ -26,7 +26,7 @@ describe('UI preview (Charts)', () => {
     for (const t of ['Revenue vs Expenses', 'User Growth', 'Traffic by Platform', 'Audience Breakdown', 'Quarterly Goals']) {
       expect(screen.getByText(t)).toBeInTheDocument()
     }
-    expect(screen.getAllByRole('img')).toHaveLength(4)
+    expect(within(canvas()).getAllByRole('img')).toHaveLength(4)
     expect(screen.getByRole('img', { name: /Donut chart: Primary 42%, Secondary 28%, Tertiary 18%, Other 12%/ })).toBeInTheDocument()
   })
 

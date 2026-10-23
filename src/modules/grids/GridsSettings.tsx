@@ -1,4 +1,5 @@
 import { NumberField } from '../../components/NumberField'
+import { Logo } from '../../components/Logo'
 import { BREAKPOINTS, GRID_PRESETS, breakpoint, type GridPresetKey } from '../../lib/grid'
 import { useProject } from '../../store/project'
 
@@ -24,7 +25,7 @@ export function GridsSettings() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <Logo size={32} />
         <div className="text-base font-semibold">Grids</div>
       </div>
 

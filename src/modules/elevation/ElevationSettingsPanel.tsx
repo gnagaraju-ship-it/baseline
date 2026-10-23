@@ -1,4 +1,5 @@
 import { ColourField } from '../../components/ColourField'
+import { Logo } from '../../components/Logo'
 import { ELEVATION_PRESETS, type ElevationPresetKey } from '../../lib/elevation'
 import { useProject } from '../../store/project'
 
@@ -21,7 +22,7 @@ export function ElevationSettingsPanel() {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <Logo size={32} />
         <div className="text-base font-semibold">Elevation</div>
       </div>
 

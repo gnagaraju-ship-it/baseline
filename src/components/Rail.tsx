@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useProject } from '../store/project'
 import { Icon, type IconName } from './Icon'
+import { Logo } from './Logo'
 
 const COLOUR_ROUTES = ['/', '/tokens', '/contrast']
 
@@ -43,9 +44,7 @@ export function Rail() {
 
   return (
     <nav aria-label="Workspace" className="flex w-16 flex-none flex-col items-center gap-1.5 border-r border-line-soft py-3.5">
-      <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-night">
-        <span className="h-3.5 w-3.5 rounded bg-[#FF5A1F]" />
-      </div>
+      <Logo size={40} className="mb-3.5" />
       <RailStub label="Projects" icon="folder" />
       <Sep />
       <RailLink to="/" label="Color" icon="color" active={COLOUR_ROUTES.includes(pathname)} />

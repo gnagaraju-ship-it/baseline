@@ -1,4 +1,5 @@
 import { ColourField } from '../../components/ColourField'
+import { Logo } from '../../components/Logo'
 import { Icon } from '../../components/Icon'
 import {
   DEFAULT_HEX,
@@ -40,7 +41,7 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
   return (
     <>
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
-        <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-night"><span className="h-3 w-3 rounded-[3px] bg-[#FF5A1F]" /></div>
+        <Logo size={32} />
         <div className="flex-1 text-base font-semibold tracking-[-0.01em]">Baseline</div>
         <button type="button" disabled aria-label="Rename project" title="Rename project — not in v1" className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-muted opacity-60">
           <Icon name="edit" size={16} />
