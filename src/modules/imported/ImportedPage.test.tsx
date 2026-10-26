@@ -151,20 +151,46 @@ describe('the Untitled theme', () => {
     expect(box).toBeChecked()
   })
 
-  it('spacing: point a token at another step, give it its own value, rename, add and remove', async () => {
+  it('spacing: a value for each breakpoint, each following its own step', async () => {
     at('/spacing')
+    expect(screen.getByRole('columnheader', { name: 'XXL' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'MD' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'XS' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' }))
-    const follows = screen.getByLabelText('spacing-xs follows') as HTMLSelectElement
-    expect(follows.value).toBe('_Primitives::Spacing/1 (4px)')
-    await userEvent.selectOptions(follows, '_Primitives::Spacing/2 (8px)')
-    expect(screen.getByLabelText('spacing-xs Mode 1')).toHaveValue(8)
-    expect(screen.getByRole('row', { name: 'spacing-xs, 0.5rem' })).toHaveTextContent('space-2 (8px)')
-    const px = screen.getByLabelText('spacing-xs Mode 1')
-    await userEvent.clear(px)
-    await userEvent.type(px, '9')
-    expect((screen.getByLabelText('spacing-xs follows') as HTMLSelectElement).value).toBe('')
-    expect(screen.getByRole('row', { name: 'spacing-xs, 0.563rem' })).toHaveTextContent('own value')
-    // radius tiles open the same editor
+    for (const m of ['XXL', 'MD', 'XS']) expect((screen.getByLabelText(`spacing-xs ${m} follows`) as HTMLSelectElement).value).toBe('_Primitives::Spacing/1 (4px)')
+    // MD follows a bigger step: only MD moves
+    await userEvent.selectOptions(screen.getByLabelText('spacing-xs MD follows'), '_Primitives::Spacing/2 (8px)')
+    expect(screen.getByLabelText('spacing-xs MD')).toHaveValue(8)
+    expect(screen.getByLabelText('spacing-xs XXL')).toHaveValue(4)
+    expect(screen.getByLabelText('spacing-xs XS')).toHaveValue(4)
+    expect(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' })).toHaveTextContent('space-2 (8px)')
+    // a value of its own at XS
+    const xs = screen.getByLabelText('spacing-xs XS')
+    await userEvent.clear(xs)
+    await userEvent.type(xs, '3')
+    expect((screen.getByLabelText('spacing-xs XS follows') as HTMLSelectElement).value).toBe('')
+    expect(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' })).toHaveTextContent('own value')
+    // editing the scale moves every breakpoint that follows that step
+    fireEvent.blur(xs)
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Spacing/2 (8px)' }))
+    fireEvent.change(screen.getByLabelText('Spacing/2 (8px) Style'), { target: { value: '10' } })
+    fireEvent.blur(screen.getByLabelText('Spacing/2 (8px) Style'))
+    await userEvent.click(screen.getByRole('row', { name: /^spacing-xs,/ }))
+    expect(screen.getByLabelText('spacing-xs MD')).toHaveValue(10)
+  })
+
+  it('spacing: the breakpoint widths are in the panel and can be changed', async () => {
+    at('/spacing')
+    const md = screen.getByLabelText('MD breakpoint width')
+    expect(md).toHaveValue(768)
+    expect(screen.getByLabelText('XXL breakpoint width')).toHaveValue(1400)
+    expect(screen.getByLabelText('XS breakpoint width')).toHaveValue(390)
+    fireEvent.change(md, { target: { value: '834' } })
+    expect(s().imported!.collections.find((c) => c.name === 'Breakpoints')!.variables.find((v) => v.name === 'breakpoint-md')!.values.Value).toEqual({ v: 834 })
+  })
+
+  it('spacing: rename, remove and the radius tiles still work', async () => {
+    at('/spacing')
     await userEvent.click(screen.getByRole('button', { name: 'radius-md, 0.5rem' }))
     const name = screen.getByLabelText('radius-md name')
     await userEvent.clear(name)
@@ -190,7 +216,8 @@ describe('the Untitled theme', () => {
 
   it('grids: the Grids screen layout with Untitled\'s widths and containers, and no columns or breakpoints', async () => {
     at('/grids')
-    expect(screen.queryByRole('group', { name: 'Breakpoint' })).not.toBeInTheDocument()
+    // breakpoints, widths and containers; no columns, gutters or sidebar
+    expect(within(screen.getByRole('group', { name: 'Breakpoint' })).getAllByRole('button').map((b) => b.textContent)).toEqual(['XXL1400', 'MD768', 'XS390'])
     expect(screen.getByRole('group', { name: 'Width' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Container' })).toBeInTheDocument()
     expect(within(screen.getByRole('group', { name: 'Width' })).getAllByRole('button')).toHaveLength(12)
@@ -200,7 +227,7 @@ describe('the Untitled theme', () => {
     const stats = within(screen.getByRole('main'))
     expect(stats.getByText('SHARE OF 1920')).toBeInTheDocument()
     expect(stats.getByText('40%')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('15')
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('18')
     expect(screen.getByText('Widths and containers')).toBeInTheDocument()
   })
 
@@ -211,7 +238,8 @@ describe('the Untitled theme', () => {
     expect((screen.getByLabelText('width-2xl follows') as HTMLSelectElement).value).toBe('_Primitives::Spacing/256 (1,024px)')
     fireEvent.change(screen.getByLabelText('width-2xl value'), { target: { value: '1100' } })
     expect((screen.getByLabelText('width-2xl follows') as HTMLSelectElement).value).toBe('')
-    expect(s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((v) => v.name === 'width-2xl')!.values['Mode 1']).toEqual({ v: 1100 })
+    expect(s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((v) => v.name === 'width-2xl')!.values.XXL).toEqual({ v: 1100 })
+    expect(s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((v) => v.name === 'width-2xl')!.values.MD.a).toBe('_Primitives::Spacing/256 (1,024px)') // only XXL changed
     fireEvent.blur(screen.getByLabelText('width-2xl value'))
     await userEvent.selectOptions(screen.getByLabelText('width-2xl follows'), '_Primitives::Spacing/192 (768px)')
     expect(screen.getByLabelText('width-2xl value')).toHaveValue(768)
@@ -229,15 +257,31 @@ describe('the Untitled theme', () => {
     expect(within(screen.getByRole('group', { name: 'Width' })).getAllByRole('button')).toHaveLength(12)
   })
 
+  it('grids: pick a breakpoint and edit the widths and containers of that breakpoint only', async () => {
+    at('/grids')
+    await userEvent.click(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^MD/ }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 48rem')
+    fireEvent.change(screen.getByLabelText('width-xl value'), { target: { value: '700' } })
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('43.75rem')
+    expect(screen.getByText(/At MD it has a value of its own/)).toBeInTheDocument()
+    fireEvent.blur(screen.getByLabelText('width-xl value'))
+    await userEvent.click(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^XXL/ }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 48rem')
+    expect(screen.getByText(/At XXL it follows Spacing\/192/)).toBeInTheDocument()
+    const v = s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((x) => x.name === 'width-xl')!
+    expect([v.values.XXL.v, v.values.MD.v, v.values.XS.v]).toEqual([768, 700, 768])
+  })
+
   it('grids: the unit switch changes how values show', async () => {
     at('/grids')
     await userEvent.click(screen.getByRole('button', { name: 'px' }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 768px')
   })
 
-  it('type: no responsive scaling, weight variants or letter spacing, which the files do not have', async () => {
+  it('type: responsive controls, but no weight variants or letter spacing, which the files do not have', async () => {
     at('/type')
-    expect(screen.queryByText('Responsive')).not.toBeInTheDocument()
+    expect(screen.getByText('Responsive')).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Tablet scaling' })).toBeInTheDocument()
     await userEvent.click(within(screen.getByRole('region', { name: 'TEXT' })).getByText('text-md'))
     expect(screen.queryByRole('group', { name: 'Weight variants' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('LETTER SPACING (EM)')).not.toBeInTheDocument()

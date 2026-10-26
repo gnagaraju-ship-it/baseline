@@ -49,3 +49,7 @@ A theme that comes from an existing design system (Untitled) is written under `I
 | `2. Radius`, `3. Spacing`, `4. Widths`, `5. Containers` | Mode 1 / Value | named sizes, aliased to the spacing primitives where the source did so |
 
 Choose the **Imported tokens** row in the plugin window to import them. Importing again updates the variables in place. A collection that needs more modes than your Figma plan allows is reported and skipped.
+
+## Breakpoints in the Untitled variables
+
+`3. Spacing`, `4. Widths`, `5. Containers` and `6. Typography` have the modes **XXL, MD, XS**, and the `Breakpoints` collection holds the widths where the layout changes (1400, 768, 390 unless you changed them). Set a frame's mode in each of those collections to preview a breakpoint. In the CSS the same values are written mobile first: the XS values in `:root`, then `@media (min-width: 768px)` and `(min-width: 1400px)` with only what changes.

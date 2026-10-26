@@ -4,7 +4,7 @@
  */
 import untitledType from '../data/untitled-type.json'
 import untitledUi from '../data/untitled-ui.json'
-import type { ImportedSet } from './importedTokens'
+import { BREAKPOINTS_COLLECTION, makeResponsive, type ImportedSet } from './importedTokens'
 import { UNTITLED_ID } from './schemas'
 import { defaultSettings, type PaletteSettings } from './colour'
 import { defaultElevationSettings, type ElevationSettings } from './elevation'
@@ -128,7 +128,17 @@ export function untitledThemeData(): ThemeData {
     mobile: { on: false, pct: -15 },
     fixed: untitledType.steps as FixedStep[]
   }
+  // Spacing tokens, widths and containers have a value per breakpoint, starting equal; the breakpoint widths are tokens too.
+  set.collections = set.collections.map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? makeResponsive(c) : c))
+  set.collections.push(breakpointsCollection())
   return { ...defaultThemeData(), type, imported: set, schemaId: UNTITLED_ID }
 }
+
+/** Where the layout changes: the widths the media queries use. */
+export const breakpointsCollection = () => ({
+  name: BREAKPOINTS_COLLECTION,
+  modes: ['Value'],
+  variables: [['breakpoint-xxl', 1400], ['breakpoint-md', 768], ['breakpoint-xs', 390]].map(([name, v]) => ({ name: name as string, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v: v as number } } }))
+})
 
 const cloneImported = (set: ImportedSet): ImportedSet => JSON.parse(JSON.stringify(set))

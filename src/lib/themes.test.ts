@@ -60,7 +60,7 @@ describe('untitledThemeData', () => {
     expect(d.schemaId).toBe('untitled-ui')
     expect(d.type.fixed!.map((x) => x.name)).toEqual(['text-xs', 'text-sm', 'text-md', 'text-lg', 'text-xl', 'display-xs', 'display-sm', 'display-md', 'display-lg', 'display-xl', 'display-2xl'])
     expect([d.type.headingFont, d.type.bodyFont]).toEqual(['Inter', 'Inter'])
-    expect(d.imported!.collections.map((c) => c.name)).toEqual(['_Primitives', '2. Radius', '3. Spacing', '4. Widths', '5. Containers'])
+    expect(d.imported!.collections.map((c) => c.name)).toEqual(['_Primitives', '2. Radius', '3. Spacing', '4. Widths', '5. Containers', 'Breakpoints'])
     // an independent copy
     d.imported!.collections[0].variables.length = 0
     expect(untitledThemeData().imported!.collections[0].variables).toHaveLength(32)

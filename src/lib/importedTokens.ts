@@ -5,6 +5,7 @@
 import untitledType from '../data/untitled-type.json'
 import { buildPalettes, withAlpha } from './colour'
 import type { ExportInput, ExportModule, ExportSection } from './exportAll'
+import { responsiveBlocks } from './breakpointCss'
 import { typeByBreakpoint } from './responsive'
 import { UNTITLED_ID, colourSchema, tokenSchemaOf } from './schemas'
 import { isResolved, resolveAll, type ResolvedCell } from './tokens'
@@ -32,7 +33,7 @@ export function moduleOf(collection: string, name: string): ExportModule {
   if (collection === 'Brand palette') return 'ramps'
   if (collection === '1. Color modes') return 'semantic'
   if (collection === '6. Typography') return 'type'
-  if (collection === '4. Widths' || collection === '5. Containers') return 'grids'
+  if (collection === '4. Widths' || collection === '5. Containers' || collection === BREAKPOINTS_COLLECTION) return 'grids'
   if (collection === '_Primitives') return name.startsWith('Spacing/') ? 'spacing' : 'ramps'
   return 'spacing' // radius and spacing
 }
@@ -61,6 +62,36 @@ const TITLES: Record<ExportModule, string> = {
 }
 const MODULES: ExportModule[] = ['ramps', 'semantic', 'type', 'grids', 'spacing', 'elevation']
 
+/** The collection that holds the widths where the layout changes. */
+export const BREAKPOINTS_COLLECTION = 'Breakpoints'
+/** A collection with these three modes changes by breakpoint. */
+export const RESPONSIVE_MODES = ['XXL', 'MD', 'XS'] as const
+export const isResponsive = (c: ImportedCollection) => c.modes.length === 3 && RESPONSIVE_MODES.every((m, i) => c.modes[i] === m)
+
+/** The widths of the MD and XXL breakpoints (768 and 1400 unless the set says otherwise). */
+export function breakpointWidths(set: ImportedSet): { md: number; xxl: number } {
+  const c = resolveSet(set).collections.find((x) => x.name === BREAKPOINTS_COLLECTION)
+  const at = (name: string, fallback: number) => {
+    const v = c?.variables.find((x) => x.name === name)
+    const n = Number(v && Object.values(v.values)[0]?.v)
+    return n > 0 ? n : fallback
+  }
+  return { md: at('breakpoint-md', 768), xxl: at('breakpoint-xxl', 1400) }
+}
+
+/** The collection with a value per breakpoint: every value of its first mode copied into XXL, MD and XS. Links stay links. */
+export function makeResponsive(c: ImportedCollection): ImportedCollection {
+  if (isResponsive(c)) return c
+  return {
+    ...c,
+    modes: [...RESPONSIVE_MODES],
+    variables: c.variables.map((v) => {
+      const first = Object.values(v.values)[0]
+      return { ...v, values: Object.fromEntries(RESPONSIVE_MODES.map((m) => [m, first ? { ...first } : { v: 0 }])) }
+    })
+  }
+}
+
 /** The variables of each module, grouped by collection. */
 export function byModule(set: ImportedSet): Record<ExportModule, ImportedCollection[]> {
   const out = Object.fromEntries(MODULES.map((m) => [m, [] as ImportedCollection[]])) as Record<ExportModule, ImportedCollection[]>
@@ -82,7 +113,14 @@ export function importedSections(set: ImportedSet): ExportSection[] {
   const groups = byModule(set)
   return MODULES.map((id) => {
     const blocks: string[] = []
+    const widths = breakpointWidths(set)
     for (const c of groups[id]) {
+      if (isResponsive(c)) {
+        // mobile first: the XS values, then what changes from the MD and the XXL width up
+        const lines = (m: string) => c.variables.filter((v) => v.values[m]).map((v) => `  ${cssName(v.name)}: ${cssValue(v.values[m])};`)
+        if (c.variables.length) blocks.push(`/* ${c.name} */\n${responsiveBlocks([], { xxl: lines('XXL'), md: lines('MD'), xs: lines('XS') }, widths)}`)
+        continue
+      }
       c.modes.forEach((mode, i) => {
         const lines = c.variables.filter((v) => v.values[mode]).map((v) => `  ${cssName(v.name)}: ${cssValue(v.values[mode])};`)
         if (lines.length) blocks.push(`/* ${c.name}${c.modes.length > 1 ? `: ${mode}` : ''} */\n${selectorFor(c, mode, i)} {\n${lines.join('\n')}\n}`)
@@ -170,20 +208,27 @@ export function schemaCollections(s: ExportInput): ImportedCollection[] {
   ]
 }
 
-/** "6. Typography": fonts, the weights of the file, and the size and line height of every step at the largest breakpoint. */
+/** "6. Typography": fonts, the weights of the file, and the size and line height of every step at XXL, MD and XS. */
 function typographyCollection(s: ExportInput): ImportedCollection {
-  const rows = typeByBreakpoint(s.type, s.grid).xxl.flatMap((g) => g.rows)
-  const str = (name: string, v: string) => ({ name, type: 'string' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
-  const num = (name: string, v: number) => ({ name, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
+  const by = typeByBreakpoint(s.type, s.grid)
+  const rows = by.xxl.flatMap((g) => g.rows)
+  const at = (k: 'xxl' | 'md' | 'xs') => by[k].flatMap((g) => g.rows)
+  const modes = [...RESPONSIVE_MODES]
+  const keys = ['xxl', 'md', 'xs'] as const
+  const str = (name: string, v: string) => ({ name, type: 'string' as const, scopes: ['ALL_SCOPES'], values: Object.fromEntries(modes.map((m) => [m, { v }])) })
+  const num = (name: string, pick: (r: (typeof rows)[number]) => number, step: string) => ({
+    name, type: 'number' as const, scopes: ['ALL_SCOPES'],
+    values: Object.fromEntries(modes.map((m, i) => [m, { v: pick(at(keys[i]).find((r) => r.name === step)!) }]))
+  })
   return {
     name: '6. Typography',
-    modes: ['Value'],
+    modes,
     variables: [
       str('Font family/font-family-display', s.type.headingFont),
       str('Font family/font-family-body', s.type.bodyFont),
       ...untitledType.weights.map((w) => str(w.name, String(w.value))),
-      ...rows.map((r) => num(`Font size/${r.name}`, r.size)),
-      ...rows.map((r) => num(`Line height/${r.name}`, r.lh))
+      ...rows.map((r) => num(`Font size/${r.name}`, (x) => x.size, r.name)),
+      ...rows.map((r) => num(`Line height/${r.name}`, (x) => x.lh, r.name))
     ]
   }
 }

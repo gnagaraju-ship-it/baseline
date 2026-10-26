@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icon'
 import { Logo } from '../../components/Logo'
 import { NumberField } from '../../components/NumberField'
 import { ThemeMenu } from '../../components/ThemeMenu'
-import { followers, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
+import { BREAKPOINTS_COLLECTION, followers, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
 import { untitledThemeData } from '../../lib/themes'
 import { barWidth, formatSpacing, parseCustom } from '../../lib/spacing'
 import { useProject } from '../../store/project'
@@ -29,7 +29,6 @@ function Panel() {
   const s = useProject()
   const reset = s.resetImportedCollection
   const set = s.imported
-  const count = (c: string, prefix?: string) => set?.collections.find((x) => x.name === c)?.variables.filter((v) => !prefix || v.name.startsWith(prefix)).length ?? 0
   const original = untitledThemeData().imported!
   const asFiles = [PRIM, SPACING, RADIUS].every((c) => JSON.stringify(set?.collections.find((x) => x.name === c)) === JSON.stringify(original.collections.find((x) => x.name === c)))
   return (
@@ -48,15 +47,20 @@ function Panel() {
           </div>
           <p className="m-0 text-xs leading-[1.55] text-muted">{asFiles ? 'The values of the Untitled files.' : 'Changed from the Untitled files. Pick Untitled to put all of it back.'}</p>
         </section>
-        <section className="flex flex-col gap-2">
-          <div className="flex justify-between"><h3 className={h3}>Sections</h3><span className="text-[11px] text-muted">3</span></div>
-          {[['Scale', count(PRIM, 'Spacing/'), 'steps'], ['Tokens', count(SPACING), 'tokens'], ['Radius', count(RADIUS), 'sizes']].map(([name, n, unit]) => (
-            <div key={name} className="flex min-h-[34px] items-center gap-2.5">
-              <span className="flex-1 text-[13px] font-medium">{name}</span>
-              <span className="font-mono text-xs text-muted">{n} {unit}</span>
-            </div>
-          ))}
-          <p className="m-0 text-xs leading-[1.55] text-muted">Untitled has no breakpoints for spacing: every value is one number. Values are stored in px; the unit switch changes how they show.</p>
+        <section aria-label="Breakpoints" className="flex flex-col gap-2">
+          <div className="flex justify-between"><h3 className={h3}>Breakpoints</h3><span className="text-[11px] text-muted">3 ON</span></div>
+          {[['XXL', 'breakpoint-xxl'], ['MD', 'breakpoint-md'], ['XS', 'breakpoint-xs']].map(([label, name]) => {
+            const v = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name)
+            const mode = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.modes[0] ?? 'Value'
+            return (
+              <div key={name} className="flex min-h-[34px] items-center gap-2.5">
+                <label htmlFor={`bp-${name}`} className="flex-1 text-[13px] font-medium">{label}</label>
+                <NumberField id={`bp-${name}`} ariaLabel={`${label} breakpoint width`} value={Number(v?.values[mode]?.v ?? 0)} min={0} className="h-8 w-[84px] px-1.5 text-right" onCommit={(n) => n !== null && v && s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, n)} />
+                <span className="text-xs text-muted">px</span>
+              </div>
+            )
+          })}
+          <p className="m-0 text-xs leading-[1.55] text-muted">Tokens, widths and containers have a value for each breakpoint. XS is the base; the CSS changes them from the MD and XXL widths up. Values are stored in px; the unit switch changes how they show.</p>
         </section>
       </div>
       <div className="flex-1" />
@@ -65,7 +69,7 @@ function Panel() {
   )
 }
 
-const valueOf = (v: ImportedVariable) => Number(Object.values(v.values)[0]?.v ?? 0)
+const valueOf = (v: ImportedVariable, mode?: string) => Number((mode ? v.values[mode] : undefined)?.v ?? Object.values(v.values)[0]?.v ?? 0)
 
 /** Spacing and radius of a theme that follows a design system's tokens, laid out like the Spacing screen. */
 export function ImportedSpacingPage() {
@@ -76,13 +80,13 @@ export function ImportedSpacingPage() {
   const resolved = resolveSet(set)
   const col = (name: string): ImportedCollection | undefined => set.collections.find((c) => c.name === name)
   const rcol = (name: string) => resolved.collections.find((c) => c.name === name)
-  const value = (collection: string, v: ImportedVariable) => valueOf(rcol(collection)!.variables.find((x) => x.name === v.name)!)
+  const value = (collection: string, v: ImportedVariable, mode?: string) => valueOf(rcol(collection)!.variables.find((x) => x.name === v.name)!, mode)
 
   const scale = (col(PRIM)?.variables ?? []).filter((v) => v.name.startsWith('Spacing/'))
   const scaleSorted = [...scale].sort((a, b) => value(PRIM, a) - value(PRIM, b))
   const tokens = col(SPACING)?.variables ?? []
   const radius = col(RADIUS)?.variables ?? []
-  const modeOf = (c: string) => col(c)!.modes[0]
+  const tokenModes = col(SPACING)?.modes ?? []
   const count = [...scale, ...tokens, ...radius].filter((v) => !v.off).length
 
   const [open, setOpen] = useState<Pick>(null)
@@ -98,28 +102,35 @@ export function ImportedSpacingPage() {
     setInvalid(false)
   }
 
-  /** The strip that opens under a value: name, px, what it follows, remove. */
+  /** The strip that opens under a value: name, px and what it follows for every mode, remove. */
   const editor = (collection: string, v: ImportedVariable) => {
-    const mode = modeOf(collection)
-    const px = value(collection, v)
-    const follows = v.values[mode]?.a ?? ''
+    const modes = col(collection)!.modes
     const canFollow = collection !== PRIM
     return (
       <div role="group" aria-label={`Edit ${v.name}`} className="flex flex-wrap items-end gap-4 border-t border-accent-edge bg-accent-wash px-4 py-3">
         <div className="flex flex-col gap-1.5"><span className={label10}>NAME</span><NameField collection={collection} name={v.name} /></div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`px-${collection}-${v.name}`} className={label10}>VALUE (PX)</label>
-          <NumberField id={`px-${collection}-${v.name}`} ariaLabel={`${v.name} ${mode}`} value={px} min={0} className="h-9 w-[100px] px-2 text-right" onCommit={(n) => n !== null && setImportedValue(collection, v.name, mode, n)} />
-        </div>
-        {canFollow && (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`fl-${collection}-${v.name}`} className={label10}>FOLLOWS</label>
-            <select id={`fl-${collection}-${v.name}`} aria-label={`${v.name} follows`} value={follows} onChange={(e) => (e.target.value ? setImportedAlias(collection, v.name, mode, e.target.value) : setImportedValue(collection, v.name, mode, px))} className="inp h-9 w-[230px] font-mono text-xs">
-              <option value="">Own value</option>
-              {scaleSorted.map((p) => <option key={p.name} value={`${PRIM}::${p.name}`}>{p.name}</option>)}
-            </select>
-          </div>
-        )}
+        {modes.map((mode) => {
+          const px = valueOf(rcol(collection)!.variables.find((x) => x.name === v.name)!, mode)
+          const follows = v.values[mode]?.a ?? ''
+          const tag = modes.length > 1 ? ` ${mode}` : ''
+          return (
+            <div key={mode} className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={`px-${collection}-${v.name}-${mode}`} className={label10}>{modes.length > 1 ? `${mode.toUpperCase()} (PX)` : 'VALUE (PX)'}</label>
+                <NumberField id={`px-${collection}-${v.name}-${mode}`} ariaLabel={`${v.name} ${mode}`} value={px} min={0} className="h-9 w-[92px] px-2 text-right" onCommit={(n) => n !== null && setImportedValue(collection, v.name, mode, n)} />
+              </div>
+              {canFollow && (
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor={`fl-${collection}-${v.name}-${mode}`} className={label10}>{modes.length > 1 ? `${mode.toUpperCase()} FOLLOWS` : 'FOLLOWS'}</label>
+                  <select id={`fl-${collection}-${v.name}-${mode}`} aria-label={`${v.name}${tag} follows`} value={follows} onChange={(e) => (e.target.value ? setImportedAlias(collection, v.name, mode, e.target.value) : setImportedValue(collection, v.name, mode, px))} className="inp h-9 w-[200px] font-mono text-xs">
+                    <option value="">Own value</option>
+                    {scaleSorted.map((p) => <option key={p.name} value={`${PRIM}::${p.name}`}>{p.name}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )
+        })}
         <button type="button" aria-label={`Remove ${v.name}`} onClick={() => { removeImportedVariable(collection, v.name); setOpen(null) }} className="flex h-9 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-xs text-ink-3"><Icon name="close" size={13} strokeWidth={2} />Remove</button>
       </div>
     )
@@ -174,21 +185,27 @@ export function ImportedSpacingPage() {
           </div>
           <div className="overflow-x-auto">
             <div role="table" aria-label="Spacing tokens" className="min-w-[600px]">
-              <div role="row" className={`${head} grid border-b border-line py-2`} style={{ gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr)' }}>
-                <span role="columnheader">TOKEN</span><span role="columnheader" className="text-center">VALUE</span><span role="columnheader" className="text-center">FOLLOWS</span>
+              <div role="row" className={`${head} grid border-b border-line py-2`} style={{ gridTemplateColumns: `minmax(0,1.4fr) repeat(${tokenModes.length}, minmax(0,1fr))` }}>
+                <span role="columnheader">TOKEN</span>{tokenModes.map((m) => <span key={m} role="columnheader" className="text-center">{m.toUpperCase()}</span>)}
               </div>
               <div className={`${head} pb-1 pt-3.5`}>SPACING</div>
               {tokens.map((t) => {
-                const mode = modeOf(SPACING)
-                const px = value(SPACING, t)
-                const follows = t.values[mode]?.a
+                const px = value(SPACING, t, tokenModes[0])
                 const on = isOpen(SPACING, t.name)
                 return (
                   <div key={t.name} role="rowgroup">
-                    <button type="button" role="row" aria-expanded={on} aria-label={`${t.name}, ${formatSpacing(px, unit)}`} onClick={() => toggle(SPACING, t.name)} className={`grid min-h-[38px] w-full items-center border-0 border-b border-line-faint text-left ${on ? 'bg-accent-wash' : 'bg-transparent hover:bg-panel'}`} style={{ gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr)' }}>
+                    <button type="button" role="row" aria-expanded={on} aria-label={`${t.name}, ${formatSpacing(px, unit)}`} onClick={() => toggle(SPACING, t.name)} className={`grid min-h-[38px] w-full items-center border-0 border-b border-line-faint text-left ${on ? 'bg-accent-wash' : 'bg-transparent hover:bg-panel'}`} style={{ gridTemplateColumns: `minmax(0,1.4fr) repeat(${tokenModes.length}, minmax(0,1fr))` }}>
                       <span role="rowheader" className="font-mono text-[13px]">{t.name}</span>
-                      <span role="cell" className="flex items-center justify-center gap-2"><span className="font-mono text-[13px]">{formatSpacing(px, unit)}</span><span aria-hidden="true" className="h-2 rounded-sm" style={{ width: barWidth(px), background: 'var(--color-accent-bar)' }} /></span>
-                      <span role="cell" className="flex justify-center">{follows ? <span className="rounded bg-soft px-1.5 py-px font-mono text-[11px] text-muted">{follows.split('::')[1].replace(/^Spacing\//, 'space-')}</span> : <span className="rounded bg-warn-chip px-[5px] py-px text-[10px] font-semibold text-warn-text">own value</span>}</span>
+                      {tokenModes.map((m) => {
+                        const v = value(SPACING, t, m)
+                        const follows = t.values[m]?.a
+                        return (
+                          <span key={m} role="cell" className="flex flex-col items-center gap-0.5">
+                            <span className="flex items-center gap-2"><span className="font-mono text-[13px]">{formatSpacing(v, unit)}</span><span aria-hidden="true" className="h-2 rounded-sm" style={{ width: barWidth(v) / 2, background: 'var(--color-accent-bar)' }} /></span>
+                            {follows ? <span className="font-mono text-[10px] text-muted">{follows.split('::')[1].replace(/^Spacing\//, 'space-')}</span> : <span className="rounded bg-warn-chip px-[5px] py-px text-[10px] font-semibold text-warn-text">own value</span>}
+                          </span>
+                        )
+                      })}
                     </button>
                     {on && editor(SPACING, t)}
                   </div>

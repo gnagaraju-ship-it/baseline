@@ -193,7 +193,7 @@ describe('themes in the store', () => {
     localStorage.setItem('baseline-project', JSON.stringify({ version: 5, state: { themes: [def, full], activeThemeId: 'theme-1' } }))
     await useProject.persist.rehydrate()
     expect(s().themes[1].data.schemaId).toBe('untitled-ui')
-    expect(s().themes[1].data.imported?.collections).toHaveLength(5)
+    expect(s().themes[1].data.imported?.collections).toHaveLength(6)
     expect(s().themes[1].data.type.fixed).toHaveLength(11)
   })
 
@@ -208,6 +208,22 @@ describe('themes in the store', () => {
     expect(u.settings.hex).toEqual({ brand: '#0EA5E9' })
   })
 
+  it('gives a version 7 Untitled its breakpoints, keeping every edit', async () => {
+    const u = untitledThemeData()
+    // as version 7 saved it: one mode and no Breakpoints collection
+    const one = u.imported!.collections.filter((c) => c.name !== 'Breakpoints').map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? { ...c, modes: ['Mode 1'], variables: c.variables.map((v) => ({ ...v, values: { 'Mode 1': v.values.XXL } })) } : c))
+    one.find((c) => c.name === '3. Spacing')!.variables[2].values['Mode 1'] = { v: 7 } // spacing-xs edited to 7
+    const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 7, state: { themes: [def, { id: 'theme-2', name: 'Untitled', data: { ...pickData(s()), schemaId: 'untitled-ui', imported: { collections: one } } }], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    const imported = s().themes[1].data.imported!
+    expect(imported.collections.map((c) => c.name)).toContain('Breakpoints')
+    const spacing = imported.collections.find((c) => c.name === '3. Spacing')!
+    expect(spacing.modes).toEqual(['XXL', 'MD', 'XS'])
+    expect(spacing.variables[2].values).toEqual({ XXL: { v: 7 }, MD: { v: 7 }, XS: { v: 7 } })
+    expect(imported.collections.find((c) => c.name === '2. Radius')!.modes).toEqual(['Mode 1'])
+  })
+
   it('switching to an imported theme carries its tokens, and resetting it restores them', () => {
     const data = untitledThemeData()
     useProject.setState({ themes: [...s().themes, { id: 'theme-9', name: 'Untitled', data }] })
@@ -219,7 +235,7 @@ describe('themes in the store', () => {
     s().switchTheme('theme-9')
     useProject.setState({ imported: { collections: [] } })
     s().resetTheme()
-    expect(s().imported?.collections).toHaveLength(5)
+    expect(s().imported?.collections).toHaveLength(6)
     expect(s().schemaId).toBe('untitled-ui')
     s().switchTheme(s().themes[0].id)
     s().resetTheme()

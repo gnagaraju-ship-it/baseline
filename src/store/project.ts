@@ -9,8 +9,8 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
-import { addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
-import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, type Theme, type ThemeData } from '../lib/themes'
+import { BREAKPOINTS_COLLECTION, makeResponsive, addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
+import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, breakpointsCollection, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
   BREAKPOINTS, GRID_PRESETS, clampColumns, clampGutter, defaultGridSettings,
@@ -445,12 +445,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 7,
+  version: 8,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
   // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 7) return p as never
+    if (version >= 8) return p as never
+    if (version === 7 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(addBreakpoints) } as never
     if (version === 6 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(upgradeUntitled) } as never
     if (version === 5 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
     if (version === 4 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
@@ -488,6 +489,14 @@ function importUntitled(t: Theme): Theme {
   // Version 5 kept all 8 files as read-only imported tokens; the colours are now an editable schema.
   const readOnly = !!d.imported && !d.schemaId && d.imported.collections.some((c) => c.name === '1. Color modes')
   return t.name === UNTITLED_NAME && (mapped || readOnly) ? { ...t, data: untitledThemeData() } : t
+}
+
+/** Version 7 Untitled has one value per spacing token, width and container: give them XXL, MD and XS (equal), keeping every edit, and add the breakpoint widths. */
+function addBreakpoints(t: Theme): Theme {
+  const set = t.data?.imported
+  if (t.data?.schemaId !== UNTITLED_ID || !set || set.collections.some((c) => c.name === BREAKPOINTS_COLLECTION)) return t
+  const collections = set.collections.map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? makeResponsive(c) : c))
+  return { ...t, data: { ...t.data, imported: { collections: [...collections, breakpointsCollection()] } } }
 }
 
 /** Version 6 Untitled has no named type steps: add them (and the trimmed imported set) and keep everything the user edited. */

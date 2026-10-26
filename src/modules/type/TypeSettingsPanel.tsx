@@ -121,7 +121,7 @@ export function TypeSettingsPanel() {
           {!web && <p className="m-0 text-xs leading-[1.55] text-muted">SF Pro is Apple’s system font — not available via Google Fonts. Use <span className="font-mono">-apple-system</span> in your CSS stack.</p>}
         </section>
 
-        {web && !fixed && (
+        {web && (
           <section className="flex flex-col gap-3">
             <h3 className={h3}>Responsive</h3>
             <div className="flex items-center gap-2 text-[13px] font-medium">Desktop <span className="rounded-full bg-ink px-2 py-[3px] text-[10px] font-bold tracking-[.06em] text-on-ink">BASE</span></div>

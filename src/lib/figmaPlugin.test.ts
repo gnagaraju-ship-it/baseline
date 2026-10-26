@@ -509,9 +509,14 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     await p.send({ type: 'import', doc: doc(), groups: GROUPS })
     expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
     const done = p.posted.find((m) => m.type === 'done').result
-    expect(done.imported).toBe(7)
+    expect(done.imported).toBe(8)
     expect(done.limited).toEqual([])
     expect(col(p, 'Primitives').modes.map((m: any) => m.name)).toEqual(['Value']) // one generated theme: no theme modes
+    expect(col(p, '3. Spacing').modes.map((m: any) => m.name)).toEqual(['XXL', 'MD', 'XS'])
+    expect(col(p, '4. Widths').modes.map((m: any) => m.name)).toEqual(['XXL', 'MD', 'XS'])
+    expect(col(p, '6. Typography').modes.map((m: any) => m.name)).toEqual(['XXL', 'MD', 'XS'])
+    expect(col(p, '2. Radius').modes.map((m: any) => m.name)).toEqual(['Mode 1'])
+    expect(vars(p, 'Breakpoints')).toHaveLength(3)
     expect(col(p, '1. Color modes').modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
     expect(vars(p, '_Primitives')).toHaveLength(27 * 11 + 2 + 32)
     expect(vars(p, '1. Color modes')).toHaveLength(273)
@@ -531,9 +536,9 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     const brand = vars(p, '_Primitives').find((v) => v.name === 'Colors/Brand/600')
     expect((Object.values(brand.valuesByMode)[0] as any).r).toBeCloseTo(0x7f / 255, 3)
     const size = vars(p, '6. Typography').find((v) => v.name === 'Font size/text-md')
-    expect(Object.values(size.valuesByMode)).toEqual([16])
+    expect(Object.values(size.valuesByMode)).toEqual([16, 16, 16]) // equal at every breakpoint to start with
     const family = vars(p, '6. Typography').find((v) => v.name === 'Font family/font-family-body')
-    expect(Object.values(family.valuesByMode)).toEqual(['Inter'])
+    expect(Object.values(family.valuesByMode)).toEqual(['Inter', 'Inter', 'Inter'])
   })
 
   it('does nothing for imported tokens unless the group is chosen, and updates in place on a second run', async () => {
@@ -559,7 +564,8 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     await p.send({ type: 'import', doc: doc(), groups: GROUPS })
     const done = p.posted.find((m) => m.type === 'done').result
     expect(done.limited.some((x: string) => x.startsWith('1. Color modes needs 2 modes'))).toBe(true)
-    expect(vars(p, '6. Typography')).toHaveLength(32)
+    expect(done.limited.some((x: string) => x.startsWith('6. Typography needs 3 modes'))).toBe(true)
+    expect(vars(p, 'Breakpoints')).toHaveLength(3)
   })
 
   it('the plugin window lists Imported tokens for a multi-theme file', async () => {

@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icon'
 import { Logo } from '../../components/Logo'
 import { NumberField } from '../../components/NumberField'
 import { ThemeMenu } from '../../components/ThemeMenu'
-import { resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
+import { BREAKPOINTS_COLLECTION, byModule, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
 import { formatSpacing } from '../../lib/spacing'
 import { useProject } from '../../store/project'
 import { useSectionCss } from '../colour/useSectionCss'
@@ -19,9 +19,9 @@ const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
 const mono9 = 'font-mono text-[9px] text-muted'
 const pill = (on: boolean) => `flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-semibold ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`
 
-const px = (v: ImportedVariable | undefined) => Number(Object.values(v?.values ?? {})[0]?.v ?? 0)
+const px = (v: ImportedVariable | undefined, mode?: string) => Number((mode ? v?.values[mode] : undefined)?.v ?? Object.values(v?.values ?? {})[0]?.v ?? 0)
 
-function Panel({ selected, onSelect, widths, containers }: { selected: string; onSelect: (key: string) => void; widths: ImportedVariable[]; containers: ImportedVariable[] }) {
+function Panel({ selected, onSelect, widths, containers, bp }: { selected: string; onSelect: (key: string) => void; widths: ImportedVariable[]; containers: ImportedVariable[]; bp: string }) {
   const { unit, resetImportedCollection, addImportedVariable } = useProject()
   const row = (collection: string, v: ImportedVariable, value: number) => {
     const key = `${collection}|${v.name}`
@@ -34,7 +34,7 @@ function Panel({ selected, onSelect, widths, containers }: { selected: string; o
     )
   }
   const resolved = resolveSet(useProject.getState().imported!)
-  const val = (c: string, v: ImportedVariable) => px(resolved.collections.find((x) => x.name === c)?.variables.find((x) => x.name === v.name))
+  const val = (c: string, v: ImportedVariable) => px(resolved.collections.find((x) => x.name === c)?.variables.find((x) => x.name === v.name), bp)
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
@@ -76,14 +76,17 @@ export function ImportedGridsPage() {
   const find = (c: string): ImportedCollection | undefined => set.collections.find((x) => x.name === c)
   const widths = find(WIDTHS)?.variables ?? []
   const containers = find(CONTAINERS)?.variables ?? []
-  const value = (c: string, v: ImportedVariable) => px(resolved.collections.find((x) => x.name === c)?.variables.find((x) => x.name === v.name))
+  const [bp, setBp] = useState('XXL')
+  const value = (c: string, v: ImportedVariable) => px(resolved.collections.find((x) => x.name === c)?.variables.find((x) => x.name === v.name), bp)
   const [selected, setSelected] = useState(`${WIDTHS}|${widths.find((w) => w.name === 'width-xl')?.name ?? widths[0]?.name ?? ''}`)
 
   const [collection, name] = selected.split('|')
   const token = (find(collection)?.variables ?? []).find((v) => v.name === name)
   const current = token ?? widths[0] ?? containers[0]
   const cname = token ? collection : widths[0] ? WIDTHS : CONTAINERS
-  const modeId = find(cname)!.modes[0]
+  const modes = find(cname)!.modes
+  const modeId = modes.includes(bp) ? bp : modes[0]
+  const bpWidth = (name: string) => px(resolved.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name))
   const v = value(cname, current)
   const alias = current.values[modeId]?.a
   const scale = (find(PRIM)?.variables ?? []).filter((x) => x.name.startsWith('Spacing/'))
@@ -106,7 +109,13 @@ export function ImportedGridsPage() {
   ]
 
   return (
-    <GridsLayout css={css} columns={total} exportCount={total} onExport={() => openExport(['grids'])} tabLabel="Widths and containers" panel={<Panel selected={`${cname}|${current.name}`} onSelect={setSelected} widths={widths} containers={containers} />}>
+    <GridsLayout css={css} columns={total} exportCount={byModule(set).grids.reduce((n, c) => n + c.variables.length, 0)} onExport={() => openExport(['grids'])} tabLabel="Widths and containers" panel={<Panel selected={`${cname}|${current.name}`} onSelect={setSelected} widths={widths} containers={containers} bp={bp} />}>
+      <div className="flex flex-wrap items-center gap-2 border-b border-line-faint px-7 py-3">
+        <span className="mr-1.5 text-[11px] font-semibold tracking-[.08em] text-muted">BREAKPOINT</span>
+        <div role="group" aria-label="Breakpoint" className="flex flex-wrap gap-2">
+          {[['XXL', 'breakpoint-xxl'], ['MD', 'breakpoint-md'], ['XS', 'breakpoint-xs']].map(([label, name]) => <button key={label} type="button" aria-pressed={bp === label} onClick={() => setBp(label)} className={pill(bp === label)}>{label}<span className="font-mono font-normal opacity-80">{bpWidth(name)}</span></button>)}
+        </div>
+      </div>
       <div className="flex flex-wrap items-center gap-2 border-b border-line-faint px-7 py-3">
         <span className="mr-1.5 text-[11px] font-semibold tracking-[.08em] text-muted">WIDTH</span>
         <div role="group" aria-label="Width" className="flex flex-wrap gap-2">
@@ -126,7 +135,7 @@ export function ImportedGridsPage() {
             <h1 className="m-0 mb-1.5 text-[22px] font-semibold tracking-[-0.01em]">{current.name} · {formatSpacing(v, unit)}</h1>
             <p className="m-0 text-[13px] text-muted">
               {isPadding ? `Space kept free on each side of a container: ${formatSpacing(v, unit)}.` : `A ${formatSpacing(v, unit)} wide ${cname === WIDTHS ? 'width' : 'container'}, ${Math.round((v / FULL) * 100)}% of a 1920px screen.`}
-              {alias ? ` It follows ${alias.split('::')[1]}.` : ' It has a value of its own.'}
+              {alias ? ` At ${modeId} it follows ${alias.split('::')[1]}.` : ` At ${modeId} it has a value of its own.`}
             </p>
           </div>
           <span className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs text-ink-3">{cname === WIDTHS ? 'Width' : 'Container'} <span className="font-mono text-muted">{rank} of {sorted.length}</span></span>
