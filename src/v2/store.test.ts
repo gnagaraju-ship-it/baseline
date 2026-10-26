@@ -109,7 +109,7 @@ describe('v2 store', () => {
     const raw = localStorage.getItem('baseline-v2')!
     const saved = JSON.parse(raw)
     expect(saved.version).toBe(1)
-    expect(Object.keys(saved.state).sort()).toEqual(['activeSystemId', 'activeThemeId', 'themes'])
+    expect(Object.keys(saved.state).sort()).toEqual(['activeSystemId', 'activeThemeId', 'custom', 'themes'])
     expect(raw.length).toBeLessThan(5000)
     resetV2()
     localStorage.setItem('baseline-v2', raw)

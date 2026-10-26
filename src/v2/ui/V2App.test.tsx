@@ -180,6 +180,37 @@ describe('v2 screens', () => {
     expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--type-heading-xl-size:')
   })
 
+  it('import: choose the collection files, see what was found, add the system', async () => {
+    const mk = (name: string, modes: Record<string, string>, variables: unknown[]) => new File([JSON.stringify({ id: name, name, modes, variables })], `${name}.json`, { type: 'application/json' })
+    const col = (id: string, name: string, v: number) => ({ id, name, type: 'FLOAT', resolvedValuesByMode: { m: { resolvedValue: v, alias: null } } })
+    const colour = (id: string, name: string, c: number) => ({ id, name, type: 'COLOR', resolvedValuesByMode: { m: { resolvedValue: { r: c, g: c, b: c, a: 1 }, alias: null } } })
+    const steps = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
+    const ramp = mk('Ramps', { m: 'Style' }, steps.map((x, i) => colour(`c${i}`, `Colors/Teal/${x}`, 1 - i / 12)))
+    const radius = mk('Radius', { m: 'Mode 1' }, [col('r1', 'radius-sm', 4), col('r2', 'radius-md', 8)])
+    at('/v2/import')
+    await userEvent.upload(screen.getByLabelText(/Choose the JSON files/), [ramp, radius, new File(['not json'], 'bad.json')])
+    expect(await screen.findByRole('table', { name: 'What was found' })).toBeInTheDocument()
+    const table = within(screen.getByRole('table', { name: 'What was found' }))
+    expect(table.getByRole('row', { name: /Ramps.*Colour ramps.*11/ })).toBeInTheDocument()
+    expect(table.getByRole('row', { name: /Radius.*Sizes.*2/ })).toBeInTheDocument()
+    expect(screen.getByText('bad.json is not valid JSON.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('1 colour ramps · no type · sizes: Radius')
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Acme' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Add design system' }))
+    expect(useV2.getState().activeSystemId).toBe('imported-acme')
+    expect(screen.getByRole('button', { name: 'Acme' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(screen.getByRole('main')).getByRole('region', { name: 'Teal' })).toBeInTheDocument()
+    expect(within(within(screen.getByRole('main')).getByRole('region', { name: 'Teal' })).getAllByRole('img')).toHaveLength(11)
+    await userEvent.click(screen.getByRole('button', { name: 'Remove this design system' }).closest('button')!)
+  })
+
+  it('import: a file that is not a Figma collection is explained, and nothing can be added', async () => {
+    at('/v2/import')
+    await userEvent.upload(screen.getByLabelText(/Choose the JSON files/), new File(['{"a":1}'], 'x.json'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('x.json is not a Figma variable collection')
+    expect(screen.queryByRole('button', { name: 'Add design system' })).not.toBeInTheDocument()
+  })
+
   it('v2 never writes what v1 saves', async () => {
     localStorage.setItem('baseline-project', 'v1 data')
     at('/v2')

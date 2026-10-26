@@ -103,7 +103,7 @@ function TypeControls() {
 function Panel() {
   const s = useV2()
   const r = useMemo(() => activeResolved(s), [s.themes, s.activeSystemId, s.activeThemeId]) // eslint-disable-line react-hooks/exhaustive-deps
-  const systems = v2Systems()
+  const systems = [...v2Systems(), ...s.custom]
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
@@ -114,9 +114,12 @@ function Panel() {
       <div className="flex flex-col gap-6 p-5">
         <section className="flex flex-col gap-2">
           <h3 className={h3}>Design system</h3>
-          <div role="group" aria-label="Design system" className="flex gap-1.5">
-            {systems.map((x) => <button key={x.id} type="button" aria-pressed={s.activeSystemId === x.id} onClick={() => s.setSystem(x.id)} className={seg(s.activeSystemId === x.id)}>{x.name}</button>)}
+          <div role="group" aria-label="Design system" className="flex flex-wrap gap-1.5">
+            {systems.map((x) => <button key={x.id} type="button" aria-pressed={s.activeSystemId === x.id} onClick={() => s.setSystem(x.id)} className={`${seg(s.activeSystemId === x.id)} min-w-[110px]`}>{x.name}</button>)}
           </div>
+          {s.custom.some((x) => x.id === s.activeSystemId) && (
+            <button type="button" onClick={() => { if (window.confirm('Remove this imported design system and its themes?')) s.removeSystem(s.activeSystemId) }} className="h-8 self-start rounded-lg border border-line bg-surface px-3 text-xs">Remove this design system</button>
+          )}
         </section>
         <ThemeBar />
         <TypeControls />
@@ -148,7 +151,7 @@ function Panel() {
 /** Frame of the v2 screens: the settings panel, the two screens as tabs, and Export. */
 export function V2Shell({ children }: { children: ReactNode }) {
   const openExport = useV2((s) => s.openExport)
-  const systemName = useV2((s) => v2Systems().find((x) => x.id === s.activeSystemId)?.name ?? '')
+  const systemName = useV2((s) => [...v2Systems(), ...s.custom].find((x) => x.id === s.activeSystemId)?.name ?? '')
   useEffect(() => { document.title = `${systemName} · Baseline v2` }, [systemName])
   const tab = ({ isActive }: { isActive: boolean }) => `flex h-16 items-center px-3.5 no-underline ${isActive ? 'font-semibold text-ink shadow-[inset_0_-2px_0_#E2531B]' : 'font-medium text-muted hover:text-ink'}`
   return (
@@ -163,6 +166,7 @@ export function V2Shell({ children }: { children: ReactNode }) {
             <NavLink to="/v2/tokens" className={tab}>Tokens</NavLink>
             <NavLink to="/v2/type" className={tab}>Type</NavLink>
             <NavLink to="/v2/sizes" className={tab}>Sizes</NavLink>
+            <NavLink to="/v2/import" className={tab}>Import</NavLink>
           </nav>
           <button type="button" onClick={openExport} className="flex h-10 items-center gap-2 rounded-[9px] border-0 bg-btn px-3.5 text-[13px] font-semibold text-white">
             <Icon name="export" size={15} strokeWidth={1.8} />

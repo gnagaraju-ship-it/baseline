@@ -8,6 +8,8 @@ import { builtInSystems } from './systems'
 export interface V2State {
   /** The themes of each system. A system starts with its own base theme. */
   themes: Record<string, Theme[]>
+  /** Design systems the user imported. */
+  custom: System[]
   activeSystemId: string
   activeThemeId: Record<string, string>
   /** The export dialog. */
@@ -15,6 +17,9 @@ export interface V2State {
   openExport: () => void
   closeExport: () => void
   setSystem: (id: string) => void
+  /** Adds an imported design system and makes it the active one. */
+  addSystem: (system: System) => void
+  removeSystem: (id: string) => void
   setTheme: (id: string) => void
   addTheme: (name?: string) => void
   renameTheme: (id: string, name: string) => void
@@ -37,7 +42,7 @@ export interface V2State {
 
 let systems = builtInSystems()
 /** The built-in systems, with the user's themes in place of their starting ones. */
-export const systemsFor = (themes: Record<string, Theme[]>): System[] => systems.map((s) => ({ ...s, themes: themes[s.id] ?? s.themes }))
+export const systemsFor = (themes: Record<string, Theme[]>, custom: System[] = []): System[] => [...systems, ...custom].map((s) => ({ ...s, themes: themes[s.id] ?? s.themes }))
 
 const initialThemes = (): Record<string, Theme[]> => Object.fromEntries(systems.map((s) => [s.id, s.themes.map((t) => ({ ...t, ramps: { ...t.ramps }, overrides: { ...t.overrides } }))]))
 const initialActive = (): Record<string, string> => Object.fromEntries(systems.map((s) => [s.id, s.themes[0].id]))
@@ -65,12 +70,33 @@ export const useV2 = create<V2State>()(
         })
       return {
         themes: initialThemes(),
+        custom: [],
         activeSystemId: systems[0].id,
         activeThemeId: initialActive(),
         exportOpen: false,
         openExport: () => set({ exportOpen: true }),
         closeExport: () => set({ exportOpen: false }),
-        setSystem: (id) => set(() => (systems.some((x) => x.id === id) ? { activeSystemId: id } : {})),
+        setSystem: (id) => set((s) => (systems.some((x) => x.id === id) || s.custom.some((x) => x.id === id) ? { activeSystemId: id } : {})),
+        addSystem: (system) =>
+          set((s) => {
+            const taken = [...systems, ...s.custom].map((x) => x.id)
+            let id = system.id
+            for (let n = 2; taken.includes(id); n++) id = `${system.id}-${n}`
+            const names = [...systems, ...s.custom].map((x) => x.name)
+            let name = system.name
+            for (let n = 2; names.some((x) => x.toLowerCase() === name.toLowerCase()); n++) name = `${system.name} ${n}`
+            const added = { ...system, id, name }
+            return { custom: [...s.custom, added], themes: { ...s.themes, [id]: added.themes }, activeThemeId: { ...s.activeThemeId, [id]: added.themes[0].id }, activeSystemId: id }
+          }),
+        removeSystem: (id) =>
+          set((s) => {
+            if (!s.custom.some((x) => x.id === id)) return {}
+            const themes = { ...s.themes }
+            delete themes[id]
+            const activeThemeId = { ...s.activeThemeId }
+            delete activeThemeId[id]
+            return { custom: s.custom.filter((x) => x.id !== id), themes, activeThemeId, activeSystemId: s.activeSystemId === id ? systems[0].id : s.activeSystemId }
+          }),
         setTheme: (id) => set((s) => (s.themes[s.activeSystemId]?.some((t) => t.id === id) ? { activeThemeId: { ...s.activeThemeId, [s.activeSystemId]: id } } : {})),
         addTheme: (name) =>
           set((s) => {
@@ -157,23 +183,26 @@ export const useV2 = create<V2State>()(
     {
       name: 'baseline-v2',
       version: 1,
-      partialize: (s) => ({ themes: s.themes, activeSystemId: s.activeSystemId, activeThemeId: s.activeThemeId }),
+      partialize: (s) => ({ themes: s.themes, custom: s.custom, activeSystemId: s.activeSystemId, activeThemeId: s.activeThemeId }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<V2State>
+        const custom = Array.isArray(p.custom) ? p.custom.filter((x) => x && x.id && Array.isArray(x.collections) && x.themes?.length) : []
         const themes = { ...current.themes }
+        for (const x of custom) themes[x.id] = x.themes
         for (const [id, list] of Object.entries(p.themes ?? {})) if (themes[id] && Array.isArray(list) && list.length) themes[id] = list
-        const activeSystemId = systems.some((x) => x.id === p.activeSystemId) ? p.activeSystemId! : current.activeSystemId
+        const known = [...systems, ...custom]
+        const activeSystemId = known.some((x) => x.id === p.activeSystemId) ? p.activeSystemId! : current.activeSystemId
         const activeThemeId = { ...current.activeThemeId }
         for (const [id, t] of Object.entries(p.activeThemeId ?? {})) if (themes[id]?.some((x) => x.id === t)) activeThemeId[id] = t
-        return { ...current, themes, activeSystemId, activeThemeId }
+        return { ...current, themes, custom, activeSystemId, activeThemeId }
       }
     }
   )
 )
 
 /** The active system, as resolved for its active theme. */
-export function activeResolved(s: Pick<V2State, 'themes' | 'activeSystemId' | 'activeThemeId'>): ResolvedSystem {
-  const list = systemsFor(s.themes)
+export function activeResolved(s: Pick<V2State, 'themes' | 'custom' | 'activeSystemId' | 'activeThemeId'>): ResolvedSystem {
+  const list = systemsFor(s.themes, s.custom)
   const system = list.find((x) => x.id === s.activeSystemId) ?? list[0]
   return resolveSystem(system, s.activeThemeId[system.id] ?? system.themes[0].id)
 }
@@ -182,5 +211,5 @@ export const v2Systems = () => systems
 /** For tests: forget everything and start again. */
 export function resetV2() {
   systems = builtInSystems()
-  useV2.setState({ themes: initialThemes(), activeSystemId: systems[0].id, activeThemeId: initialActive(), exportOpen: false })
+  useV2.setState({ themes: initialThemes(), custom: [], activeSystemId: systems[0].id, activeThemeId: initialActive(), exportOpen: false })
 }
