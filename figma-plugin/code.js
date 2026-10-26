@@ -111,6 +111,18 @@ function literal(doc, raw, mode) {
   return raw;
 }
 
+// Figma wants every style of a font family loaded before a font-family variable is given a value, the old family's and
+// the new one's (otherwise: 'unloaded font "Fraunces Regular"'). A family Figma does not have is simply skipped.
+async function loadFamilies(names) {
+  var wanted = names.filter(function (n, i) { return typeof n === 'string' && n && names.indexOf(n) === i; });
+  if (!wanted.length) return;
+  var all = await figma.listAvailableFontsAsync();
+  for (var i = 0; i < all.length; i++) {
+    if (wanted.indexOf(all[i].fontName.family) < 0) continue;
+    try { await figma.loadFontAsync(all[i].fontName); } catch (e) {}
+  }
+}
+
 // The themes in a file: a multi-theme file has a "Themes" object, anything else is one theme.
 function themesOf(input) {
   if (input && typeof input.Themes === 'object' && input.Themes) {
@@ -330,6 +342,11 @@ async function importTokens(input, groups) {
     try { v.scopes = scopesFor(group, e.path); } catch (err) {}
     var css = cssName(group, e.path);
     if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (err) {} }
+    if (type === 'fontFamily') {
+      var families = writes.map(function (w) { return w.value; });
+      Object.keys(v.valuesByMode || {}).forEach(function (k) { families.push(v.valuesByMode[k]); });
+      await loadFamilies(families);
+    }
     writes.forEach(function (w) {
       try {
         v.setValueForMode(modeId(c, w.mode), w.value);
@@ -432,7 +449,14 @@ async function importTokens(input, groups) {
       }
     }
     // Values last, so an alias can point at a variable from any collection in the file.
-    pending.forEach(function (p) {
+    for (var pi = 0; pi < pending.length; pi++) {
+      var p = pending[pi];
+      // a font family variable: load every style of the old and the new family first
+      if (p.type === 'string' && /famil/i.test(p.label)) {
+        var fams = Object.keys(p.modes).map(function (k) { return String(p.modes[k]); });
+        Object.keys(p.variable.valuesByMode || {}).forEach(function (k) { fams.push(p.variable.valuesByMode[k]); });
+        await loadFamilies(fams);
+      }
       Object.keys(p.modes).forEach(function (m) {
         var raw = p.modes[m];
         var value;
@@ -444,7 +468,7 @@ async function importTokens(input, groups) {
         try { p.variable.setValueForMode(modeId(p.collection, m), value); }
         catch (e) { throw new Error(p.label + ': ' + (e && e.message ? e.message : e)); }
       });
-    });
+    }
   }
 
   return { imported: importedCollections, created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped, replaced: replaced, limited: limited, themes: themes.length > 1 ? themes.map(function (t) { return t.name; }) : [] };

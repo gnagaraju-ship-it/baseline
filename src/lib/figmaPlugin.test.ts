@@ -22,7 +22,8 @@ const font = (family: string, styles: string[]) => styles.map((style) => ({ font
 const FONTS = [
   ...font('Raleway', ['Regular', 'Medium', 'SemiBold', 'Bold', 'Italic', 'Medium Italic']),
   ...font('Nunito', ['Regular', 'Medium', 'Semi Bold', 'Bold']),
-  ...font('Inter', ['Regular'])
+  ...font('Inter', ['Regular']),
+  ...font('Fraunces', ['Regular', 'SemiBold', 'Bold', 'SemiBold Italic'])
 ]
 
 // --- a small in-memory Figma to run the plugin code against ---------------------------------------------------
@@ -72,6 +73,13 @@ function mockFigma() {
             const alias = val && val.type === 'VARIABLE_ALIAS'
             const ok = alias || (this.resolvedType === 'STRING' ? typeof val === 'string' : this.resolvedType === 'FLOAT' ? typeof val === 'number' : typeof val === 'object')
             if (!ok) throw new Error('Mismatched variable resolved type for mode ' + m)
+            // Figma wants every style of a font family loaded before a font-family variable gets a value (and the old family's too)
+            if (this.resolvedType === 'STRING' && /famil/i.test(this.name)) {
+              for (const family of [val, this.valuesByMode[m]].filter((x) => typeof x === 'string')) {
+                const missing = FONTS.find((f) => f.fontName.family === family && !loaded.some((l: any) => l.family === f.fontName.family && l.style === f.fontName.style))
+                if (missing) throw new Error(`in setValueForMode: unloaded font "${family} ${missing.fontName.style}". Please call figma.loadFontAsync({ family: "${family}", style: "${missing.fontName.style}" }) and await the returned promise first.`)
+              }
+            }
             this.valuesByMode[m] = val
           },
           remove() { variables.splice(variables.indexOf(this), 1) },
@@ -265,10 +273,10 @@ describe('plugin import', () => {
 
   it('skips text styles for fonts Figma does not have, and says which', async () => {
     const i = input()
-    i.type.headingFont = 'Fraunces'
+    i.type.headingFont = 'Quattrocento'
     const p = loadPlugin()
     await p.send({ type: 'import', doc: JSON.parse(buildExport(i, 'json', ALL_MODULES).text), groups: ['Type'] })
-    expect(p.posted.at(-1).result.missingFonts).toEqual(['Fraunces'])
+    expect(p.posted.at(-1).result.missingFonts).toEqual(['Quattrocento'])
     expect(p.textStyles).toHaveLength(7)
     expect(p.textStyles.every((t) => t.fontName.family === 'Nunito')).toBe(true)
     expect(p.variables.find((x) => x.name === 'font-family/heading')).toBeDefined()
@@ -656,6 +664,25 @@ describe('plugin import: a v2 export', () => {
     const p = loadPlugin()
     await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
     expect(p.styles).toHaveLength(0)
+  })
+
+  it('loads every style of a font family before a font-family variable gets its value, the old family and the new one', async () => {
+    resetV2()
+    const v2 = useV2.getState()
+    v2.setSystem('untitled')
+    v2.setType({ headingFont: 'Fraunces' })
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    expect(p.loaded.map((f: any) => `${f.family} ${f.style}`).sort()).toEqual(['Fraunces Bold', 'Fraunces Regular', 'Fraunces SemiBold', 'Fraunces SemiBold Italic', 'Inter Regular'])
+    // the font stays the same family on a second run, and a change of family loads the old one too
+    v2.setType({ headingFont: 'Inter' })
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
+    expect(p.posted.filter((m) => m.type === 'error')).toEqual([])
+    const ty = p.collections.find((c: any) => c.name === '6. Typography')
+    const display = p.variables.find((v: any) => v.variableCollectionId === ty.id && v.name === 'Font family/font-family-display')
+    expect(Object.values(display.valuesByMode)).toEqual(['Inter'])
+    resetV2()
   })
 
   it('creates Default\'s two collections too', async () => {
