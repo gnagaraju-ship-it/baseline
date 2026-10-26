@@ -1,7 +1,9 @@
 import { BREAKPOINTS, computeGrid, gridDescription, gridStats, gridTitle, sidebarChip, toGridCss } from '../../lib/grid'
+import { byModule } from '../../lib/importedTokens'
 import { useProject } from '../../store/project'
 import { GridOverlay } from './GridOverlay'
 import { GridsLayout } from './GridsLayout'
+import { NamedTokenTables } from '../imported/ImportedPage'
 
 export function GridsPage() {
   const openExport = useProject((s) => s.openExport)
@@ -11,9 +13,10 @@ export function GridsPage() {
   const layout = computeGrid(grid, grid.active)
   const enabled = BREAKPOINTS.filter((b) => grid.on[b.key])
   const chip = sidebarChip(layout, grid, unit)
+  const named = useProject((s) => (s.imported ? byModule(s.imported).grids.reduce((n, c) => n + c.variables.length, 0) : 0))
 
   return (
-    <GridsLayout css={toGridCss(grid)} columns={layout.columns} exportCount={enabled.length} onExport={() => openExport(['grids'])}>
+    <GridsLayout css={toGridCss(grid)} columns={layout.columns} exportCount={enabled.length + named} onExport={() => openExport(['grids'])}>
       <div className="flex flex-wrap items-center gap-2 border-b border-line-faint px-7 py-3">
         <span className="mr-1.5 text-[11px] font-semibold tracking-[.08em] text-muted">BREAKPOINT</span>
         <div role="group" aria-label="Breakpoint" className="flex flex-wrap gap-2">
@@ -47,6 +50,13 @@ export function GridsPage() {
             </div>
           ))}
         </dl>
+
+        {named > 0 && (
+          <div className="mt-4 flex flex-col gap-4">
+            <h2 className="m-0 text-base font-semibold">Widths and containers</h2>
+            <NamedTokenTables module="grids" />
+          </div>
+        )}
       </div>
     </GridsLayout>
   )

@@ -119,10 +119,30 @@ describe('the Untitled theme', () => {
     expect(screen.getByLabelText('radius-md name')).toBeInTheDocument()
   })
 
-  it('widths and containers are listed in the grids screen', () => {
+  it('grids: the Baseline grid screen, with the widths and containers of Untitled below it', async () => {
     at('/grids')
-    expect(within(screen.getByRole('region', { name: '4. Widths' })).getByLabelText('width-xxs name')).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Breakpoint' })).toBeInTheDocument() // the real grid controls
+    expect(screen.getByText('Widths and containers')).toBeInTheDocument()
+    const widths = within(screen.getByRole('region', { name: '4. Widths' }))
+    expect(widths.getByLabelText('width-xxs name')).toBeInTheDocument()
     expect(screen.getByRole('region', { name: '5. Containers' })).toBeInTheDocument()
+    // edit a container and a width
+    const pad = screen.getByLabelText('container-padding-desktop Value')
+    await userEvent.clear(pad)
+    await userEvent.type(pad, '40')
+    expect(s().imported!.collections.find((c) => c.name === '5. Containers')!.variables.find((v) => v.name === 'container-padding-desktop')!.values.Value).toEqual({ v: 40 })
+    await userEvent.click(within(screen.getByRole('region', { name: '5. Containers' })).getByRole('button', { name: '+ Add' }))
+    expect(screen.getByLabelText('new name')).toBeInTheDocument()
+    // the export count is the breakpoints plus the 15 named tokens
+    expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent(String(3 + 16))
+  })
+
+  it('grids export: columns and gutters from the grid screen followed by the widths and containers', async () => {
+    const { exportSections } = await import('../../lib/exportAll')
+    const sec = exportSections({ ...untitledThemeData() }).find((x) => x.id === 'grids')!
+    expect(sec.css).toContain('--grid-xxl-columns: 12;')
+    expect(sec.css).toContain('--width-xxs: var(--spacing-80-320px);')
+    expect(sec.count).toBe(3 + 15)
   })
 
   it('elevation is Baseline\'s own', () => {
@@ -136,7 +156,7 @@ describe('the Untitled theme', () => {
     const dialog = screen.getByRole('dialog', { name: 'Export settings' })
     expect(within(dialog).getByRole('checkbox', { name: /Grids/ })).toBeChecked()
     await userEvent.click(within(dialog).getByRole('radio', { name: /Active theme only/ }))
-    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--width-xxs: var(--spacing-80-320px);')
+    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--grid-xxl-width: 1400px;')
     await userEvent.keyboard('{Escape}')
     act(() => s().switchTheme('theme-1'))
     expect(screen.queryByText('Spacing and sizes')).not.toBeInTheDocument()

@@ -54,7 +54,13 @@ export function exportSections(s: ExportInput): ExportSection[] {
   // Grids and spacing kept as imported replace the generated ones; colours, type and elevation always come from the settings.
   if (!s.imported) return sections
   const kept = importedSections(s.imported)
-  return sections.map((sec) => (sec.id === 'grids' || sec.id === 'spacing' ? kept.find((k) => k.id === sec.id)! : sec))
+  return sections.map((sec) => {
+    const own = kept.find((k) => k.id === sec.id)!
+    if (sec.id === 'spacing') return own
+    // The grid screen's columns and gutters, then the named widths and containers.
+    if (sec.id === 'grids') return { ...sec, css: [sec.css, own.css].filter(Boolean).join('\n\n'), count: sec.count + own.count }
+    return sec
+  })
 }
 
 export function exportAll(s: ExportInput): { css: string; count: number } {

@@ -12,12 +12,11 @@ import { byModule, cssName, importedCount, importedSections, resolveSet, type Im
 import { useProject } from '../../store/project'
 
 const TABS: Record<string, { module: ExportModule; label: string }> = {
-  '/grids': { module: 'grids', label: 'Widths and containers' },
   '/spacing': { module: 'spacing', label: 'Spacing and radius' }
 }
 
 /** The screens an imported set still has to itself: the colour screens use the theme's colour schema. */
-export const IMPORTED_ROUTES = ['/grids', '/spacing']
+export const IMPORTED_ROUTES = ['/spacing']
 
 function NameField({ collection, name }: { collection: string; name: string }) {
   const rename = useProject((s) => s.renameImportedVariable)
@@ -88,6 +87,15 @@ function CollectionTable({ collection, resolved }: { collection: ImportedCollect
       </div>
     </section>
   )
+}
+
+/** The editable tables of one module's named tokens (spacing and radius, or widths and containers). */
+export function NamedTokenTables({ module }: { module: ExportModule }) {
+  const set = useProject((s) => s.imported)
+  if (!set) return null
+  const groups = byModule(set)[module]
+  const resolved = byModule(resolveSet(set))[module]
+  return <>{groups.map((c, i) => <CollectionTable key={c.name} collection={c} resolved={resolved[i]} />)}</>
 }
 
 /** Spacing, radius, widths and containers of a theme that keeps them as imported: named tokens you can edit. */

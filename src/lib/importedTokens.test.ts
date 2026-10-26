@@ -66,7 +66,11 @@ describe('the Untitled theme', () => {
   })
 
   it('turns the colours into collections named like the Figma files, with aliases', () => {
-    const [prim, modes, typo] = schemaCollections(untitled)
+    const [prim, modes, typo, grid] = schemaCollections(untitled)
+    expect(grid.name).toBe('Grid')
+    expect(grid.modes).toEqual(['XXL', 'MD', 'XS'])
+    expect(grid.variables.find((v) => v.name === 'Grid/columns')!.values).toEqual({ XXL: { v: 12 }, MD: { v: 8 }, XS: { v: 4 } })
+    expect(grid.variables.find((v) => v.name === 'Grid/width')!.values.XXL.v).toBe(1400)
     expect(typo.name).toBe('6. Typography')
     expect(typo.variables.find((v) => v.name === 'Font size/display-2xl')!.values.Value.v).toBe(72)
     expect(typo.variables.find((v) => v.name === 'Line height/text-md')!.values.Value.v).toBe(24)
@@ -79,7 +83,7 @@ describe('the Untitled theme', () => {
     const bg = modes.variables.find((v) => v.name === 'Colors/Background/bg-primary')!
     expect(bg.values['Light mode']).toEqual({ v: '#FFFFFF', a: '_Primitives::Colors/Base/white' })
     const merged = withSchemaColours(set, untitled)
-    expect(merged.collections.map((c) => c.name)).toEqual(['_Primitives', '1. Color modes', '6. Typography', '2. Radius', '3. Spacing', '4. Widths', '5. Containers'])
+    expect(merged.collections.map((c) => c.name)).toEqual(['_Primitives', '1. Color modes', '6. Typography', 'Grid', '2. Radius', '3. Spacing', '4. Widths', '5. Containers'])
     // the primitives share one collection with the spacing
     expect(merged.collections[0].variables.some((v) => v.name.startsWith('Spacing/'))).toBe(true)
   })
