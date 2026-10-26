@@ -570,4 +570,17 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     expect(labels.some((t) => t!.startsWith('Imported tokens'))).toBe(true)
     expect(labels.some((t) => t!.startsWith('Colour ramps'))).toBe(true)
   })
+
+  it('the plugin window says what is in a file it cannot use, and which version it is', () => {
+    const html = file('ui.html')
+    document.body.innerHTML = /<body[^>]*>([\s\S]*?)<script>/.exec(html)![1]
+    new Function(/<script>([\s\S]*)<\/script>/.exec(html)![1])()
+    expect(document.getElementById('version')!.textContent).toBe('plugin v5')
+    const paste = document.getElementById('paste') as HTMLTextAreaElement
+    paste.value = JSON.stringify({ Colours: { a: { $value: '#fff' } }, Sizes: {} })
+    paste.dispatchEvent(new Event('input'))
+    const msg = document.getElementById('status')!.textContent!
+    expect(msg).toContain('plugin v5 knows: Primitives, Semantic')
+    expect(msg).toContain('This file has: Colours, Sizes')
+  })
 })
