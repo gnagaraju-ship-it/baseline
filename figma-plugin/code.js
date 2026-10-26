@@ -141,7 +141,9 @@ async function importTokens(input, groups) {
   if (!themes.length) themes = [{ name: 'Default', doc: {} }];
   var doc = themes[0].doc; // the document the helpers below read; set to each theme's own while its values are written
   var wanted = ORDER.filter(function (g) { return themes.some(function (th) { return th.doc[g]; }) && groups.indexOf(g) >= 0; });
-  var wantsElevation = themes.some(function (th) { return th.doc.Elevation; }) && groups.indexOf('Elevation') >= 0;
+  // Shadows may sit in any document, next to generated groups or imported collections.
+  var elevationDocs = all.filter(function (th) { return th.doc.Elevation; });
+  var wantsElevation = elevationDocs.length > 0 && groups.indexOf('Elevation') >= 0;
   if (!wanted.length && !wantsElevation && !imports.length) throw new Error('Nothing to import: no known groups were selected.');
 
   var collections = await figma.variables.getLocalVariableCollectionsAsync();
@@ -370,12 +372,12 @@ async function importTokens(input, groups) {
   if (wantsElevation) {
     var existing = await figma.getLocalEffectStylesAsync();
     // Effect styles cannot hold variables, so themes whose shadows differ get a folder each.
-    var perTheme = themes.map(function (th) { var list = []; walk(th.doc.Elevation, ['Elevation'], list); return list; });
-    var sameShadows = themes.length < 2 || perTheme.every(function (l) { return JSON.stringify(l) === JSON.stringify(perTheme[0]); });
+    var perTheme = elevationDocs.map(function (th) { var list = []; walk(th.doc.Elevation, ['Elevation'], list); return list; });
+    var sameShadows = elevationDocs.length < 2 || perTheme.every(function (l) { return JSON.stringify(l) === JSON.stringify(perTheme[0]); });
     var shadows = [];
     perTheme.forEach(function (list, ti) {
       if (sameShadows && ti > 0) return;
-      list.forEach(function (x) { shadows.push({ path: x.path, leaf: x.leaf, theme: sameShadows ? null : themes[ti].name }); });
+      list.forEach(function (x) { shadows.push({ path: x.path, leaf: x.leaf, theme: sameShadows ? null : elevationDocs[ti].name }); });
     });
     shadows.forEach(function (s) {
       var name = 'elevation/' + (s.theme ? s.theme + '/' : '') + s.path.slice(1).join('/');

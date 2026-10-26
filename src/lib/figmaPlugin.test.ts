@@ -626,6 +626,31 @@ describe('plugin import: a v2 export', () => {
     resetV2()
   })
 
+  it('makes effect styles of the shadows next to the imported collections, in a folder per theme when they differ', async () => {
+    resetV2()
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported', 'Elevation'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    expect(p.styles.map((x: any) => x.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
+    expect(p.styles[2].effects[0]).toMatchObject({ type: 'DROP_SHADOW', offset: { x: 0, y: 6 }, radius: 16 })
+    expect(p.posted.find((m) => m.type === 'done').result.styles).toBe(5)
+
+    const v2 = useV2.getState()
+    v2.addTheme('Hard')
+    v2.setElevationPreset('carbon')
+    const q = loadPlugin()
+    await q.send({ type: 'import', doc: JSON.parse(themesJson(resolveThemes(activeResolved(useV2.getState()).system))), groups: ['Imported', 'Elevation'] })
+    expect(q.styles.map((x: any) => x.name)).toEqual(['xs', 'sm', 'md', 'lg', 'xl'].map((n) => `elevation/Base/${n}`).concat(['low', 'raised', 'overlay'].map((n) => `elevation/Hard/${n}`)))
+    resetV2()
+  })
+
+  it('does not make styles unless the shadows are chosen', async () => {
+    resetV2()
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
+    expect(p.styles).toHaveLength(0)
+  })
+
   it('creates Default\'s two collections too', async () => {
     resetV2()
     const p = loadPlugin()

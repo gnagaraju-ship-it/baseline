@@ -134,7 +134,7 @@ describe('v2 exports', () => {
     expect(css).toContain('--bg-fill: var(--primary-10);')
     expect(css).toContain('[data-theme="dark"] {')
     expect(css).toContain('--bg-fill: var(--primary-9);')
-    expect(count).toBe(7 * 16 + 32 + 58 + 46 + 17 + 5)
+    expect(count).toBe(7 * 16 + 32 + 58 + 46 + 17 + 5 + 5)
     expect(systemCss(resolved(), ['Semantic']).css).not.toContain('--primary-10: #')
   })
 
@@ -246,5 +246,62 @@ describe('v2 sizes', () => {
     s().addNumber('Spacing', 'space/50', 50, 'px')
     s().removeAdded('Spacing', 'space/50')
     expect(resolved().find(refOf('Spacing', 'space/50'))).toBeUndefined()
+  })
+})
+
+describe('v2 elevation', () => {
+  beforeEach(() => { localStorage.clear(); resetV2() })
+  const e = () => resolved().elevation!
+
+  it('Default has v1\'s soft shadows, Untitled has none', () => {
+    expect(e().preset).toBe('soft')
+    expect(e().tokens.map((t) => t.name)).toEqual(['xs', 'sm', 'md', 'lg', 'xl'])
+    expect(e().shadow).toBe('#000000')
+    s().setSystem('untitled')
+    expect(resolved().elevation).toBeUndefined()
+    expect(resolved().system.elevation).toBeUndefined()
+  })
+
+  it('a preset replaces the levels, a layer edit makes it custom, and the theme keeps its own', () => {
+    s().setElevationPreset('material')
+    expect(e().preset).toBe('material')
+    expect(e().tokens).toHaveLength(9)
+    s().setLayer(0, 0, 'blur', '7')
+    expect(e().preset).toBe('custom')
+    expect(e().tokens[0].layers[0].blur).toBe(7)
+    s().addTheme('Other')
+    s().setElevationPreset('carbon')
+    expect(e().tokens.map((t) => t.name)).toEqual(['low', 'raised', 'overlay'])
+    s().setTheme('base')
+    expect(e().tokens).toHaveLength(9)
+    expect(e().tokens[0].layers[0].blur).toBe(7)
+  })
+
+  it('layers and levels can be added, renamed and removed; the last layer and level stay', () => {
+    s().addElevationLayer(0)
+    expect(e().tokens[0].layers).toHaveLength(2)
+    s().removeElevationLayer(0, 1)
+    s().removeElevationLayer(0, 0)
+    expect(e().tokens[0].layers).toHaveLength(1)
+    s().addElevationLevel()
+    expect(e().tokens.at(-1)!.name).toBe('level-6')
+    s().renameElevationLevel(5, 'floating')
+    expect(e().tokens.at(-1)!.name).toBe('floating')
+    s().removeElevationLevel(5)
+    expect(e().tokens).toHaveLength(5)
+    s().setShadowColour('#112233')
+    expect(e().shadow).toBe('#112233')
+    s().resetTheme()
+    expect(e().preset).toBe('soft')
+    expect(e().shadow).toBe('#000000')
+  })
+
+  it('CSS and JSON carry the shadows', () => {
+    const css = systemCss(resolved(), ['Elevation']).css
+    expect(css).toContain('--elevation-md: 0px 6px 16px 0px rgba(0, 0, 0, 0.12);')
+    expect(systemCss(resolved(), ['Primitives']).css).not.toContain('--elevation')
+    const doc = JSON.parse(systemJson(resolved(), ['Elevation']))
+    expect(doc.Elevation.md).toEqual({ $type: 'shadow', $value: [{ color: '#0000001F', offsetX: '0px', offsetY: '6px', blur: '16px', spread: '0px' }] })
+    expect(JSON.parse(systemJson(resolved(), ['Primitives'])).Elevation).toBeUndefined()
   })
 })

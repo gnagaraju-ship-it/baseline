@@ -3,8 +3,8 @@ import { importedDoc, type ImportedCollection, type ImportedSet, type ImportedVa
 import { themeSlugs } from '../../lib/themes'
 import type { System } from '../model'
 import { resolveSystem, type ResolvedCell, type ResolvedCollection, type ResolvedSystem } from '../resolve'
-import { systemCss } from './css'
-import { systemSet } from './json'
+import { ELEVATION, systemCss } from './css'
+import { elevationDoc, systemSet } from './json'
 
 /** The themes of a system, each resolved. `ids` picks some of them (all when left out). */
 export function resolveThemes(system: System, ids?: string[]): ResolvedSystem[] {
@@ -63,7 +63,13 @@ export function themesSet(rs: ResolvedSystem[], only?: string[]): ImportedSet {
 
 /** Design tokens JSON for the Figma plugin with every chosen theme as modes. */
 export function themesJson(rs: ResolvedSystem[], only?: string[]): string {
-  return JSON.stringify(importedDoc(themesSet(rs, only), ['ramps', 'semantic', 'type', 'grids', 'spacing', 'elevation']), null, 2) + '\n'
+  const doc = importedDoc(themesSet(rs, only), ['ramps', 'semantic', 'type', 'grids', 'spacing', 'elevation'])
+  if (rs[0].elevation && (!only || only.includes(ELEVATION))) {
+    // Effect styles cannot hold modes: when the themes' shadows differ, every theme gets its own folder of styles.
+    const docs = rs.map((r) => JSON.stringify(elevationDoc(r)))
+    doc.Elevation = docs.every((d) => d === docs[0]) ? elevationDoc(rs[0]) : Object.fromEntries(rs.map((r) => [r.theme.name, elevationDoc(r)]))
+  }
+  return JSON.stringify(doc, null, 2) + '\n'
 }
 
 /** CSS with every chosen theme: the first answers to :root, each to its own [data-brand="name"]. */

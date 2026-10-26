@@ -191,6 +191,46 @@ describe('v2 screens', () => {
     expect(within(dialog).getByText(/ · untitled-theme-2\.json/)).toBeInTheDocument()
   })
 
+  it('elevation: a tab for systems that have shadows, with presets, layers and levels', async () => {
+    at('/v2/elevation')
+    expect(screen.getByRole('link', { name: 'Elevation' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Soft ambient' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByRole('region', { name: /^Level / })).toHaveLength(5)
+    await userEvent.click(screen.getByRole('button', { name: 'Carbon' }))
+    expect(screen.getAllByRole('region', { name: /^Level / })).toHaveLength(3)
+    const blur = screen.getByLabelText('low layer 1 Blur')
+    fireEvent.change(blur, { target: { value: '9' } })
+    expect(screen.getByRole('button', { name: 'Custom' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(within(screen.getByRole('region', { name: 'Level low' })).getByRole('button', { name: '+ Add layer' }))
+    expect(screen.getByRole('group', { name: 'low layer 2' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Remove low layer 2' }))
+    expect(screen.queryByRole('group', { name: 'low layer 2' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove low layer 1' })).toBeDisabled()
+    const name = screen.getByLabelText('Level low name')
+    await userEvent.clear(name)
+    await userEvent.type(name, 'flat{Enter}')
+    expect(screen.getByRole('region', { name: 'Level flat' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '+ Add level' }))
+    expect(screen.getAllByRole('region', { name: /^Level / })).toHaveLength(4)
+  })
+
+  it('elevation: Untitled has none, so no tab and a plain message', async () => {
+    at('/v2/elevation')
+    await userEvent.click(screen.getByRole('button', { name: 'Untitled' }))
+    expect(screen.queryByRole('link', { name: 'Elevation' })).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('no elevation')
+  })
+
+  it('export lists the shadows next to the collections', async () => {
+    at('/v2')
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }))
+    const dialog = screen.getByRole('dialog', { name: /Export Default/ })
+    for (const c of ['Primitives', 'Semantic', 'Type', 'Spacing', 'Grid']) await userEvent.click(within(dialog).getByRole('checkbox', { name: new RegExp(`^${c}`) }))
+    expect(within(dialog).getByRole('checkbox', { name: /Elevation/ })).toBeChecked()
+    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--elevation-xs:')
+    expect(within(dialog).getByText(/^5 tokens/)).toBeInTheDocument()
+  })
+
   it('export includes the type collection', async () => {
     at('/v2')
     await userEvent.click(screen.getByRole('button', { name: 'Export' }))

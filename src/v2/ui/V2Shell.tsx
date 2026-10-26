@@ -8,7 +8,7 @@ import { FONT_CATALOG } from '../../lib/fonts'
 import { RATIOS } from '../../lib/typeScale'
 import { NumberField } from '../../components/NumberField'
 import { startHex } from '../recipes'
-import { activeResolved, useV2, v2Systems } from '../store'
+import { activeResolved, systemsFor, useV2, v2Systems } from '../store'
 import { V2ExportDialog } from './V2ExportDialog'
 
 const GROUPS: Array<{ key: string; title: string }> = [
@@ -151,6 +151,7 @@ function Panel() {
 /** Frame of the v2 screens: the settings panel, the two screens as tabs, and Export. */
 export function V2Shell({ children }: { children: ReactNode }) {
   const openExport = useV2((s) => s.openExport)
+  const hasElevation = useV2((s) => !!systemsFor(s.themes, s.custom).find((x) => x.id === s.activeSystemId)?.elevation)
   const systemName = useV2((s) => [...v2Systems(), ...s.custom].find((x) => x.id === s.activeSystemId)?.name ?? '')
   useEffect(() => { document.title = `${systemName} · Baseline v2` }, [systemName])
   const tab = ({ isActive }: { isActive: boolean }) => `flex h-16 items-center px-3.5 no-underline ${isActive ? 'font-semibold text-ink shadow-[inset_0_-2px_0_#E2531B]' : 'font-medium text-muted hover:text-ink'}`
@@ -166,6 +167,7 @@ export function V2Shell({ children }: { children: ReactNode }) {
             <NavLink to="/v2/tokens" className={tab}>Tokens</NavLink>
             <NavLink to="/v2/type" className={tab}>Type</NavLink>
             <NavLink to="/v2/sizes" className={tab}>Sizes</NavLink>
+            {hasElevation && <NavLink to="/v2/elevation" className={tab}>Elevation</NavLink>}
             <NavLink to="/v2/import" className={tab}>Import</NavLink>
           </nav>
           <button type="button" onClick={openExport} className="flex h-10 items-center gap-2 rounded-[9px] border-0 bg-btn px-3.5 text-[13px] font-semibold text-white">

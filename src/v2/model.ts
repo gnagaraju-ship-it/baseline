@@ -3,6 +3,8 @@
  * recipes that generate ramps, a naming policy and themes. Nothing in here knows about a particular system.
  */
 
+import type { ElevationPresetKey, Level } from '../lib/elevation'
+
 export type VarType = 'color' | 'number' | 'string'
 
 export interface Mode { id: string; name: string }
@@ -77,6 +79,14 @@ export interface DimensionSection {
   addPath?: string
 }
 
+/** Shadows by level: the multi-layer shadows of elevation, with one base colour. */
+export interface ElevationSetup {
+  preset: ElevationPresetKey
+  tokens: Level[]
+  /** The shadow colour as typed. */
+  shadow: string
+}
+
 /** How a system's type is made: from a base size and ratio ("scale"), or from sizes written down ("fixed"). */
 export interface TypeSetup {
   collection: string
@@ -117,6 +127,8 @@ export interface Theme {
   /** A different cell for a variable in a mode, by `<collection>::<path>|<mode id>`. */
   overrides: Record<string, Cell>
   type?: ThemeType
+  /** Shadows the theme changed: a preset, its own levels, or another colour. */
+  elevation?: Partial<ElevationSetup>
   /** Variables the theme adds, by collection name. */
   added?: Record<string, Variable[]>
 }
@@ -128,6 +140,7 @@ export interface System {
   recipes: RampRecipe[]
   type?: TypeSetup
   dimensions?: DimensionSection[]
+  elevation?: ElevationSetup
   naming: NamingPolicy
   themes: Theme[]
 }

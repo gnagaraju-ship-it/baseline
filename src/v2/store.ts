@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { clampAlpha, norm } from '../lib/colour'
-import { emptyTheme, overrideKey, type Cell, type System, type Theme, type ThemeType, type Variable } from './model'
+import { addLayer, addLevel, loadPreset, removeLayer, removeLevel, renameLevel, setLayerField, parseField, type ElevationPresetKey, type LayerField } from '../lib/elevation'
+import { emptyTheme, overrideKey, type Cell, type ElevationSetup, type System, type Theme, type ThemeType, type Variable } from './model'
 import { resolveSystem, type ResolvedSystem } from './resolve'
 import { builtInSystems } from './systems'
 
@@ -37,6 +38,15 @@ export interface V2State {
   /** A new number variable in a collection, for the theme. A path already used is ignored. */
   addNumber: (collection: string, path: string, value: number, unit?: Variable['unit']) => void
   removeAdded: (collection: string, path: string) => void
+  /** The shadows: a preset, the colour, and each layer, level and name. */
+  setElevationPreset: (key: ElevationPresetKey) => void
+  setShadowColour: (text: string) => void
+  setLayer: (level: number, layer: number, field: LayerField, text: string) => void
+  addElevationLayer: (level: number) => void
+  removeElevationLayer: (level: number, layer: number) => void
+  addElevationLevel: () => void
+  removeElevationLevel: (level: number) => void
+  renameElevationLevel: (level: number, text: string) => void
   resetTheme: () => void
 }
 
@@ -62,6 +72,24 @@ const uniqueName = (wanted: string, taken: string[]) => {
 export const useV2 = create<V2State>()(
   persist(
     (set, get) => {
+      /** Change the active theme's shadows, starting from what it shows now. */
+      const editShadows = (change: (current: ElevationSetup) => Partial<ElevationSetup>) =>
+        set((s) => {
+          const id = s.activeSystemId
+          const system = systemsFor(s.themes, s.custom).find((x) => x.id === id)
+          if (!system?.elevation) return {}
+          const list = s.themes[id] ?? []
+          return {
+            themes: {
+              ...s.themes,
+              [id]: list.map((t) => {
+                if (t.id !== s.activeThemeId[id]) return t
+                const current: ElevationSetup = { ...system.elevation!, ...t.elevation }
+                return { ...t, elevation: { ...t.elevation, ...change(current) } }
+              })
+            }
+          }
+        })
       const edit = (change: (t: Theme) => Theme) =>
         set((s) => {
           const id = s.activeSystemId
@@ -105,7 +133,7 @@ export const useV2 = create<V2State>()(
             if (list.length >= 8) return {}
             const from = list.find((t) => t.id === s.activeThemeId[sys]) ?? list[0]
             const id = nextId(list)
-            const copy: Theme = { ...emptyTheme(id, uniqueName(name ?? `${from.name} copy`, list.map((t) => t.name))), ramps: { ...from.ramps }, overrides: { ...from.overrides }, type: JSON.parse(JSON.stringify(from.type ?? {})), added: JSON.parse(JSON.stringify(from.added ?? {})) }
+            const copy: Theme = { ...emptyTheme(id, uniqueName(name ?? `${from.name} copy`, list.map((t) => t.name))), ramps: { ...from.ramps }, overrides: { ...from.overrides }, type: JSON.parse(JSON.stringify(from.type ?? {})), added: JSON.parse(JSON.stringify(from.added ?? {})), ...(from.elevation ? { elevation: JSON.parse(JSON.stringify(from.elevation)) } : {}) }
             return { themes: { ...s.themes, [sys]: [...list, copy] }, activeThemeId: { ...s.activeThemeId, [sys]: id } }
           }),
         renameTheme: (id, name) =>
@@ -177,7 +205,15 @@ export const useV2 = create<V2State>()(
             else delete added[collection]
             return { ...t, added }
           }),
-        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {}, type: {}, added: {} }))
+        setElevationPreset: (key) => editShadows(() => ({ preset: key, tokens: loadPreset(key) })),
+        setShadowColour: (text) => editShadows(() => ({ shadow: text })),
+        setLayer: (i, j, field, text) => editShadows((c) => ({ preset: 'custom', tokens: setLayerField(c.tokens, i, j, field, parseField(field, text)) })),
+        addElevationLayer: (i) => editShadows((c) => ({ preset: 'custom', tokens: addLayer(c.tokens, i) })),
+        removeElevationLayer: (i, j) => editShadows((c) => ({ preset: 'custom', tokens: removeLayer(c.tokens, i, j) })),
+        addElevationLevel: () => editShadows((c) => ({ preset: 'custom', tokens: addLevel(c.tokens) })),
+        removeElevationLevel: (i) => editShadows((c) => ({ preset: 'custom', tokens: removeLevel(c.tokens, i) })),
+        renameElevationLevel: (i, text) => editShadows((c) => ({ tokens: renameLevel(c.tokens, i, text) })),
+        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {}, type: {}, added: {}, elevation: undefined }))
       }
     },
     {

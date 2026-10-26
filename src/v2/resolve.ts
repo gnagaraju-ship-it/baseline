@@ -1,4 +1,4 @@
-import { overrideKey, refOf, splitRef, type Cell, type Collection, type CollectionKind, type Mode, type System, type Theme, type VarType, type Variable } from './model'
+import { overrideKey, refOf, splitRef, type Cell, type ElevationSetup, type Collection, type CollectionKind, type Mode, type System, type Theme, type VarType, type Variable } from './model'
 import { rampSteps } from './recipes'
 import { stepPath, typeRows } from './typeScale'
 
@@ -26,6 +26,8 @@ export interface ResolvedSystem {
   system: System
   theme: Theme
   collections: ResolvedCollection[]
+  /** The system's shadows as the theme sees them. */
+  elevation?: ElevationSetup
   find: (ref: string) => ResolvedVariable | undefined
 }
 
@@ -102,7 +104,12 @@ export function resolveSystem(system: System, themeId: string): ResolvedSystem {
 
   const byRef = new Map<string, ResolvedVariable>()
   for (const c of collections) for (const v of c.variables) byRef.set(refOf(c.name, v.path), v)
-  return { system, theme, collections, find: (ref) => byRef.get(ref) }
+  const elevation = system.elevation && {
+    preset: theme.elevation?.preset ?? system.elevation.preset,
+    tokens: theme.elevation?.tokens ?? system.elevation.tokens,
+    shadow: theme.elevation?.shadow ?? system.elevation.shadow
+  }
+  return { system, theme, collections, elevation, find: (ref) => byRef.get(ref) }
 }
 
 export { splitRef }

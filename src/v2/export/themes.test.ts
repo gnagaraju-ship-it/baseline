@@ -84,4 +84,17 @@ describe('themes as Figma modes', () => {
     expect(css.split('\n').filter((l) => /^\s*:root/.test(l)).every((l) => l.includes('[data-brand="base"]'))).toBe(true)
     expect(themesCss(themes(['base']), ['_Primitives']).css).not.toContain('data-brand')
   })
+
+  it('shadows go once when the themes agree, and in a folder per theme when they differ', () => {
+    s().setSystem('default')
+    s().addTheme('Hard')
+    expect(JSON.parse(themesJson(themes(), ['Elevation'])).Elevation).toHaveProperty('md')
+    s().setElevationPreset('carbon')
+    const doc = JSON.parse(themesJson(themes(), ['Elevation']))
+    expect(Object.keys(doc.Elevation)).toEqual(['Base', 'Hard'])
+    expect(Object.keys(doc.Elevation.Hard)).toEqual(['low', 'raised', 'overlay'])
+    const css = themesCss(themes(), ['Elevation']).css
+    expect(css).toContain('[data-brand="hard"] {')
+    expect(css).toContain('--elevation-raised:')
+  })
 })

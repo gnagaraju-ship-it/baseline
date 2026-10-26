@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { copyText, downloadText } from '../../lib/browser'
+import { ELEVATION } from '../export/css'
 import { resolveThemes, themesCss, themesJson } from '../export/themes'
 import { activeResolved, useV2 } from '../store'
 
@@ -16,8 +17,9 @@ export function V2ExportDialog() {
   const several = r.system.themes.length > 1
   const all = several && scope === 'all'
   const rs = useMemo(() => (all ? resolveThemes(r.system) : [r]), [all, r])
-  const chosen = r.collections.map((c) => c.name).filter((n) => !off.includes(n))
-  const built = useMemo(() => (s.exportOpen && chosen.length ? (format === 'css' ? themesCss(rs, chosen) : { css: themesJson(rs, chosen), count: r.collections.filter((c) => chosen.includes(c.name)).reduce((n, c) => n + c.variables.length, 0) }) : { css: '', count: 0 }), [s.exportOpen, format, rs, chosen.join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const names = [...r.collections.map((c) => c.name), ...(r.elevation ? [ELEVATION] : [])]
+  const chosen = names.filter((n) => !off.includes(n))
+  const built = useMemo(() => (s.exportOpen && chosen.length ? (format === 'css' ? themesCss(rs, chosen) : { css: themesJson(rs, chosen), count: r.collections.filter((c) => chosen.includes(c.name)).reduce((n, c) => n + c.variables.length, 0) + (r.elevation && chosen.includes(ELEVATION) ? r.elevation.tokens.length : 0) }) : { css: '', count: 0 }), [s.exportOpen, format, rs, chosen.join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!s.exportOpen) return
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') s.closeExport() }
@@ -56,11 +58,11 @@ export function V2ExportDialog() {
           )}
           <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
             <legend className="mb-1 text-xs font-semibold uppercase tracking-[.08em] text-muted">Include</legend>
-            {r.collections.map((c) => (
+            {[...r.collections.map((c) => ({ name: c.name, count: c.variables.length })), ...(r.elevation ? [{ name: ELEVATION, count: r.elevation.tokens.length }] : [])].map((c) => (
               <label key={c.name} className="flex items-center gap-2.5 text-[13px]">
                 <input type="checkbox" checked={!off.includes(c.name)} onChange={() => setOff((o) => (o.includes(c.name) ? o.filter((x) => x !== c.name) : [...o, c.name]))} className="accent-accent" />
                 <span className="flex-1 font-mono">{c.name}</span>
-                <span className="rounded-md bg-soft px-1.5 py-px font-mono text-[11px] text-muted">{c.variables.length}</span>
+                <span className="rounded-md bg-soft px-1.5 py-px font-mono text-[11px] text-muted">{c.count}</span>
               </label>
             ))}
           </fieldset>

@@ -1,5 +1,6 @@
 import { buildPalettes, defaultSettings } from '../../lib/colour'
 import { computeGroups, defaultTypeSettings } from '../../lib/typeScale'
+import { defaultElevationSettings } from '../../lib/elevation'
 import { BREAKPOINTS, computeGrid, defaultGridSettings } from '../../lib/grid'
 import { defaultSpacingSettings, onValues, scaleSteps } from '../../lib/spacing'
 import { ALPHA, DEFAULT_SCHEMA } from '../../lib/tokens'
@@ -104,6 +105,7 @@ export function defaultSystem(): System {
     recipes,
     type,
     dimensions,
+    elevation: defaultElevationSettings(),
     naming: { prefix: '--', separator: '-' },
     themes: [emptyTheme('base', 'Base')]
   }
