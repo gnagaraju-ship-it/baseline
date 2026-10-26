@@ -1,7 +1,9 @@
 import { buildPalettes, defaultSettings } from '../../lib/colour'
 import { computeGroups, defaultTypeSettings } from '../../lib/typeScale'
+import { BREAKPOINTS, computeGrid, defaultGridSettings } from '../../lib/grid'
+import { defaultSpacingSettings, onValues, scaleSteps } from '../../lib/spacing'
 import { ALPHA, DEFAULT_SCHEMA } from '../../lib/tokens'
-import { emptyTheme, refOf, type Cell, type Collection, type RampRecipe, type System, type TypeSetup, type Variable } from '../model'
+import { emptyTheme, refOf, type Cell, type Collection, type DimensionSection, type RampRecipe, type System, type TypeSetup, type Variable } from '../model'
 import { typeRows, typeVariables } from '../typeScale'
 
 const PRIMITIVES = 'Primitives'
@@ -68,12 +70,40 @@ export function defaultSystem(): System {
   }
   const typeCollection: Collection = { name: 'Type', kind: 'type', modes: [{ id: 'value', name: 'Value' }], variables: typeVariables(type, typeRows(type, undefined)) }
 
+  const sp = defaultSpacingSettings()
+  const steps = onValues(scaleSteps(sp.base, sp.extra), sp.on)
+  const spacing: Collection = {
+    name: 'Spacing',
+    kind: 'dimension',
+    modes: [{ id: 'value', name: 'Value' }],
+    variables: steps.map((n) => ({ path: `space/${n}`, type: 'number' as const, unit: 'px' as const, cells: { value: { value: n } } }))
+  }
+  const grid = defaultGridSettings()
+  const layouts = Object.fromEntries(BREAKPOINTS.map((b) => [b.key, computeGrid(grid, b.key)]))
+  const gridCollection: Collection = {
+    name: 'Grid',
+    kind: 'dimension',
+    modes: BREAKPOINTS.map((b) => ({ id: b.key, name: b.label })),
+    variables: ([
+      ['grid/width', (k: string) => BREAKPOINTS.find((b) => b.key === k)!.width, 'px'],
+      ['grid/columns', (k: string) => layouts[k].columns, ''],
+      ['grid/gutter', (k: string) => layouts[k].gutter, 'px'],
+      ['grid/margin', (k: string) => layouts[k].margin, 'px'],
+      ['grid/sidebar', (k: string) => layouts[k].sidebarWidth, 'px']
+    ] as const).map(([path, pick, unit]) => ({ path, type: 'number' as const, unit, cells: Object.fromEntries(BREAKPOINTS.map((b) => [b.key, { value: pick(b.key) }])) }))
+  }
+  const dimensions: DimensionSection[] = [
+    { id: 'space', title: 'Spacing scale', collection: 'Spacing', shape: 'bar', addPath: 'space/{n}' },
+    { id: 'grid', title: 'Grid by breakpoint', collection: 'Grid', shape: 'plain' }
+  ]
+
   return {
     id: 'default',
     name: 'Default',
-    collections: [primitives, semantic, typeCollection],
+    collections: [primitives, semantic, typeCollection, spacing, gridCollection],
     recipes,
     type,
+    dimensions,
     naming: { prefix: '--', separator: '-' },
     themes: [emptyTheme('base', 'Base')]
   }

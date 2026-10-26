@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { clampAlpha, norm } from '../lib/colour'
-import { emptyTheme, overrideKey, type Cell, type System, type Theme, type ThemeType } from './model'
+import { emptyTheme, overrideKey, type Cell, type System, type Theme, type ThemeType, type Variable } from './model'
 import { resolveSystem, type ResolvedSystem } from './resolve'
 import { builtInSystems } from './systems'
 
@@ -29,6 +29,9 @@ export interface V2State {
   setType: (patch: Partial<Omit<ThemeType, 'steps'>>) => void
   /** A size, line height or tracking for one type step; undefined puts it back. */
   setStep: (step: string, patch: { size?: number; lh?: number; tr?: number }) => void
+  /** A new number variable in a collection, for the theme. A path already used is ignored. */
+  addNumber: (collection: string, path: string, value: number, unit?: Variable['unit']) => void
+  removeAdded: (collection: string, path: string) => void
   resetTheme: () => void
 }
 
@@ -76,7 +79,7 @@ export const useV2 = create<V2State>()(
             if (list.length >= 8) return {}
             const from = list.find((t) => t.id === s.activeThemeId[sys]) ?? list[0]
             const id = nextId(list)
-            const copy: Theme = { ...emptyTheme(id, uniqueName(name ?? `${from.name} copy`, list.map((t) => t.name))), ramps: { ...from.ramps }, overrides: { ...from.overrides } }
+            const copy: Theme = { ...emptyTheme(id, uniqueName(name ?? `${from.name} copy`, list.map((t) => t.name))), ramps: { ...from.ramps }, overrides: { ...from.overrides }, type: JSON.parse(JSON.stringify(from.type ?? {})), added: JSON.parse(JSON.stringify(from.added ?? {})) }
             return { themes: { ...s.themes, [sys]: [...list, copy] }, activeThemeId: { ...s.activeThemeId, [sys]: id } }
           }),
         renameTheme: (id, name) =>
@@ -133,7 +136,22 @@ export const useV2 = create<V2State>()(
             else delete steps[step]
             return { ...t, type: { ...t.type, steps } }
           }),
-        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {}, type: {} }))
+        addNumber: (collection, path, value, unit) =>
+          edit((t) => {
+            const list = t.added?.[collection] ?? []
+            if (list.some((v) => v.path === path)) return t
+            const modeCell = (): Variable['cells'] => ({ '*': { value } })
+            return { ...t, added: { ...t.added, [collection]: [...list, { path, type: 'number', unit, cells: modeCell() }] } }
+          }),
+        removeAdded: (collection, path) =>
+          edit((t) => {
+            const left = (t.added?.[collection] ?? []).filter((v) => v.path !== path)
+            const added = { ...t.added }
+            if (left.length) added[collection] = left
+            else delete added[collection]
+            return { ...t, added }
+          }),
+        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {}, type: {}, added: {} }))
       }
     },
     {

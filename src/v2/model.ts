@@ -62,6 +62,21 @@ export interface TypeStepDef {
   weight?: number
 }
 
+/** A list of sizes shown together on the sizes screen (a spacing scale, radius, widths, a grid ...). */
+export interface DimensionSection {
+  id: string
+  title: string
+  collection: string
+  /** Only the variables whose path starts with this. */
+  prefix?: string
+  /** How a value is drawn. */
+  shape: 'bar' | 'radius' | 'plain'
+  /** The section whose variables a value here may follow. */
+  follows?: string
+  /** A path for a variable the user adds, with {n} for its value; none means the section cannot grow. */
+  addPath?: string
+}
+
 /** How a system's type is made: from a base size and ratio ("scale"), or from sizes written down ("fixed"). */
 export interface TypeSetup {
   collection: string
@@ -102,6 +117,8 @@ export interface Theme {
   /** A different cell for a variable in a mode, by `<collection>::<path>|<mode id>`. */
   overrides: Record<string, Cell>
   type?: ThemeType
+  /** Variables the theme adds, by collection name. */
+  added?: Record<string, Variable[]>
 }
 
 export interface System {
@@ -110,6 +127,7 @@ export interface System {
   collections: Collection[]
   recipes: RampRecipe[]
   type?: TypeSetup
+  dimensions?: DimensionSection[]
   naming: NamingPolicy
   themes: Theme[]
 }

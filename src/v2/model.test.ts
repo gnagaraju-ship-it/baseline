@@ -28,7 +28,7 @@ describe('Default as data', () => {
     expect(prim.variables.filter((v) => v.path.startsWith('primary/'))).toHaveLength(16)
     expect(prim.variables).toHaveLength(7 * 16 + 32)
     expect(sem.variables).toHaveLength(58)
-    expect(r.collections).toHaveLength(3)
+    expect(r.collections.map((c) => c.name)).toEqual(['Primitives', 'Semantic', 'Type', 'Spacing', 'Grid'])
     expect(sem.modes.map((m) => m.name)).toEqual(['Light', 'Dark'])
   })
 
@@ -57,7 +57,7 @@ describe('Untitled as data', () => {
 
   it('has the ramps and the 273 semantic tokens of the files, named like the files', () => {
     expect(prim.name).toBe('_Primitives')
-    expect(prim.variables).toHaveLength(27 * 11 + 2)
+    expect(prim.variables).toHaveLength(27 * 11 + 2 + 32) // the colours and the spacing primitives, as in the file
     expect(modes.name).toBe('1. Color modes')
     expect(modes.variables).toHaveLength(273)
     expect(modes.modes.map((m) => m.name)).toEqual(['Light mode', 'Dark mode'])

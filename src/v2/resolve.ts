@@ -62,11 +62,13 @@ export function resolveSystem(system: System, themeId: string): ResolvedSystem {
     if (own) return { cell: own, overridden: true }
     const generated = rampValue.get(refOf(c.name, v.path))
     if (generated !== undefined) return { cell: { value: generated }, overridden: false }
-    return { cell: v.cells[mode.id] ?? v.cells[c.modes[0].id] ?? { value: '' }, overridden: false }
+    return { cell: v.cells[mode.id] ?? v.cells['*'] ?? v.cells[c.modes[0].id] ?? { value: '' }, overridden: false }
   }
 
+  // the system's collections with the variables the theme added
+  const all: Collection[] = system.collections.map((c) => ({ ...c, variables: [...c.variables, ...(theme.added?.[c.name] ?? [])] }))
   const index = new Map<string, { c: Collection; v: Variable }>()
-  for (const c of system.collections) for (const v of c.variables) index.set(refOf(c.name, v.path), { c, v })
+  for (const c of all) for (const v of c.variables) index.set(refOf(c.name, v.path), { c, v })
 
   const follow = (c: Collection, v: Variable, mode: Mode, depth: number): string | number => {
     const { cell } = cellOf(c, v, mode)
@@ -78,7 +80,7 @@ export function resolveSystem(system: System, themeId: string): ResolvedSystem {
     return follow(target.c, target.v, tm, depth + 1)
   }
 
-  const collections: ResolvedCollection[] = system.collections.map((c) => ({
+  const collections: ResolvedCollection[] = all.map((c) => ({
     name: c.name,
     kind: c.kind,
     modes: c.modes,

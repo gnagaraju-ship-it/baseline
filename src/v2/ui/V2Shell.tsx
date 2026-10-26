@@ -162,6 +162,7 @@ export function V2Shell({ children }: { children: ReactNode }) {
             <NavLink to="/v2" end className={tab}>Palette</NavLink>
             <NavLink to="/v2/tokens" className={tab}>Tokens</NavLink>
             <NavLink to="/v2/type" className={tab}>Type</NavLink>
+            <NavLink to="/v2/sizes" className={tab}>Sizes</NavLink>
           </nav>
           <button type="button" onClick={openExport} className="flex h-10 items-center gap-2 rounded-[9px] border-0 bg-btn px-3.5 text-[13px] font-semibold text-white">
             <Icon name="export" size={15} strokeWidth={1.8} />

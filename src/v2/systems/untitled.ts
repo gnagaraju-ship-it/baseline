@@ -1,6 +1,8 @@
 import untitledType from '../../data/untitled-type.json'
+import untitledUi from '../../data/untitled-ui.json'
+import type { ImportedSet } from '../../lib/importedTokens'
 import { UNTITLED_ID, colourSchema } from '../../lib/schemas'
-import { emptyTheme, refOf, type Cell, type Collection, type RampRecipe, type System, type TypeSetup, type Variable } from '../model'
+import { emptyTheme, refOf, type Cell, type Collection, type DimensionSection, type RampRecipe, type System, type TypeSetup, type Variable } from '../model'
 import { typeRows, typeVariables } from '../typeScale'
 
 const PRIMITIVES = '_Primitives'
@@ -57,12 +59,40 @@ export function untitledSystem(): System {
   const weights: Variable[] = untitledType.weights.map((w) => ({ path: w.name, type: 'string' as const, group: 'Font weights', cells: { value: { value: String(w.value) } } }))
   const typography: Collection = { name: type.collection, kind: 'type', modes: [{ id: 'value', name: 'Value' }], variables: typeVariables(type, typeRows(type, undefined), weights) }
 
+  // Spacing primitives share the _Primitives collection with the colour ramps, as they do in the file.
+  const files = untitledUi as ImportedSet
+  const fromFile = (name: string): Collection => {
+    const c = files.collections.find((x) => x.name === name)!
+    const modeId = (m: string) => m.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    return {
+      name: c.name,
+      kind: 'dimension',
+      modes: c.modes.map((m) => ({ id: modeId(m), name: m })),
+      variables: c.variables.map((v) => ({
+        path: v.name,
+        type: 'number' as const,
+        unit: 'px' as const,
+        cells: Object.fromEntries(c.modes.map((m) => [modeId(m), v.values[m].a ? { alias: v.values[m].a } : { value: v.values[m].v }]))
+      }))
+    }
+  }
+  const spacingPrimitives = fromFile('_Primitives').variables.filter((v) => v.path.startsWith('Spacing/'))
+  primitives.variables.push(...spacingPrimitives.map((v) => ({ ...v, cells: { style: v.cells.style } })))
+  const dimensions: DimensionSection[] = [
+    { id: 'scale', title: 'Scale', collection: PRIMITIVES, prefix: 'Spacing/', shape: 'bar', addPath: 'Spacing/custom ({n}px)' },
+    { id: 'spacing', title: 'Spacing tokens', collection: '3. Spacing', shape: 'bar', follows: 'scale' },
+    { id: 'radius', title: 'Radius', collection: '2. Radius', shape: 'radius' },
+    { id: 'widths', title: 'Widths', collection: '4. Widths', shape: 'bar', follows: 'scale' },
+    { id: 'containers', title: 'Containers', collection: '5. Containers', shape: 'plain', follows: 'scale' }
+  ]
+
   return {
     id: 'untitled',
     name: 'Untitled',
-    collections: [primitives, semantic, typography],
+    collections: [primitives, semantic, typography, ...['2. Radius', '3. Spacing', '4. Widths', '5. Containers'].map(fromFile)],
     recipes,
     type,
+    dimensions,
     naming: { prefix: '--', separator: '-' },
     themes: [emptyTheme('base', 'Base')]
   }

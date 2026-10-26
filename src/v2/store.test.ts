@@ -37,6 +37,21 @@ describe('v2 store', () => {
     expect(resolved().find(refOf('Primitives', 'primary/10'))!.cells.value.value).toBe('#222222')
   })
 
+  it('a new theme copies everything the active one changed: colours, remaps, type and added sizes', () => {
+    s().setRamp('primary', '#123456')
+    s().setType({ base: 18 })
+    s().setStep('body-md', { lh: 33 })
+    s().addNumber('Spacing', 'space/36', 36, 'px')
+    s().addTheme('Copy')
+    const t = resolved().theme
+    expect(t.ramps.primary).toBe('#123456')
+    expect(t.type).toEqual({ base: 18, steps: { 'body-md': { lh: 33 } } })
+    expect(t.added!.Spacing).toHaveLength(1)
+    s().setType({ base: 12 })
+    s().setTheme('base')
+    expect(resolved().theme.type!.base).toBe(18) // the copy is independent
+  })
+
   it('renames with unique names, deletes but never the last, and caps at eight', () => {
     s().addTheme('Ocean')
     s().renameTheme('theme-2', 'base')
@@ -119,7 +134,7 @@ describe('v2 exports', () => {
     expect(css).toContain('--bg-fill: var(--primary-10);')
     expect(css).toContain('[data-theme="dark"] {')
     expect(css).toContain('--bg-fill: var(--primary-9);')
-    expect(count).toBe(7 * 16 + 32 + 58 + 46)
+    expect(count).toBe(7 * 16 + 32 + 58 + 46 + 17 + 5)
     expect(systemCss(resolved(), ['Semantic']).css).not.toContain('--primary-10: #')
   })
 
@@ -142,7 +157,7 @@ describe('v2 exports', () => {
     const { css, count } = systemCss(resolved())
     expect(css).toContain('--colors-brand-600: #7F56D9;')
     expect(css).toContain('--colors-text-text-primary-900: var(--colors-neutral-900);')
-    expect(count).toBe(27 * 11 + 2 + 273 + 32)
+    expect(count).toBe(27 * 11 + 2 + 32 + 273 + 32 + 11 + 17 + 12 + 3)
   })
 
   it('CSS follows the theme: a new brand colour reaches the ramp and nothing else changes', () => {
@@ -156,10 +171,80 @@ describe('v2 exports', () => {
   it('JSON: the collections the Figma plugin imports, with modes and links', () => {
     s().setSystem('untitled')
     const set = systemSet(resolved())
-    expect(set.collections.map((c) => [c.name, c.modes.length, c.variables.length])).toEqual([['_Primitives', 1, 27 * 11 + 2], ['1. Color modes', 2, 273], ['6. Typography', 1, 32]])
+    expect(set.collections.map((c) => [c.name, c.modes.length, c.variables.length])).toEqual([['_Primitives', 1, 27 * 11 + 2 + 32], ['1. Color modes', 2, 273], ['6. Typography', 1, 32], ['2. Radius', 1, 11], ['3. Spacing', 1, 17], ['4. Widths', 1, 12], ['5. Containers', 1, 3]])
     const doc = JSON.parse(systemJson(resolved()))
     const token = doc.Imported['1. Color modes'].Colors.Text['text-primary (900)']
     expect(token.$extensions['com.baseline'].alias['Light mode']).toBe('_Primitives::Colors/Neutral/900')
     expect(token.$extensions['com.baseline'].modes['Dark mode']).toBe('#FAFAFA')
+  })
+})
+
+describe('v2 sizes', () => {
+  beforeEach(() => { localStorage.clear(); resetV2() })
+
+  it('Default: its spacing scale and grid are data, equal to v1', () => {
+    const r = resolved()
+    expect(r.system.dimensions!.map((d) => d.id)).toEqual(['space', 'grid'])
+    expect(r.find(refOf('Spacing', 'space/16'))!.cells.value.value).toBe(16)
+    expect(r.find(refOf('Spacing', 'space/6'))).toBeUndefined() // off in v1's 4px base
+    const columns = r.find(refOf('Grid', 'grid/columns'))!
+    expect(r.collections.find((c) => c.name === 'Grid')!.modes.map((m) => m.name)).toEqual(['XXL', 'MD', 'XS'])
+    expect([columns.cells.xxl.value, columns.cells.md.value, columns.cells.xs.value]).toEqual([12, 8, 4])
+    expect(r.find(refOf('Grid', 'grid/width'))!.cells.md.value).toBe(768)
+    expect(systemCss(r, ['Spacing']).css).toContain('--space-16: 16px;')
+    expect(systemCss(r, ['Grid']).css).toContain('--grid-columns: 12;')
+    expect(systemCss(r, ['Grid']).css).toContain('[data-grid="md"] {')
+  })
+
+  it('Untitled: scale, tokens that follow it, radius, widths and containers', () => {
+    s().setSystem('untitled')
+    const r = resolved()
+    expect(r.system.dimensions!.map((d) => d.id)).toEqual(['scale', 'spacing', 'radius', 'widths', 'containers'])
+    expect(r.find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1']).toMatchObject({ value: 4, alias: refOf('_Primitives', 'Spacing/1 (4px)') })
+    expect(r.find(refOf('4. Widths', 'width-xxs'))!.cells['mode-1'].value).toBe(320)
+    expect(r.find(refOf('2. Radius', 'radius-full'))!.cells['mode-1'].value).toBe(9999)
+    expect(r.find(refOf('5. Containers', 'container-padding-desktop'))!.cells.value.value).toBe(32)
+    const css = systemCss(r, ['3. Spacing']).css
+    expect(css).toContain('--spacing-xs: var(--spacing-1-4px);')
+  })
+
+  it('editing a value in the scale moves the tokens that follow it, in this theme only', () => {
+    s().setSystem('untitled')
+    s().setCell('_Primitives', 'Spacing/1 (4px)', 'style', { value: 6 })
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1'].value).toBe(6)
+    s().addTheme('Other')
+    s().setCell('_Primitives', 'Spacing/1 (4px)', 'style', null)
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1'].value).toBe(4)
+    s().setTheme('base')
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1'].value).toBe(6)
+  })
+
+  it('a token can follow another step, or take a value of its own', () => {
+    s().setSystem('untitled')
+    s().setCell('3. Spacing', 'spacing-xs', 'mode-1', { alias: refOf('_Primitives', 'Spacing/2 (8px)') })
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1'].value).toBe(8)
+    s().setCell('3. Spacing', 'spacing-xs', 'mode-1', { value: 9 })
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1']).toMatchObject({ value: 9, overridden: true })
+    expect(resolved().find(refOf('3. Spacing', 'spacing-xs'))!.cells['mode-1'].alias).toBeUndefined()
+  })
+
+  it('adds a value to a scale for the theme, and removes it again', () => {
+    s().addNumber('Spacing', 'space/36', 36, 'px')
+    s().addNumber('Spacing', 'space/36', 40, 'px') // a path in use is ignored
+    expect(resolved().find(refOf('Spacing', 'space/36'))!.cells.value.value).toBe(36)
+    expect(systemCss(resolved(), ['Spacing']).css).toContain('--space-36: 36px;')
+    s().setCell('Spacing', 'space/36', 'value', { value: 37 })
+    expect(resolved().find(refOf('Spacing', 'space/36'))!.cells.value.value).toBe(37)
+    s().addTheme('Other')
+    expect(resolved().find(refOf('Spacing', 'space/36'))!.cells.value.value).toBe(37) // a new theme starts as a copy of the active one
+  })
+
+  it('grid values per breakpoint can be set, and the added value goes away with Remove', () => {
+    s().setCell('Grid', 'grid/columns', 'md', { value: 6 })
+    const c = resolved().find(refOf('Grid', 'grid/columns'))!
+    expect([c.cells.xxl.value, c.cells.md.value, c.cells.xs.value]).toEqual([12, 6, 4])
+    s().addNumber('Spacing', 'space/50', 50, 'px')
+    s().removeAdded('Spacing', 'space/50')
+    expect(resolved().find(refOf('Spacing', 'space/50'))).toBeUndefined()
   })
 })
