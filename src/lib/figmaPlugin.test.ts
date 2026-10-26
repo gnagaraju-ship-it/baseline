@@ -4,6 +4,7 @@ import { defaultElevationSettings } from './elevation'
 import type { ExportInput } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
 import { systemJson } from '../v2/export/json'
+import { resolveThemes, themesJson } from '../v2/export/themes'
 import { activeResolved, resetV2, useV2 } from '../v2/store'
 import { cloneData, defaultThemeData, untitledThemeData, type ThemeData } from './themes'
 import { PLUGIN_FILES, PLUGIN_FOLDER, pluginZip } from './figmaPlugin'
@@ -599,6 +600,29 @@ describe('plugin import: a v2 export', () => {
     const tokens = p.variables.filter((v: any) => v.variableCollectionId === p.collections[1].id)
     expect(tokens).toHaveLength(273)
     expect(tokens.find((v: any) => v.name === 'Colors/Text/text-primary (900)').valuesByMode[p.collections[1].modes[0].modeId].type).toBe('VARIABLE_ALIAS')
+    resetV2()
+  })
+
+  it('creates a mode per theme where the themes differ, and keeps the others as they are', async () => {
+    resetV2()
+    const v2 = useV2.getState()
+    v2.setSystem('untitled')
+    v2.addTheme('Sky')
+    v2.setRamp('brand', '#0EA5E9')
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(themesJson(resolveThemes(activeResolved(useV2.getState()).system))), groups: ['Imported'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    const col = (n: string) => p.collections.find((c: any) => c.name === n)
+    expect(col('_Primitives').modes.map((m: any) => m.name)).toEqual(['Base', 'Sky'])
+    expect(col('1. Color modes').modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
+    const brand = p.variables.find((v: any) => v.variableCollectionId === col('_Primitives').id && v.name === 'Colors/Brand/600')
+    const [base, sky] = col('_Primitives').modes.map((m: any) => brand.valuesByMode[m.modeId])
+    expect(base.r).toBeCloseTo(0x7f / 255, 3)
+    expect(sky.r).toBeCloseTo(0x0e / 255, 3)
+    expect(sky.g).toBeCloseTo(0xa5 / 255, 3)
+    // the tokens still point at the ramp, so they follow whichever mode a frame uses
+    const token = p.variables.find((v: any) => v.variableCollectionId === col('1. Color modes').id && v.name === 'Colors/Background/bg-brand-primary')
+    expect(token.valuesByMode[col('1. Color modes').modes[0].modeId].type).toBe('VARIABLE_ALIAS')
     resetV2()
   })
 

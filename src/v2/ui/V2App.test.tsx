@@ -170,6 +170,27 @@ describe('v2 screens', () => {
     expect(screen.getByLabelText('radius-full Mode 1')).toHaveValue(9999)
   })
 
+  it('export: with several themes, all of them go in one file, or only the active one', async () => {
+    at('/v2')
+    await userEvent.click(screen.getByRole('button', { name: 'Untitled' }))
+    await userEvent.click(screen.getByRole('button', { name: 'New' }))
+    fireEvent.change(document.getElementById('f-brand')!, { target: { value: '#0EA5E9' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }))
+    const dialog = screen.getByRole('dialog', { name: /Export Untitled, 2 themes/ })
+    expect(within(dialog).getByRole('radio', { name: /All themes in one file \(2\)/ })).toBeChecked()
+    expect(within(dialog).getByText(/ × 2 themes · untitled-themes\.css/)).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /1\. Color modes/ }))
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /6\. Typography/ }))
+    for (const c of ['2. Radius', '3. Spacing', '4. Widths', '5. Containers']) await userEvent.click(within(dialog).getByRole('checkbox', { name: new RegExp(c.replace('.', '\\.')) }))
+    const preview = within(dialog).getByLabelText('Export preview')
+    expect(preview).toHaveTextContent('/* Theme: Base */')
+    await userEvent.click(within(dialog).getByRole('radio', { name: /Design tokens JSON/ }))
+    expect(preview).toHaveTextContent('"Base copy"')
+    await userEvent.click(within(dialog).getByRole('radio', { name: /^Only Base copy/ }))
+    expect(preview).not.toHaveTextContent('"Base copy"')
+    expect(within(dialog).getByText(/ · untitled-theme-2\.json/)).toBeInTheDocument()
+  })
+
   it('export includes the type collection', async () => {
     at('/v2')
     await userEvent.click(screen.getByRole('button', { name: 'Export' }))
