@@ -54,7 +54,7 @@ export function Rail() {
       <RailLink to="/type" label="Typography" icon="type" active={pathname === '/type'} />
       <RailLink to="/grids" label="Grids" icon="grid" active={pathname === '/grids'} />
       <RailLink to="/spacing" label="Spacing" icon="spacing" active={pathname === '/spacing'} />
-      <RailLink to="/elevation" label="Elevation" icon="elevation" active={pathname === '/elevation'} />
+      {!project.imported && <RailLink to="/elevation" label="Elevation" icon="elevation" active={pathname === '/elevation'} />}
       <Sep />
       <RailLink to="/preview" label="UI preview" icon="monitor" active={pathname === '/preview'} />
       <RailStub label="Documentation" icon="docs" />

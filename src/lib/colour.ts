@@ -280,13 +280,13 @@ export interface TokenRow {
 }
 
 /** CSS custom property per step, e.g. --primary-10. `labels` names the steps when they are not 1, 2, 3 ... */
-export function tokenRows(palettes: Palette[], labels?: readonly string[]): TokenRow[] {
+export function tokenRows(palettes: Palette[], labels?: readonly string[], prefix = ''): TokenRow[] {
   return palettes.flatMap((p) => {
     const label = (i: number) => p.labels?.[i] ?? labels?.[i] ?? String(i + 1)
     return [
-      ...p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}`, hex: h })),
+      ...p.steps.map((h, i) => ({ name: `--${prefix}${p.key}-${label(i)}`, hex: h })),
       // A colour set below 100% opacity also exports every step with that alpha, as #RRGGBBAA.
-      ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
+      ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${prefix}${p.key}-${label(i)}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
     ]
   })
 }

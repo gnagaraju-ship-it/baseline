@@ -48,29 +48,30 @@ describe('the Untitled theme', () => {
     ])
   })
 
-  it('writes colours from the schema and the rest from the imported collections', () => {
+  it('writes exactly the tokens of the files, with the names they have there', () => {
     const sections = exportSections(untitled)
-    const css = sections.map((s) => s.css).join('\n')
-    expect(css).toContain('--brand-600: #7F56D9;')
-    expect(css).toContain('--text-primary: var(--neutral-900);')
+    const css = sections.map((x) => x.css).join('\n')
+    expect(css).toContain('--colors-brand-600: #7F56D9;')
+    expect(css).toContain('--colors-text-text-primary-900: var(--colors-neutral-900);')
     expect(css).toContain('[data-theme="dark"] {')
-    expect(css).toContain('--type-text-md-size: 1.000rem;')
-    expect(css).toContain('--type-display-2xl-line: 90px;')
-    expect(css).toContain("--type-font-body: '")
+    expect(css).toContain('--font-size-text-md: 16px;')
+    expect(css).toContain('--line-height-display-2xl: 90px;')
+    expect(css).toContain('--font-family-font-family-body: "Inter";')
+    expect(css).toContain('--spacing-xs: var(--spacing-1-4px);')
+    expect(css).toContain('--radius-md: 8px;')
     expect(css).not.toContain('--primary-10')
+    expect(css).not.toContain('--type-')
+    expect(css).not.toContain('--grid-')
     expect(sections.find((s) => s.id === 'ramps')!.count).toBe(27 * 11 + 2)
     expect(sections.find((s) => s.id === 'semantic')!.count).toBe(273)
-    // elevation is Baseline's own
-    expect(sections.find((s) => s.id === 'elevation')!.count).toBe(untitled.elevation.tokens.length)
+    expect(sections.find((s) => s.id === 'type')!.count).toBe(2 + 8 + 11 + 11)
+    expect(sections.find((s) => s.id === 'grids')!.count).toBe(15)
+    expect(sections.find((s) => s.id === 'elevation')).toMatchObject({ css: '', count: 0 })
     expect(cssName('Spacing/0․5 (2px)')).toBe('--spacing-0-5-2px')
   })
 
   it('turns the colours into collections named like the Figma files, with aliases', () => {
-    const [prim, modes, typo, grid] = schemaCollections(untitled)
-    expect(grid.name).toBe('Grid')
-    expect(grid.modes).toEqual(['XXL', 'MD', 'XS'])
-    expect(grid.variables.find((v) => v.name === 'Grid/columns')!.values).toEqual({ XXL: { v: 12 }, MD: { v: 8 }, XS: { v: 4 } })
-    expect(grid.variables.find((v) => v.name === 'Grid/width')!.values.XXL.v).toBe(1400)
+    const [prim, modes, typo] = schemaCollections(untitled)
     expect(typo.name).toBe('6. Typography')
     expect(typo.variables.find((v) => v.name === 'Font size/display-2xl')!.values.Value.v).toBe(72)
     expect(typo.variables.find((v) => v.name === 'Line height/text-md')!.values.Value.v).toBe(24)
@@ -83,7 +84,7 @@ describe('the Untitled theme', () => {
     const bg = modes.variables.find((v) => v.name === 'Colors/Background/bg-primary')!
     expect(bg.values['Light mode']).toEqual({ v: '#FFFFFF', a: '_Primitives::Colors/Base/white' })
     const merged = withSchemaColours(set, untitled)
-    expect(merged.collections.map((c) => c.name)).toEqual(['_Primitives', '1. Color modes', '6. Typography', 'Grid', '2. Radius', '3. Spacing', '4. Widths', '5. Containers'])
+    expect(merged.collections.map((c) => c.name)).toEqual(['_Primitives', '1. Color modes', '6. Typography', '2. Radius', '3. Spacing', '4. Widths', '5. Containers'])
     // the primitives share one collection with the spacing
     expect(merged.collections[0].variables.some((v) => v.name.startsWith('Spacing/'))).toBe(true)
   })

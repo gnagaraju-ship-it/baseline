@@ -34,8 +34,8 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
 
       {open && (
         <div className="flex flex-col gap-3 border-t border-accent-edge bg-accent-wash px-4 pb-4 pt-3.5">
-          <div className="text-[10.5px] font-bold tracking-[.08em] text-muted">WEIGHT VARIANTS</div>
-          <div role="group" aria-label="Weight variants" className="flex flex-wrap gap-1.5">
+          {!settings.fixed && <div className="text-[10.5px] font-bold tracking-[.08em] text-muted">WEIGHT VARIANTS</div>}
+          {!settings.fixed && <div role="group" aria-label="Weight variants" className="flex flex-wrap gap-1.5">
             {WEIGHTS.map(([name, w]) => {
               const on = chosen.includes(w)
               return (
@@ -44,7 +44,7 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
                 </button>
               )
             })}
-          </div>
+          </div>}
           <div className="text-[10.5px] font-bold tracking-[.08em] text-muted">OVERRIDES</div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
             {settings.fixed && (
@@ -57,10 +57,12 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
               <label htmlFor={`lh-${row.name}`} className={label10}>LINE HEIGHT (PX)</label>
               <NumberField id={`lh-${row.name}`} value={row.lh} min={8} onCommit={(n) => setTypeOverride(row.name, { lh: n ?? undefined })} />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={`tr-${row.name}`} className={label10}>LETTER SPACING (EM)</label>
-              <NumberField id={`tr-${row.name}`} value={row.tr} step={0.001} onCommit={(n) => setTypeOverride(row.name, { tr: n ?? undefined })} />
-            </div>
+            {!settings.fixed && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={`tr-${row.name}`} className={label10}>LETTER SPACING (EM)</label>
+                <NumberField id={`tr-${row.name}`} value={row.tr} step={0.001} onCommit={(n) => setTypeOverride(row.name, { tr: n ?? undefined })} />
+              </div>
+            )}
           </div>
           {row.overridden && (
             <button type="button" onClick={() => resetTypeOverride(row.name)} className="self-start border-0 bg-transparent py-1 text-xs font-semibold text-accent-text">Reset to scale</button>

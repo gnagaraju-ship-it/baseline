@@ -9,6 +9,6 @@ export function usePalettes() {
   const { colour } = useSchema()
   return useMemo(() => {
     const palettes = buildPalettes(settings, colour)
-    return { palettes, rows: tokenRows(palettes, colour?.steps) }
+    return { palettes, rows: tokenRows(palettes, colour?.steps, colour ? 'colors-' : '') }
   }, [settings, colour])
 }

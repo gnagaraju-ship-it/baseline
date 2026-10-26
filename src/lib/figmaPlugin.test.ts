@@ -506,7 +506,7 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     await p.send({ type: 'import', doc: doc(), groups: GROUPS })
     expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
     const done = p.posted.find((m) => m.type === 'done').result
-    expect(done.imported).toBe(8)
+    expect(done.imported).toBe(7)
     expect(done.limited).toEqual([])
     expect(col(p, 'Primitives').modes.map((m: any) => m.name)).toEqual(['Value']) // one generated theme: no theme modes
     expect(col(p, '1. Color modes').modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
@@ -514,8 +514,6 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     expect(vars(p, '1. Color modes')).toHaveLength(273)
     expect(vars(p, '6. Typography')).toHaveLength(32)
     expect(vars(p, '2. Radius')).toHaveLength(11)
-    expect(col(p, 'Grid').modes.map((m: any) => m.name)).toEqual(['XXL', 'MD', 'XS'])
-    expect(vars(p, 'Grid')).toHaveLength(6)
     expect(p.collections.some((c) => c.name === 'Brand palette')).toBe(false)
   })
 

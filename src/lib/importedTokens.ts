@@ -5,8 +5,7 @@
 import untitledType from '../data/untitled-type.json'
 import { buildPalettes, withAlpha } from './colour'
 import type { ExportInput, ExportModule, ExportSection } from './exportAll'
-import { gridByBreakpoint, typeByBreakpoint } from './responsive'
-import { BREAKPOINTS } from './grid'
+import { typeByBreakpoint } from './responsive'
 import { UNTITLED_ID, colourSchema, tokenSchemaOf } from './schemas'
 import { isResolved, resolveAll, type ResolvedCell } from './tokens'
 
@@ -26,7 +25,7 @@ export function moduleOf(collection: string, name: string): ExportModule {
   if (collection === 'Brand palette') return 'ramps'
   if (collection === '1. Color modes') return 'semantic'
   if (collection === '6. Typography') return 'type'
-  if (collection === '4. Widths' || collection === '5. Containers' || collection === 'Grid') return 'grids'
+  if (collection === '4. Widths' || collection === '5. Containers') return 'grids'
   if (collection === '_Primitives') return name.startsWith('Spacing/') ? 'spacing' : 'ramps'
   return 'spacing' // radius and spacing
 }
@@ -160,27 +159,8 @@ export function schemaCollections(s: ExportInput): ImportedCollection[] {
   return [
     { name: '_Primitives', modes: ['Style'], variables: ramps },
     { name: '1. Color modes', modes: ['Light mode', 'Dark mode'], variables: tokens },
-    ...(schema.id === UNTITLED_ID ? [typographyCollection(s), gridCollection(s)] : [])
+    ...(schema.id === UNTITLED_ID ? [typographyCollection(s)] : [])
   ]
-}
-
-/** "Grid": columns, gutter, margin, sidebar and widths of the grid screen, one mode per breakpoint. */
-function gridCollection(s: ExportInput): ImportedCollection {
-  const layouts = gridByBreakpoint(s.grid)
-  const modes = ['XXL', 'MD', 'XS']
-  const keys = ['xxl', 'md', 'xs'] as const
-  const width = (k: (typeof keys)[number]) => BREAKPOINTS.find((b) => b.key === k)?.width ?? 0
-  const row = (name: string, pick: (k: (typeof keys)[number]) => number) => ({
-    name, type: 'number' as const, scopes: ['ALL_SCOPES'], values: Object.fromEntries(modes.map((m, i) => [m, { v: +pick(keys[i]).toFixed(2) }]))
-  })
-  return {
-    name: 'Grid',
-    modes,
-    variables: [
-      row('Grid/width', width), row('Grid/columns', (k) => layouts[k].columns), row('Grid/gutter', (k) => layouts[k].gutter),
-      row('Grid/margin', (k) => layouts[k].margin), row('Grid/sidebar', (k) => layouts[k].sidebarWidth), row('Grid/column', (k) => layouts[k].column)
-    ]
-  }
 }
 
 /** "6. Typography": fonts, the weights of the file, and the size and line height of every step at the largest breakpoint. */

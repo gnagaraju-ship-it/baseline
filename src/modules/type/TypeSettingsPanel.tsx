@@ -43,7 +43,7 @@ export function TypeSettingsPanel() {
 
       <div className="flex flex-col gap-[22px] p-5">
         {fixed && (
-          <p className="m-0 text-xs leading-[1.55] text-muted">This theme has named steps with their own sizes. Open a step in the list to change its size, line height, letter spacing and weights.</p>
+          <p className="m-0 text-xs leading-[1.55] text-muted">This theme has named steps with their own sizes. Open a step in the list to change its size and line height.</p>
         )}
 
         {!fixed && <section className="flex flex-col gap-2.5">
@@ -121,7 +121,7 @@ export function TypeSettingsPanel() {
           {!web && <p className="m-0 text-xs leading-[1.55] text-muted">SF Pro is Apple’s system font — not available via Google Fonts. Use <span className="font-mono">-apple-system</span> in your CSS stack.</p>}
         </section>
 
-        {web && (
+        {web && !fixed && (
           <section className="flex flex-col gap-3">
             <h3 className={h3}>Responsive</h3>
             <div className="flex items-center gap-2 text-[13px] font-medium">Desktop <span className="rounded-full bg-ink px-2 py-[3px] text-[10px] font-bold tracking-[.06em] text-on-ink">BASE</span></div>

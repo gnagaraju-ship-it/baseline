@@ -3,6 +3,7 @@ import { toTokenCss } from '../../lib/tokens'
 import { useProject } from '../../store/project'
 import { ColourLayout } from '../colour/ColourLayout'
 import { useResolvedTokens } from '../colour/useResolvedTokens'
+import { useSectionCss } from '../colour/useSectionCss'
 import { TokenRow } from './TokenRow'
 
 const NAMES: Record<string, string> = { primary: 'Primary', secondary: 'Secondary', neutral: 'Neutral', info: 'Info', success: 'Success', caution: 'Caution', warning: 'Warning', critical: 'Critical' }
@@ -11,9 +12,11 @@ export function TokensPage() {
   const openExport = useProject((s) => s.openExport)
   const { palettes, tokens, resolvedCount, missing, schema } = useResolvedTokens()
   const flashCopied = useProject((s) => s.flashCopied)
+  const section = useSectionCss('semantic')
+  const hasSchema = useProject((s) => !!s.schemaId)
 
   async function copyAll() {
-    flashCopied(await copyText(toTokenCss(tokens, schema)))
+    flashCopied(await copyText(hasSchema ? section : toTokenCss(tokens, schema)))
   }
 
   return (

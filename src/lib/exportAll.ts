@@ -1,7 +1,7 @@
 /**
  * One export for the whole system: every module's CSS in a single file, with a count of the tokens it holds.
  */
-import { importedSections, type ImportedSet } from './importedTokens'
+import { importedSections, withSchemaColours, type ImportedSet } from './importedTokens'
 import { colourSchema, tokenSchemaOf } from './schemas'
 import { themeSlugs } from './themes'
 import { buildPalettes, toCss, tokenRows, type PaletteSettings } from './colour'
@@ -32,6 +32,8 @@ export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' |
 export interface ExportSection { id: ExportModule; title: string; css: string; count: number }
 
 export function exportSections(s: ExportInput): ExportSection[] {
+  // A theme that follows a design system's tokens writes exactly those tokens, with the names they have in its files.
+  if (s.imported) return importedSections(withSchemaColours(s.imported, s))
   const colour = colourSchema(s.schemaId)
   const tokenSchema = tokenSchemaOf(colour)
   const palettes = buildPalettes(s.settings, colour)
@@ -51,16 +53,7 @@ export function exportSections(s: ExportInput): ExportSection[] {
     { id: 'spacing', title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },
     { id: 'elevation', title: 'Elevation', css: toElevationCss(s.elevation.tokens, s.elevation.shadow), count: s.elevation.tokens.length }
   ]
-  // Grids and spacing kept as imported replace the generated ones; colours, type and elevation always come from the settings.
-  if (!s.imported) return sections
-  const kept = importedSections(s.imported)
-  return sections.map((sec) => {
-    const own = kept.find((k) => k.id === sec.id)!
-    if (sec.id === 'spacing') return own
-    // The grid screen's columns and gutters, then the named widths and containers.
-    if (sec.id === 'grids') return { ...sec, css: [sec.css, own.css].filter(Boolean).join('\n\n'), count: sec.count + own.count }
-    return sec
-  })
+  return sections
 }
 
 export function exportAll(s: ExportInput): { css: string; count: number } {

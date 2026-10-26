@@ -12,11 +12,13 @@ import { byModule, cssName, importedCount, importedSections, resolveSet, type Im
 import { useProject } from '../../store/project'
 
 const TABS: Record<string, { module: ExportModule; label: string }> = {
-  '/spacing': { module: 'spacing', label: 'Spacing and radius' }
+  '/grids': { module: 'grids', label: 'Widths and containers' },
+  '/spacing': { module: 'spacing', label: 'Spacing and radius' },
+  '/elevation': { module: 'elevation', label: 'Elevation' }
 }
 
 /** The screens an imported set still has to itself: the colour screens use the theme's colour schema. */
-export const IMPORTED_ROUTES = ['/spacing']
+export const IMPORTED_ROUTES = ['/grids', '/spacing', '/elevation']
 
 function NameField({ collection, name }: { collection: string; name: string }) {
   const rename = useProject((s) => s.renameImportedVariable)
