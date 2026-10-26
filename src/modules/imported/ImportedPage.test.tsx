@@ -95,9 +95,34 @@ describe('the Untitled theme', () => {
     expect(rows.find((r) => r.name === 'text-md')).toMatchObject({ size: 18, lh: 27 })
   })
 
-  it('widths and spacing keep their imported tokens, read-only', () => {
+  it('spacing: named tokens that can be edited, renamed, added, removed and reset', async () => {
+    at('/spacing')
+    expect(screen.getByRole('region', { name: '3. Spacing' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '2. Radius' })).toBeInTheDocument()
+    // edit a primitive: the token that points at it follows
+    const prim = screen.getByLabelText('Spacing/1 (4px) Style')
+    await userEvent.clear(prim)
+    await userEvent.type(prim, '6')
+    expect((screen.getByLabelText('spacing-xs Mode 1') as HTMLInputElement).value).toBe('6')
+    // rename
+    const name = screen.getByLabelText('radius-md name')
+    await userEvent.clear(name)
+    await userEvent.type(name, 'radius-medium{Enter}')
+    expect(screen.getByLabelText('radius-medium Mode 1')).toBeInTheDocument()
+    // add and remove
+    await userEvent.click(within(screen.getByRole('region', { name: '2. Radius' })).getByRole('button', { name: '+ Add' }))
+    expect(screen.getByLabelText('new name')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Remove new' }))
+    expect(screen.queryByLabelText('new name')).not.toBeInTheDocument()
+    // reset the radius collection
+    await userEvent.click(screen.getByRole('button', { name: 'Reset 2. Radius' }))
+    expect(screen.getByLabelText('radius-md name')).toBeInTheDocument()
+  })
+
+  it('widths and containers are listed in the grids screen', () => {
     at('/grids')
-    expect(within(screen.getByRole('region', { name: '4. Widths' })).getByText('width-xxs')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: '4. Widths' })).getByLabelText('width-xxs name')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '5. Containers' })).toBeInTheDocument()
   })
 
   it('elevation is Baseline\'s own', () => {
@@ -114,6 +139,6 @@ describe('the Untitled theme', () => {
     expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--width-xxs: var(--spacing-80-320px);')
     await userEvent.keyboard('{Escape}')
     act(() => s().switchTheme('theme-1'))
-    expect(screen.queryByText('Imported tokens')).not.toBeInTheDocument()
+    expect(screen.queryByText('Spacing and sizes')).not.toBeInTheDocument()
   })
 })

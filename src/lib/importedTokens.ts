@@ -88,7 +88,8 @@ export function importedSections(set: ImportedSet): ExportSection[] {
 type Json = Record<string, unknown>
 
 /** The design tokens JSON of the chosen modules: one object per collection, tokens nested by their path. */
-export function importedDoc(set: ImportedSet, modules: ExportModule[]): Json {
+export function importedDoc(input: ImportedSet, modules: ExportModule[]): Json {
+  const set = resolveSet(input)
   const out: Json = {}
   for (const id of modules) {
     for (const c of byModule(set)[id]) {
@@ -188,4 +189,92 @@ export function withSchemaColours(set: ImportedSet, s: ExportInput): ImportedSet
   const prim = set.collections.find((c) => c.name === '_Primitives')
   const merged = colours.map((c) => (c.name === '_Primitives' && prim ? { ...c, variables: [...c.variables, ...prim.variables] } : c))
   return { collections: [...merged, ...rest] }
+}
+
+// --- editing -------------------------------------------------------------------------------------------------------
+
+const refOf = (collection: string, name: string) => `${collection}::${name}`
+
+/** Every value with the alias followed to its current value, so an edited primitive reaches the tokens that point at it. */
+export function resolveSet(set: ImportedSet): ImportedSet {
+  const find = (ref: string, mode: string): string | number | undefined => {
+    const [cn, vn] = ref.split('::')
+    const v = set.collections.find((c) => c.name === cn)?.variables.find((x) => x.name === vn)
+    return v ? (v.values[mode] ?? Object.values(v.values)[0])?.v : undefined
+  }
+  const follow = (value: ImportedValue, mode: string, depth = 0): ImportedValue => {
+    if (!value.a || depth > 8) return value
+    const [cn, vn] = value.a.split('::')
+    const target = set.collections.find((c) => c.name === cn)?.variables.find((x) => x.name === vn)
+    const tv = target ? (target.values[mode] ?? Object.values(target.values)[0]) : undefined
+    return tv ? { v: follow(tv, mode, depth + 1).v, a: value.a } : { v: find(value.a, mode) ?? value.v, a: value.a }
+  }
+  return {
+    collections: set.collections.map((c) => ({
+      ...c,
+      variables: c.variables.map((v) => ({ ...v, values: Object.fromEntries(Object.entries(v.values).map(([m, x]) => [m, follow(x, m)])) }))
+    }))
+  }
+}
+
+function editCollection(set: ImportedSet, collection: string, change: (c: ImportedCollection) => ImportedCollection): ImportedSet {
+  return { collections: set.collections.map((c) => (c.name === collection ? change(c) : c)) }
+}
+
+/** A new value for a variable. It no longer points at another variable. */
+export function setImportedValue(set: ImportedSet, collection: string, name: string, mode: string, v: string | number): ImportedSet {
+  return editCollection(set, collection, (c) => ({ ...c, variables: c.variables.map((x) => (x.name === name ? { ...x, values: { ...x.values, [mode]: { v } } } : x)) }))
+}
+
+/** Renames a variable (a name already in use or an empty one is refused) and repoints the aliases that used the old name. */
+export function renameImported(set: ImportedSet, collection: string, from: string, to: string): ImportedSet {
+  const name = to.trim()
+  const c = set.collections.find((x) => x.name === collection)
+  if (!name || name === from || !c || c.variables.some((x) => x.name === name)) return set
+  const was = refOf(collection, from)
+  const now = refOf(collection, name)
+  return {
+    collections: set.collections.map((col) => ({
+      ...col,
+      variables: col.variables.map((x) => {
+        const renamed = col.name === collection && x.name === from ? { ...x, name } : x
+        const values = Object.fromEntries(Object.entries(renamed.values).map(([m, val]) => [m, val.a === was ? { ...val, a: now } : val]))
+        return { ...renamed, values }
+      })
+    }))
+  }
+}
+
+/** Adds a variable at the end, named "<prefix>-new" (numbered when taken), with the same value in every mode. */
+export function addImported(set: ImportedSet, collection: string, value = 0): ImportedSet {
+  return editCollection(set, collection, (c) => {
+    const kind = c.variables[0]?.name.split('/').slice(0, -1).join('/')
+    const stem = `${kind ? `${kind}/` : ''}new`
+    let name = stem
+    for (let n = 2; c.variables.some((x) => x.name === name); n++) name = `${stem}-${n}`
+    return { ...c, variables: [...c.variables, { name, type: 'number', scopes: ['ALL_SCOPES'], values: Object.fromEntries(c.modes.map((m) => [m, { v: value }])) }] }
+  })
+}
+
+/** Removes a variable. Tokens that pointed at it keep the value they had. */
+export function removeImported(set: ImportedSet, collection: string, name: string): ImportedSet {
+  const resolved = resolveSet(set)
+  const gone = refOf(collection, name)
+  return {
+    collections: set.collections.map((c, ci) => ({
+      ...c,
+      variables: c.variables
+        .filter((x) => !(c.name === collection && x.name === name))
+        .map((x) => ({
+          ...x,
+          values: Object.fromEntries(Object.entries(x.values).map(([m, val]) => [m, val.a === gone ? { v: resolved.collections[ci].variables.find((y) => y.name === x.name)!.values[m].v } : val]))
+        }))
+    }))
+  }
+}
+
+/** One collection back to what it was imported with. */
+export function resetImported(set: ImportedSet, source: ImportedSet, collection: string): ImportedSet {
+  const original = source.collections.find((c) => c.name === collection)
+  return original ? editCollection(set, collection, () => JSON.parse(JSON.stringify(original))) : set
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import full from '../data/untitled-ui.json'
 import { exportSections } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
-import { byModule, cssName, importedCount, importedDoc, moduleOf, schemaCollections, withSchemaColours, type ImportedSet } from './importedTokens'
+import { addImported, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
 import { defaultThemeData, untitledThemeData } from './themes'
 
 const source = full as ImportedSet
@@ -104,5 +104,63 @@ describe('the Untitled theme', () => {
     const out = JSON.parse(buildExport([{ name: 'Default', data: defaultThemeData() }, { name: 'Untitled', data: untitled }], 'json', ['type']).text)
     expect(Object.keys(out.Themes.Untitled.Imported)).toEqual(['6. Typography'])
     expect(out.Themes.Default.Type).toBeDefined()
+  })
+})
+
+describe('editing imported tokens', () => {
+  const value = (s: ImportedSet, c: string, n: string, m = 'Mode 1') => resolveSet(s).collections.find((x) => x.name === c)!.variables.find((v) => v.name === n)!.values[m].v
+  const spacing = '3. Spacing'
+
+  it('follows an alias to its primitive, so editing the primitive moves the tokens that point at it', () => {
+    expect(value(set, spacing, 'spacing-xs')).toBe(4)
+    const next = setImportedValue(set, '_Primitives', 'Spacing/1 (4px)', 'Style', 5)
+    expect(value(next, spacing, 'spacing-xs')).toBe(5)
+    expect(value(next, '4. Widths', 'width-xxs')).toBe(320) // other chains are untouched
+    expect(value(set, spacing, 'spacing-xs')).toBe(4) // the original is not changed
+  })
+
+  it('a value typed on a token that pointed at another is its own from then on', () => {
+    const next = setImportedValue(set, spacing, 'spacing-xs', 'Mode 1', 7)
+    const v = next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!
+    expect(v.values['Mode 1']).toEqual({ v: 7 })
+    expect(value(setImportedValue(next, '_Primitives', 'Spacing/1 (4px)', 'Style', 9), spacing, 'spacing-xs')).toBe(7)
+  })
+
+  it('renames a token and repoints the aliases at it; a taken or empty name is refused', () => {
+    const next = renameImported(set, '_Primitives', 'Spacing/1 (4px)', 'Spacing/one')
+    const xs = next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!
+    expect(xs.values['Mode 1'].a).toBe('_Primitives::Spacing/one')
+    expect(value(next, spacing, 'spacing-xs')).toBe(4)
+    expect(renameImported(set, spacing, 'spacing-xs', 'spacing-md')).toBe(set)
+    expect(renameImported(set, spacing, 'spacing-xs', '  ')).toBe(set)
+  })
+
+  it('adds a token named like its neighbours, and removes one without breaking the tokens that pointed at it', () => {
+    const added = addImported(set, '2. Radius', 3)
+    const radius = added.collections.find((c) => c.name === '2. Radius')!
+    expect(radius.variables).toHaveLength(12)
+    expect(radius.variables[11]).toMatchObject({ name: 'new', values: { 'Mode 1': { v: 3 } } })
+    expect(addImported(added, '2. Radius').collections.find((c) => c.name === '2. Radius')!.variables[12].name).toBe('new-2')
+    const removed = removeImported(set, '_Primitives', 'Spacing/1 (4px)')
+    expect(removed.collections[0].variables.some((v) => v.name === 'Spacing/1 (4px)')).toBe(false)
+    expect(value(removed, spacing, 'spacing-xs')).toBe(4)
+    expect(removed.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values['Mode 1'].a).toBeUndefined()
+  })
+
+  it('resets one collection and leaves the others alone', () => {
+    const edited = setImportedValue(setImportedValue(set, '2. Radius', 'radius-md', 'Mode 1', 99), spacing, 'spacing-xs', 'Mode 1', 1)
+    const back = resetImported(edited, set, '2. Radius')
+    expect(value(back, '2. Radius', 'radius-md')).toBe(8)
+    expect(value(back, spacing, 'spacing-xs')).toBe(1)
+  })
+
+  it('exports the edited values: CSS keeps the link, JSON carries the current value with its alias', () => {
+    const data = { ...untitled, imported: setImportedValue(set, '_Primitives', 'Spacing/1 (4px)', 'Style', 5) }
+    const css = exportSections(data).map((x) => x.css).join('\n')
+    expect(css).toContain('--spacing-xs: var(--spacing-1-4px);')
+    expect(css).toContain('--spacing-1-4px: 5px;')
+    const doc = importedDoc(withSchemaColours(data.imported!, data), ['spacing']) as any
+    expect(doc.Imported['3. Spacing']['spacing-xs'].$value).toBe(5)
+    expect(doc.Imported['3. Spacing']['spacing-xs'].$extensions['com.baseline'].alias['Mode 1']).toBe('_Primitives::Spacing/1 (4px)')
   })
 })

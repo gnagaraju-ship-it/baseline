@@ -9,7 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
-import type { ImportedSet } from '../lib/importedTokens'
+import { addImported, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
 import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
@@ -113,6 +113,12 @@ interface ProjectState {
   schemaId?: string
   /** Type a colour for a palette of the schema (raw text; invalid text keeps the starting colour). */
   setPaletteHex: (key: string, text: string) => void
+  /** Edit the tokens kept as imported: a value, a name, add, remove, or back to what was imported. */
+  setImportedValue: (collection: string, name: string, mode: string, value: number) => void
+  renameImportedVariable: (collection: string, from: string, to: string) => void
+  addImportedVariable: (collection: string) => void
+  removeImportedVariable: (collection: string, name: string) => void
+  resetImportedCollection: (collection: string) => void
   applyElevationPreset: (preset: ElevationPresetKey) => void
   setShadowColour: (text: string) => void
   renameElevation: (i: number, text: string) => void
@@ -331,6 +337,11 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   setNeutralEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, neutral: { ...s.settings.neutral, enabled } } })),
   setSemanticEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, semanticEnabled: enabled } })),
   setPaletteHex: (key, text) => set((s) => ({ settings: { ...s.settings, hex: { ...(s.settings.hex ?? {}), [key]: text } } })),
+  setImportedValue: (collection, name, mode, value) => set((s) => (s.imported ? { imported: setImportedValue(s.imported, collection, name, mode, value) } : {})),
+  renameImportedVariable: (collection, from, to) => set((s) => (s.imported ? { imported: renameImported(s.imported, collection, from, to) } : {})),
+  addImportedVariable: (collection) => set((s) => (s.imported ? { imported: addImported(s.imported, collection) } : {})),
+  removeImportedVariable: (collection, name) => set((s) => (s.imported ? { imported: removeImported(s.imported, collection, name) } : {})),
+  resetImportedCollection: (collection) => set((s) => (s.imported ? { imported: resetImported(s.imported, untitledThemeData().imported!, collection) } : {})),
   setSide: (side) => set({ side }),
   select: (key, index) => set({ selected: { key, index } }),
   flashCopied: (ok = true) => {
