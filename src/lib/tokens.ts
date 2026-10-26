@@ -66,15 +66,42 @@ export const TOKEN_DEFS: TokenDef[] = (Object.keys(RAW) as TokenGroup[]).flatMap
   })
 )
 
-export function parseRef(ref: string): { palette: PaletteRef; step: number } {
-  const i = ref.lastIndexOf('-')
-  return { palette: ref.slice(0, i) as PaletteRef, step: parseInt(ref.slice(i + 1), 10) }
+/** What a set of tokens is built on: how its ramp steps are named, its overlay alphas, its token list and the steps contrast is judged against (0-based). */
+export interface TokenSchema {
+  steps: readonly string[]
+  alpha: readonly number[]
+  defs: TokenDef[]
+  anchors: {
+    /** The darkest neutral step: text on a surface or fill. */
+    text: number
+    /** The fill text sits on. */
+    fill: Record<Mode, number>
+    /** The page background. */
+    page: Record<Mode, number>
+  }
 }
 
-export function refLabel(ref: string): string {
-  const { palette, step } = parseRef(ref)
+export const DEFAULT_SCHEMA: TokenSchema = {
+  steps: Array.from({ length: 16 }, (_, i) => String(i + 1)),
+  alpha: ALPHA,
+  defs: TOKEN_DEFS,
+  anchors: { text: 15, fill: { light: 9, dark: 8 }, page: { light: 0, dark: 13 } }
+}
+
+/** A ref is "palette-step"; `step` is the 1-based position of the step label in the schema (NaN when it is not one). */
+export function parseRef(ref: string, steps: readonly string[] = DEFAULT_SCHEMA.steps): { palette: PaletteRef; step: number } {
+  const i = ref.lastIndexOf('-')
+  const palette = ref.slice(0, i) as PaletteRef
+  // The black and white alpha overlays are numbered 1, 2, 3 ... whatever the ramp steps are called.
+  if (palette === 'blackA' || palette === 'whiteA') return { palette, step: parseInt(ref.slice(i + 1), 10) }
+  const at = steps.indexOf(ref.slice(i + 1))
+  return { palette, step: at < 0 ? NaN : at + 1 }
+}
+
+export function refLabel(ref: string, steps: readonly string[] = DEFAULT_SCHEMA.steps): string {
+  const { palette } = parseRef(ref, steps)
   const p = palette === 'blackA' ? 'black-alpha' : palette === 'whiteA' ? 'white-alpha' : palette
-  return `${p}-${step}`
+  return `${p}-${ref.slice(ref.lastIndexOf('-') + 1)}`
 }
 
 const CHECKER = 'repeating-conic-gradient(#E4E4E7 0 25%, #FFFFFF 0 50%) 0 0 / 8px 8px'
@@ -85,9 +112,9 @@ export interface Paint {
 }
 
 /** CSS paint and hex for a palette step (index is 0-based). Alpha palettes have no hex. */
-export function paintFor(palette: PaletteRef, index: number, palettes: Palette[]): Paint | null {
-  if (palette === 'blackA') return { css: `linear-gradient(rgba(0,0,0,${ALPHA[index]}), rgba(0,0,0,${ALPHA[index]})), ${CHECKER}`, hex: null }
-  if (palette === 'whiteA') return { css: `linear-gradient(rgba(255,255,255,${ALPHA[index]}), rgba(255,255,255,${ALPHA[index]})), ${CHECKER}`, hex: null }
+export function paintFor(palette: PaletteRef, index: number, palettes: Palette[], alpha: readonly number[] = ALPHA): Paint | null {
+  if (palette === 'blackA') return { css: `linear-gradient(rgba(0,0,0,${alpha[index]}), rgba(0,0,0,${alpha[index]})), ${CHECKER}`, hex: null }
+  if (palette === 'whiteA') return { css: `linear-gradient(rgba(255,255,255,${alpha[index]}), rgba(255,255,255,${alpha[index]})), ${CHECKER}`, hex: null }
   const p = palettes.find((x) => x.key === palette)
   const h = p?.steps[index]
   return h ? { css: `#${h}`, hex: h } : null
@@ -100,20 +127,20 @@ export function paintFor(palette: PaletteRef, index: number, palettes: Palette[]
  * Text and borders: the colour against the page background (neutral-1 light, neutral-14 dark).
  * Returns null for alpha colours or when the palette needed for the comparison is missing.
  */
-export function lcFor(kind: TokenKind, mode: Mode, hexColour: string | null, palettes: Palette[]): number | null {
+export function lcFor(kind: TokenKind, mode: Mode, hexColour: string | null, palettes: Palette[], anchors: TokenSchema['anchors'] = DEFAULT_SCHEMA.anchors): number | null {
   if (!hexColour) return null
   const neutral = palettes.find((p) => p.key === 'neutral')?.steps
   const primary = palettes.find((p) => p.key === 'primary')?.steps
   if (kind === 's' || kind === 'f') {
     if (!neutral) return null
-    return Math.round(Math.max(Math.abs(apcaLc(neutral[15], hexColour)), Math.abs(apcaLc('FFFFFF', hexColour))))
+    return Math.round(Math.max(Math.abs(apcaLc(neutral[anchors.text], hexColour)), Math.abs(apcaLc('FFFFFF', hexColour))))
   }
   if (kind === 'o') {
     if (!primary) return null
-    return Math.round(Math.abs(apcaLc(hexColour, mode === 'light' ? primary[9] : primary[8])))
+    return Math.round(Math.abs(apcaLc(hexColour, primary[anchors.fill[mode]])))
   }
   if (!neutral) return null
-  return Math.round(Math.abs(apcaLc(hexColour, mode === 'light' ? neutral[0] : neutral[13])))
+  return Math.round(Math.abs(apcaLc(hexColour, neutral[anchors.page[mode]])))
 }
 
 export interface ResolvedCell {
@@ -142,32 +169,32 @@ export function overrideKey(name: string, mode: Mode): string {
   return `${name}|${mode}`
 }
 
-function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number>): ResolvedCell {
+function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number>, schema: TokenSchema): ResolvedCell {
   const overridden = overrides[overrideKey(def.name, mode)] !== undefined
   const ref = overrides[overrideKey(def.name, mode)] ?? def[mode]
-  const { palette, step } = parseRef(ref)
+  const { palette, step } = parseRef(ref, schema.steps)
   const index = step - 1
-  const found = paintFor(palette, index, palettes)
+  const found = paintFor(palette, index, palettes, schema.alpha)
   const intrinsic = palette === 'blackA' || palette === 'whiteA'
   const alpha = intrinsic ? 100 : clampAlpha(alphas[overrideKey(def.name, mode)] ?? 100)
   // A ramp colour with its own opacity is painted over a checkerboard, like the alpha palettes.
   const paint = found && alpha < 100 && found.hex ? { css: `linear-gradient(#${withAlpha(found.hex, alpha)}, #${withAlpha(found.hex, alpha)}), ${CHECKER}`, hex: found.hex } : found
   return {
     ref,
-    label: refLabel(ref),
+    label: refLabel(ref, schema.steps),
     palette,
     index,
     paint: paint?.css ?? 'transparent',
     hex: paint?.hex ?? null,
-    lc: paint && alpha === 100 ? lcFor(def.kind, mode, paint.hex, palettes) : null,
+    lc: paint && alpha === 100 ? lcFor(def.kind, mode, paint.hex, palettes, schema.anchors) : null,
     alpha,
     available: paint !== null,
     overridden
   }
 }
 
-export function resolveToken(def: TokenDef, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number> = {}): ResolvedToken {
-  return { def, light: resolveCell(def, 'light', overrides, palettes, alphas), dark: resolveCell(def, 'dark', overrides, palettes, alphas) }
+export function resolveToken(def: TokenDef, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number> = {}, schema: TokenSchema = DEFAULT_SCHEMA): ResolvedToken {
+  return { def, light: resolveCell(def, 'light', overrides, palettes, alphas, schema), dark: resolveCell(def, 'dark', overrides, palettes, alphas, schema) }
 }
 
 export function isResolved(t: ResolvedToken): boolean {
@@ -184,8 +211,8 @@ export interface TokenSet {
 
 const DISPLAY_ORDER: PaletteKey[] = ['primary', 'secondary', 'neutral', 'info', 'success', 'caution', 'warning', 'critical']
 
-export function resolveAll(palettes: Palette[], overrides: Record<string, string>, alphas: Record<string, number> = {}): TokenSet {
-  const tokens = TOKEN_DEFS.map((d) => resolveToken(d, overrides, palettes, alphas))
+export function resolveAll(palettes: Palette[], overrides: Record<string, string>, alphas: Record<string, number> = {}, schema: TokenSchema = DEFAULT_SCHEMA): TokenSet {
+  const tokens = schema.defs.map((d) => resolveToken(d, overrides, palettes, alphas, schema))
   const missing = new Set<PaletteKey>()
   for (const t of tokens) {
     for (const c of [t.light, t.dark]) {
@@ -207,17 +234,17 @@ export function pickerChips(palettes: Palette[]): Array<{ key: PaletteRef; label
   return [...present, { key: 'blackA', label: 'black α' }, { key: 'whiteA', label: 'white α' }]
 }
 
-function cssValue(c: ResolvedCell): string {
-  if (c.palette === 'blackA') return `rgb(0 0 0 / ${ALPHA[c.index]})`
-  if (c.palette === 'whiteA') return `rgb(255 255 255 / ${ALPHA[c.index]})`
-  const ref = `var(--${c.palette}-${c.index + 1})`
+function cssValue(c: ResolvedCell, schema: TokenSchema): string {
+  if (c.palette === 'blackA') return `rgb(0 0 0 / ${schema.alpha[c.index]})`
+  if (c.palette === 'whiteA') return `rgb(255 255 255 / ${schema.alpha[c.index]})`
+  const ref = `var(--${c.palette}-${schema.steps[c.index]})`
   return c.alpha < 100 ? `color-mix(in srgb, ${ref} ${c.alpha}%, transparent)` : ref
 }
 
 /** Light values in :root, dark values in [data-theme="dark"]. Tokens with a removed palette are skipped. */
-export function toTokenCss(tokens: ResolvedToken[]): string {
+export function toTokenCss(tokens: ResolvedToken[], schema: TokenSchema = DEFAULT_SCHEMA): string {
   const ok = tokens.filter(isResolved)
-  const light = ok.map((t) => `  --${t.def.name}: ${cssValue(t.light)};`).join('\n')
-  const dark = ok.map((t) => `  --${t.def.name}: ${cssValue(t.dark)};`).join('\n')
+  const light = ok.map((t) => `  --${t.def.name}: ${cssValue(t.light, schema)};`).join('\n')
+  const dark = ok.map((t) => `  --${t.def.name}: ${cssValue(t.dark, schema)};`).join('\n')
   return `:root {\n${light}\n}\n\n[data-theme="dark"] {\n${dark}\n}`
 }

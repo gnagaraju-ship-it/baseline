@@ -63,21 +63,21 @@ function sideLightness(base: number, end: number, t: number, n: number, slope: n
 }
 
 /**
- * Generate a 16-step ramp whose step `base` (1-based) is exactly `hexColour`.
+ * Generate a ramp of `count` steps (16 by default) whose step `base` (1-based) is exactly `hexColour`.
  * Works in OKLCH: the hue stays that of the input, lightness eases from the input's lightness to the light and
  * dark ends of the Primary ramp, and chroma follows the Primary ramp's profile so dark steps keep their colour
  * instead of turning grey or khaki. Out-of-gamut colours lose chroma only.
  */
-export function gen(hexColour: string, base: number): string[] {
+export function gen(hexColour: string, base: number, count = STEP_COUNT): string[] {
   const b = base - 1
   const { L: L0, C: C0, H } = hexToOklch(hexColour)
   const lightEnd = Math.max(L_MAX, L0)
   const darkEnd = Math.min(L_MIN, L0)
   const lightN = b
-  const darkN = STEP_COUNT - 1 - b
+  const darkN = count - 1 - b
   const slope = ((lightEnd - L0) / Math.max(1, lightN) + (L0 - darkEnd) / Math.max(1, darkN)) / 2
   const out: string[] = []
-  for (let i = 0; i < STEP_COUNT; i++) {
+  for (let i = 0; i < count; i++) {
     if (i === b) {
       out.push(hexColour)
       continue
@@ -261,12 +261,13 @@ export interface TokenRow {
   hex: string
 }
 
-/** CSS custom property per step, e.g. --primary-10. */
-export function tokenRows(palettes: Palette[]): TokenRow[] {
+/** CSS custom property per step, e.g. --primary-10. `labels` names the steps when they are not 1, 2, 3 ... */
+export function tokenRows(palettes: Palette[], labels?: readonly string[]): TokenRow[] {
+  const label = (i: number) => labels?.[i] ?? String(i + 1)
   return palettes.flatMap((p) => [
-    ...p.steps.map((h, i) => ({ name: `--${p.key}-${i + 1}`, hex: h })),
+    ...p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}`, hex: h })),
     // A colour set below 100% opacity also exports every step with that alpha, as #RRGGBBAA.
-    ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${i + 1}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
+    ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
   ])
 }
 
