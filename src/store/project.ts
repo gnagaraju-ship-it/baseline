@@ -9,7 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
-import { addImported, addNamedImported, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
+import { addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
 import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
@@ -117,6 +117,7 @@ interface ProjectState {
   setImportedValue: (collection: string, name: string, mode: string, value: number) => void
   renameImportedVariable: (collection: string, from: string, to: string) => void
   addImportedVariable: (collection: string) => void
+  setImportedOff: (collection: string, name: string, off: boolean) => void
   addNamedImportedVariable: (collection: string, name: string, value: number) => void
   setImportedAlias: (collection: string, name: string, mode: string, target: string) => void
   removeImportedVariable: (collection: string, name: string) => void
@@ -342,6 +343,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
   setImportedValue: (collection, name, mode, value) => set((s) => (s.imported ? { imported: setImportedValue(s.imported, collection, name, mode, value) } : {})),
   renameImportedVariable: (collection, from, to) => set((s) => (s.imported ? { imported: renameImported(s.imported, collection, from, to) } : {})),
   addImportedVariable: (collection) => set((s) => (s.imported ? { imported: addImported(s.imported, collection) } : {})),
+  setImportedOff: (collection, name, off) => set((s) => (s.imported ? { imported: setOff(s.imported, collection, name, off) } : {})),
   addNamedImportedVariable: (collection, name, value) => set((s) => (s.imported ? { imported: addNamedImported(s.imported, collection, name, value) } : {})),
   setImportedAlias: (collection, name, mode, target) => set((s) => (s.imported ? { imported: setImportedAlias(s.imported, collection, name, mode, target) } : {})),
   removeImportedVariable: (collection, name) => set((s) => (s.imported ? { imported: removeImported(s.imported, collection, name) } : {})),

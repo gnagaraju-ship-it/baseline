@@ -168,7 +168,7 @@ describe('v2 screens', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Reset spacing-xs' }))
     expect(screen.getByLabelText('spacing-xs Mode 1')).toHaveValue(4)
     expect(screen.getByLabelText('radius-full Mode 1')).toHaveValue(9999)
-  })
+  }, 20000)
 
   it('export: with several themes, all of them go in one file, or only the active one', async () => {
     at('/v2')

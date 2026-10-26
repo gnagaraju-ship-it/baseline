@@ -14,7 +14,14 @@ export type ImportedType = 'color' | 'number' | 'string'
 /** `v` is the resolved value (hex colour, number or text); `a` names the variable it points at ("Collection::name"). */
 export interface ImportedValue { v: string | number; a?: string }
 
-export interface ImportedVariable { name: string; type: ImportedType; scopes: string[]; values: Record<string, ImportedValue> }
+export interface ImportedVariable {
+  name: string
+  type: ImportedType
+  scopes: string[]
+  values: Record<string, ImportedValue>
+  /** Switched off: kept in the theme and still followed, but not written to an export. */
+  off?: boolean
+}
 
 export interface ImportedCollection { name: string; modes: string[]; variables: ImportedVariable[] }
 
@@ -59,7 +66,7 @@ export function byModule(set: ImportedSet): Record<ExportModule, ImportedCollect
   const out = Object.fromEntries(MODULES.map((m) => [m, [] as ImportedCollection[]])) as Record<ExportModule, ImportedCollection[]>
   for (const c of set.collections) {
     for (const m of MODULES) {
-      const variables = c.variables.filter((v) => moduleOf(c.name, v.name) === m)
+      const variables = c.variables.filter((v) => !v.off && moduleOf(c.name, v.name) === m)
       if (variables.length) out[m].push({ ...c, variables })
     }
   }
@@ -295,4 +302,20 @@ export function addNamedImported(set: ImportedSet, collection: string, name: str
       ? c
       : { ...c, variables: [...c.variables, { name, type: 'number', scopes: ['ALL_SCOPES'], values: Object.fromEntries(c.modes.map((m) => [m, { v: value }])) }] }
   )
+}
+
+/** The variables that point at this one ("Collection::name"). */
+export function followers(set: ImportedSet, collection: string, name: string): string[] {
+  const ref = refOf(collection, name)
+  return set.collections.flatMap((c) => c.variables.filter((v) => Object.values(v.values).some((x) => x.a === ref)).map((v) => v.name))
+}
+
+/** Switches a variable off or on. One that others follow cannot be switched off, so nothing in an export points at nothing. */
+export function setImportedOff(set: ImportedSet, collection: string, name: string, off: boolean): ImportedSet {
+  if (off && followers(set, collection, name).length) return set
+  const mark = (x: ImportedVariable): ImportedVariable => {
+    const { off: _was, ...rest } = x
+    return off ? { ...rest, off: true } : rest
+  }
+  return editCollection(set, collection, (c) => ({ ...c, variables: c.variables.map((x) => (x.name === name ? mark(x) : x)) }))
 }

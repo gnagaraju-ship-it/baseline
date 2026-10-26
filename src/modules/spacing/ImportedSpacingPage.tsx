@@ -3,7 +3,8 @@ import { Icon } from '../../components/Icon'
 import { Logo } from '../../components/Logo'
 import { NumberField } from '../../components/NumberField'
 import { ThemeMenu } from '../../components/ThemeMenu'
-import { resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
+import { followers, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
+import { untitledThemeData } from '../../lib/themes'
 import { barWidth, formatSpacing, parseCustom } from '../../lib/spacing'
 import { useProject } from '../../store/project'
 import { useSectionCss } from '../colour/useSectionCss'
@@ -22,10 +23,15 @@ const RADIUS = '2. Radius'
 
 type Pick = { collection: string; name: string } | null
 
+const pillCls = (on: boolean) => `h-[30px] rounded-full border px-3 text-xs font-medium ${on ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface text-ink-3'}`
+
 function Panel() {
-  const reset = useProject((s) => s.resetImportedCollection)
   const s = useProject()
-  const count = (c: string, prefix?: string) => (s.imported?.collections.find((x) => x.name === c)?.variables.filter((v) => !prefix || v.name.startsWith(prefix)).length ?? 0)
+  const reset = s.resetImportedCollection
+  const set = s.imported
+  const count = (c: string, prefix?: string) => set?.collections.find((x) => x.name === c)?.variables.filter((v) => !prefix || v.name.startsWith(prefix)).length ?? 0
+  const original = untitledThemeData().imported!
+  const asFiles = [PRIM, SPACING, RADIUS].every((c) => JSON.stringify(set?.collections.find((x) => x.name === c)) === JSON.stringify(original.collections.find((x) => x.name === c)))
   return (
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
@@ -35,17 +41,22 @@ function Panel() {
       </div>
       <div className="flex flex-col gap-6 p-5">
         <section className="flex flex-col gap-2.5">
-          <h3 className={h3}>Scale</h3>
-          <div className="flex items-center justify-between text-[13px]"><span className="font-medium">Spacing steps</span><span className="font-mono text-xs text-muted">{count(PRIM, 'Spacing/')}</span></div>
-          <div className="flex items-center justify-between text-[13px]"><span className="font-medium">Spacing tokens</span><span className="font-mono text-xs text-muted">{count(SPACING)}</span></div>
-          <div className="flex items-center justify-between text-[13px]"><span className="font-medium">Radius</span><span className="font-mono text-xs text-muted">{count(RADIUS)}</span></div>
-          <p className="m-0 text-xs leading-[1.55] text-muted">These come from the Untitled files. Click a value to change it, point a token at another step, rename or remove it. Values are stored in px; the unit switch changes how they show.</p>
+          <h3 className={h3}>Presets</h3>
+          <div role="group" aria-label="Preset" className="flex flex-wrap gap-1.5">
+            <button type="button" aria-pressed={asFiles} onClick={() => [PRIM, SPACING, RADIUS].forEach(reset)} className={pillCls(asFiles)}>Untitled</button>
+            <button type="button" aria-pressed={!asFiles} className={pillCls(!asFiles)}>Custom</button>
+          </div>
+          <p className="m-0 text-xs leading-[1.55] text-muted">{asFiles ? 'The values of the Untitled files.' : 'Changed from the Untitled files. Pick Untitled to put all of it back.'}</p>
         </section>
         <section className="flex flex-col gap-2">
-          <h3 className={h3}>Reset to the files</h3>
-          {[[PRIM, 'Spacing scale'], [SPACING, 'Spacing tokens'], [RADIUS, 'Radius']].map(([c, label]) => (
-            <button key={c} type="button" onClick={() => reset(c)} className={`${btn} h-9 text-left`}>Reset {label.toLowerCase()}</button>
+          <div className="flex justify-between"><h3 className={h3}>Sections</h3><span className="text-[11px] text-muted">3</span></div>
+          {[['Scale', count(PRIM, 'Spacing/'), 'steps'], ['Tokens', count(SPACING), 'tokens'], ['Radius', count(RADIUS), 'sizes']].map(([name, n, unit]) => (
+            <div key={name} className="flex min-h-[34px] items-center gap-2.5">
+              <span className="flex-1 text-[13px] font-medium">{name}</span>
+              <span className="font-mono text-xs text-muted">{n} {unit}</span>
+            </div>
           ))}
+          <p className="m-0 text-xs leading-[1.55] text-muted">Untitled has no breakpoints for spacing: every value is one number. Values are stored in px; the unit switch changes how they show.</p>
         </section>
       </div>
       <div className="flex-1" />
@@ -72,7 +83,7 @@ export function ImportedSpacingPage() {
   const tokens = col(SPACING)?.variables ?? []
   const radius = col(RADIUS)?.variables ?? []
   const modeOf = (c: string) => col(c)!.modes[0]
-  const count = scale.length + tokens.length + radius.length
+  const count = [...scale, ...tokens, ...radius].filter((v) => !v.off).length
 
   const [open, setOpen] = useState<Pick>(null)
   const toggle = (collection: string, name: string) => setOpen(open?.collection === collection && open.name === name ? null : { collection, name })
@@ -121,20 +132,26 @@ export function ImportedSpacingPage() {
     <SpacingLayout css={css} exportCount={count} onExport={() => openExport(['spacing'])} panel={<Panel />}>
       <div className="flex flex-col gap-5 px-7 pb-12 pt-6">
         <section aria-label="Scale" className={`${card} gap-4`}>
-          <div>
-            <h2 className="m-0 mb-1 text-base font-semibold">Scale</h2>
-            <p className="m-0 text-[13px] text-muted">Click a value to change it. The token name on the right is what it exports as. {scale.length} steps.</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="m-0 mb-1 text-base font-semibold">Scale</h2>
+              <p className="m-0 text-[13px] text-muted">Toggle a value on or off — the token name on the right is what it exports as. Click the name to change it. {scale.filter((v) => !v.off).length} of {scale.length} on.</p>
+            </div>
+            <button type="button" onClick={() => s.resetImportedCollection(PRIM)} className={btn}>Reset scale</button>
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-x-8 gap-y-1">
             {scaleSorted.map((v) => {
               const px = value(PRIM, v)
-              const on = isOpen(PRIM, v.name)
+              const on = !v.off
+              const used = followers(set, PRIM, v.name)
+              const opened = isOpen(PRIM, v.name)
               return (
-                <button key={v.name} type="button" aria-expanded={on} aria-label={`${v.name}, ${formatSpacing(px, unit)}`} onClick={() => toggle(PRIM, v.name)} className={`flex min-h-10 items-center gap-2.5 border-0 border-b border-line-faint px-1 text-left ${on ? 'bg-accent-wash' : 'bg-transparent hover:bg-panel'}`}>
-                  <span className="flex-1 font-mono text-sm font-bold text-ink">{formatSpacing(px, unit)}</span>
-                  <span aria-hidden="true" className="h-2 rounded-sm" style={{ width: barWidth(px), background: 'var(--color-accent-bar)' }} />
-                  <span className="w-[110px] truncate text-right font-mono text-[11px] text-muted">{v.name.replace(/^Spacing\//, 'space-')}</span>
-                </button>
+                <div key={v.name} className={`flex min-h-10 items-center gap-2.5 border-b border-line-faint ${opened ? 'bg-accent-wash' : ''}`}>
+                  <input type="checkbox" id={`sp-${v.name}`} checked={on} disabled={on && used.length > 0} title={on && used.length ? `Used by ${used.join(', ')}` : undefined} onChange={() => s.setImportedOff(PRIM, v.name, on)} className="m-0 h-[18px] w-[18px] accent-accent" />
+                  <label htmlFor={`sp-${v.name}`} className={`flex-1 font-mono text-sm ${on ? 'font-bold text-ink' : 'text-subtle'}`}>{formatSpacing(px, unit)}</label>
+                  <span aria-hidden="true" className="h-2 rounded-sm" style={{ width: barWidth(px), background: on ? 'var(--color-accent-bar)' : 'var(--color-line)' }} />
+                  <button type="button" aria-expanded={opened} aria-label={`Edit ${v.name}`} onClick={() => toggle(PRIM, v.name)} className={`w-[92px] truncate border-0 bg-transparent p-0 text-right font-mono text-[11px] hover:text-ink ${on ? 'text-muted' : 'text-subtle'}`}>{v.name.replace(/^Spacing\//, 'space-')}</button>
+                </div>
               )
             })}
           </div>
@@ -148,15 +165,19 @@ export function ImportedSpacingPage() {
         </section>
 
         <section aria-label="Tokens" className={`${card} gap-3.5`}>
-          <div>
-            <h2 className="m-0 mb-1 text-base font-semibold">Tokens</h2>
-            <p className="m-0 text-[13px] text-muted">Grouped the way Figma Variables groups by name. A token follows a step of the scale until it gets a value of its own.</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="m-0 mb-1 text-base font-semibold">Tokens</h2>
+              <p className="m-0 text-[13px] text-muted">Grouped the way Figma Variables groups by name. A token follows a step of the scale until it gets a value of its own.</p>
+            </div>
+            <button type="button" onClick={() => s.resetImportedCollection(SPACING)} className={btn}>Reset tokens</button>
           </div>
           <div className="overflow-x-auto">
             <div role="table" aria-label="Spacing tokens" className="min-w-[600px]">
               <div role="row" className={`${head} grid border-b border-line py-2`} style={{ gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr)' }}>
                 <span role="columnheader">TOKEN</span><span role="columnheader" className="text-center">VALUE</span><span role="columnheader" className="text-center">FOLLOWS</span>
               </div>
+              <div className={`${head} pb-1 pt-3.5`}>SPACING</div>
               {tokens.map((t) => {
                 const mode = modeOf(SPACING)
                 const px = value(SPACING, t)
@@ -179,9 +200,12 @@ export function ImportedSpacingPage() {
         </section>
 
         <section aria-label="Radius" className={`${card} gap-4`}>
-          <div>
-            <h2 className="m-0 mb-1 text-base font-semibold">Radius</h2>
-            <p className="m-0 text-[13px] text-muted">Corner radius tokens, each drawn on a sample box. Click one to change it.</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="m-0 mb-1 text-base font-semibold">Radius</h2>
+              <p className="m-0 text-[13px] text-muted">Corner radius tokens, each drawn on a sample box. Click one to change it.</p>
+            </div>
+            <button type="button" onClick={() => s.resetImportedCollection(RADIUS)} className={btn}>Reset radius</button>
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3.5">
             {radius.map((r) => {

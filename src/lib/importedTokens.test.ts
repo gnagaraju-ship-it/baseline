@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import full from '../data/untitled-ui.json'
 import { exportSections } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
-import { addImported, addNamedImported, setImportedAlias, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
+import { followers, setImportedOff, addImported, addNamedImported, setImportedAlias, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
 import { defaultThemeData, untitledThemeData } from './themes'
 
 const source = full as ImportedSet
@@ -177,5 +177,17 @@ describe('editing imported tokens', () => {
     const added = addNamedImported(set, '_Primitives', 'Spacing/custom (36px)', 36)
     expect(value(added, '_Primitives', 'Spacing/custom (36px)', 'Style')).toBe(36)
     expect(addNamedImported(added, '_Primitives', 'Spacing/custom (36px)', 40).collections[0].variables).toHaveLength(added.collections[0].variables.length)
+  })
+
+  it('switches a step off for the export, but not one that a token follows', () => {
+    expect(followers(set, '_Primitives', 'Spacing/1 (4px)')).toEqual(['spacing-xs'])
+    expect(setImportedOff(set, '_Primitives', 'Spacing/1 (4px)', true)).toBe(set)
+    const free = set.collections[0].variables.find((v) => v.name.startsWith('Spacing/') && followers(set, '_Primitives', v.name).length === 0)!
+    const off = setImportedOff(set, '_Primitives', free.name, true)
+    expect(off.collections[0].variables.find((v) => v.name === free.name)!.off).toBe(true)
+    expect(byModule(off).spacing.flatMap((c) => c.variables).some((v) => v.name === free.name)).toBe(false)
+    expect(importedDoc(off, ['spacing']).Imported).not.toHaveProperty(['_Primitives', 'Spacing', free.name.replace('Spacing/', '')])
+    // switched on again, it is as it was
+    expect(JSON.stringify(setImportedOff(off, '_Primitives', free.name, false))).toBe(JSON.stringify(set))
   })
 })

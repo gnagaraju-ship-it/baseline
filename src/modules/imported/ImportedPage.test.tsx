@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from '../../App'
+import { exportSections } from '../../lib/exportAll'
+import { followers } from '../../lib/importedTokens'
 import { untitledThemeData } from '../../lib/themes'
 import { useProject } from '../../store/project'
 
@@ -11,6 +13,8 @@ const s = () => useProject.getState()
 function at(path: string) {
   render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
 }
+
+const followersOf = (name: string) => followers(useProject.getState().imported!, '_Primitives', name).length > 0
 
 describe('the Untitled theme', () => {
   beforeEach(() => {
@@ -100,10 +104,13 @@ describe('the Untitled theme', () => {
     expect(screen.getByRole('region', { name: 'Scale' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Tokens' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Radius' })).toBeInTheDocument()
-    expect(screen.queryByRole('group', { name: 'Base unit' })).not.toBeInTheDocument() // no Baseline presets
+    expect(screen.queryByRole('group', { name: 'Base unit' })).not.toBeInTheDocument() // no Baseline base units
     expect(screen.getByRole('group', { name: 'Unit' })).toBeInTheDocument()
-    // a row shows its value and its name; editing opens under it
-    const step = screen.getByRole('button', { name: 'Spacing/1 (4px), 0.25rem' })
+    expect(screen.getByRole('button', { name: 'Untitled' })).toHaveAttribute('aria-pressed', 'true')
+    // a row shows a checkbox, its value and its name; editing opens under it
+    expect(screen.getByText(/32 of 32 on\./)).toBeInTheDocument()
+    expect(screen.getByLabelText('0.25rem')).toBeChecked()
+    const step = screen.getByRole('button', { name: 'Edit Spacing/1 (4px)' })
     expect(step).toHaveTextContent('space-1 (4px)')
     expect(screen.queryByRole('group', { name: /^Edit / })).not.toBeInTheDocument()
     await userEvent.click(step)
@@ -116,9 +123,32 @@ describe('the Untitled theme', () => {
     expect(token).toHaveTextContent('space-1 (4px)')
     // the unit switch changes how values show, not the stored px
     await userEvent.click(screen.getByRole('button', { name: 'px' }))
-    expect(screen.getByRole('button', { name: 'Spacing/1 (4px), 6px' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Spacing/1 (4px), 6px' }))
+    expect(document.getElementById('sp-Spacing/1 (4px)')).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Custom' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Spacing/1 (4px)' }))
     expect(screen.queryByRole('group', { name: 'Edit Spacing/1 (4px)' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Untitled' }))
+    expect(screen.getAllByLabelText('4px')[0]).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Untitled' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('spacing: a step can be switched off, unless a token follows it, and an off step is not exported', async () => {
+    at('/spacing')
+    // Spacing/1 (4px) is followed by spacing-xs
+    expect(screen.getByLabelText('0.25rem')).toBeDisabled()
+    expect(screen.getByLabelText('0.25rem')).toHaveAttribute('title', 'Used by spacing-xs')
+    // Spacing/48 (192px) is followed by nothing among the spacing tokens, but widths use it? find a free step
+    const free = s().imported!.collections.find((c) => c.name === '_Primitives')!.variables.find((v) => v.name.startsWith('Spacing/') && !followersOf(v.name))!
+    const px = Number(Object.values(free.values)[0].v)
+    const box = screen.getByLabelText(`${+(px / 16).toFixed(3)}rem`)
+    expect(box).toBeEnabled()
+    await userEvent.click(box)
+    expect(box).not.toBeChecked()
+    expect(screen.getByText(/31 of 32 on\./)).toBeInTheDocument()
+    const css = exportSections(s().imported ? { ...untitledThemeData(), imported: s().imported } : untitledThemeData()).find((x) => x.id === 'spacing')!.css
+    expect(css).not.toContain(`--${free.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}:`)
+    await userEvent.click(box)
+    expect(box).toBeChecked()
   })
 
   it('spacing: point a token at another step, give it its own value, rename, add and remove', async () => {
@@ -152,7 +182,7 @@ describe('the Untitled theme', () => {
     at('/spacing')
     await userEvent.type(screen.getByLabelText('Custom value in px'), '36')
     await userEvent.click(screen.getByRole('button', { name: 'Add' }))
-    expect(screen.getByRole('button', { name: /^Spacing\/custom \(36px\), 2\.25rem/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit Spacing/custom (36px)' })).toBeInTheDocument()
     await userEvent.type(screen.getByLabelText('Custom value in px'), '999')
     await userEvent.click(screen.getByRole('button', { name: 'Add' }))
     expect(screen.getByRole('alert')).toBeInTheDocument()
