@@ -36,3 +36,16 @@ Variables get Figma scopes and their CSS name (for example `var(--primary-10)`, 
 A file exported with several themes has a mode per theme in each collection where the themes differ: **Primitives**, **Type** and **Spacing** use the theme name as the mode ("Ocean"); **Semantic** and **Responsive** use "Ocean / Light" or "Ocean / XXL". Collections where every theme holds the same values keep the normal modes (Semantic stays Light and Dark when only the ramps differ, because its values point at Primitives). Set a frame's Primitives, Semantic and Responsive modes to switch it to a theme. Elevation styles are not variable-bound, so themes with different shadows get `elevation/<Theme>/<name>`.
 
 Figma limits the number of modes per collection by plan. A collection that needs more is reported ("Responsive needs 6 modes") and skipped; everything else is imported.
+
+## Themes built on a design system (Untitled)
+
+A theme that comes from an existing design system (Untitled) is written under `Imported`. The plugin creates its collections with **their own names and modes**, the way they are in the source Figma file, and keeps aliases between them:
+
+| Collection | Modes | Holds |
+| --- | --- | --- |
+| `_Primitives` | Style | colour ramps (50 to 950) and the spacing primitives |
+| `1. Color modes` | Light mode, Dark mode | the semantic colour tokens, aliased to `_Primitives` |
+| `6. Typography` | Value | font families, weights, sizes and line heights |
+| `2. Radius`, `3. Spacing`, `4. Widths`, `5. Containers` | Mode 1 / Value | named sizes, aliased to the spacing primitives where the source did so |
+
+Choose the **Imported tokens** row in the plugin window to import them. Importing again updates the variables in place. A collection that needs more modes than your Figma plan allows is reported and skipped.
