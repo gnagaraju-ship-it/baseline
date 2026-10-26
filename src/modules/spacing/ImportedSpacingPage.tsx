@@ -50,17 +50,28 @@ function Panel() {
         <section aria-label="Breakpoints" className="flex flex-col gap-2">
           <div className="flex justify-between"><h3 className={h3}>Breakpoints</h3><span className="text-[11px] text-muted">3 ON</span></div>
           {[['XXL', 'breakpoint-xxl'], ['MD', 'breakpoint-md'], ['XS', 'breakpoint-xs']].map(([label, name]) => {
-            const v = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name)
-            const mode = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.modes[0] ?? 'Value'
+            const bps = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)
+            const v = bps?.variables.find((x) => x.name === name)
+            const mode = bps?.modes[0] ?? 'Value'
+            const resolvedV = resolveSet(set!).collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name)
+            const widths = [...(set?.collections.find((x) => x.name === '4. Widths')?.variables ?? [])]
+            const wv = (w: ImportedVariable) => Number(resolveSet(set!).collections.find((x) => x.name === '4. Widths')?.variables.find((x) => x.name === w.name)?.values.XXL?.v ?? 0)
+            widths.sort((x, y) => wv(x) - wv(y))
             return (
-              <div key={name} className="flex min-h-[34px] items-center gap-2.5">
-                <label htmlFor={`bp-${name}`} className="flex-1 text-[13px] font-medium">{label}</label>
-                <NumberField id={`bp-${name}`} ariaLabel={`${label} breakpoint width`} value={Number(v?.values[mode]?.v ?? 0)} min={0} className="h-8 w-[84px] px-1.5 text-right" onCommit={(n) => n !== null && v && s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, n)} />
-                <span className="text-xs text-muted">px</span>
+              <div key={name} className="flex flex-col gap-1.5 py-1">
+                <div className="flex items-center gap-2.5">
+                  <label htmlFor={`bp-${name}`} className="flex-1 text-[13px] font-medium">{label}</label>
+                  <NumberField id={`bp-${name}`} ariaLabel={`${label} breakpoint width`} value={Number(resolvedV?.values[mode]?.v ?? 0)} min={0} className="h-8 w-[84px] px-1.5 text-right" onCommit={(n) => n !== null && v && s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, n)} />
+                  <span className="text-xs text-muted">px</span>
+                </div>
+                <select aria-label={`${label} breakpoint follows`} value={v?.values[mode]?.a ?? ''} onChange={(e) => (e.target.value ? s.setImportedAlias(BREAKPOINTS_COLLECTION, name, mode, e.target.value) : s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, Number(resolvedV?.values[mode]?.v ?? 0)))} className="inp h-8 w-full font-mono text-xs">
+                  <option value="">Own value</option>
+                  {widths.map((w) => <option key={w.name} value={`4. Widths::${w.name}`}>{w.name} · {wv(w)}</option>)}
+                </select>
               </div>
             )
           })}
-          <p className="m-0 text-xs leading-[1.55] text-muted">Tokens, widths and containers have a value for each breakpoint. XS is the base; the CSS changes them from the MD and XXL widths up. Values are stored in px; the unit switch changes how they show.</p>
+          <p className="m-0 text-xs leading-[1.55] text-muted">Each breakpoint is made from a width token (its XXL value), so changing that width moves the breakpoint. Tokens, widths and containers have a value for each breakpoint; XS is the base and the CSS changes them from the MD and XXL widths up. Values are stored in px; the unit switch changes how they show.</p>
         </section>
       </div>
       <div className="flex-1" />

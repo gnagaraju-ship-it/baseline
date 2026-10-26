@@ -224,6 +224,22 @@ describe('themes in the store', () => {
     expect(imported.collections.find((c) => c.name === '2. Radius')!.modes).toEqual(['Mode 1'])
   })
 
+  it('makes the breakpoints of a version 8 Untitled follow the width tokens, unless they were changed', async () => {
+    const mk = (md: number) => {
+      const u = untitledThemeData()
+      u.imported!.collections = u.imported!.collections.map((c) => (c.name === 'Breakpoints' ? { ...c, variables: [['breakpoint-xxl', 1400], ['breakpoint-md', md], ['breakpoint-xs', 390]].map(([n, v]) => ({ name: n as string, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v: v as number } } })) } : c))
+      return u
+    }
+    const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 8, state: { themes: [def, { id: 'theme-2', name: 'Untitled', data: mk(768) }], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    const bp = (i: number) => s().themes[i].data.imported!.collections.find((c) => c.name === 'Breakpoints')!.variables
+    expect(bp(1).map((v) => v.values.Value.a)).toEqual(['4. Widths::width-4xl', '4. Widths::width-xl', '4. Widths::width-xs'])
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 8, state: { themes: [def, { id: 'theme-2', name: 'Untitled', data: mk(834) }], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    expect(bp(1).map((v) => [v.values.Value.v, v.values.Value.a])).toEqual([[1400, undefined], [834, undefined], [390, undefined]])
+  })
+
   it('switching to an imported theme carries its tokens, and resetting it restores them', () => {
     const data = untitledThemeData()
     useProject.setState({ themes: [...s().themes, { id: 'theme-9', name: 'Untitled', data }] })

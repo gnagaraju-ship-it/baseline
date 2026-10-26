@@ -183,8 +183,14 @@ describe('the Untitled theme', () => {
     at('/spacing')
     const md = screen.getByLabelText('MD breakpoint width')
     expect(md).toHaveValue(768)
-    expect(screen.getByLabelText('XXL breakpoint width')).toHaveValue(1400)
-    expect(screen.getByLabelText('XS breakpoint width')).toHaveValue(390)
+    expect(screen.getByLabelText('XXL breakpoint width')).toHaveValue(1440)
+    expect(screen.getByLabelText('XS breakpoint width')).toHaveValue(384)
+    expect((screen.getByLabelText('MD breakpoint follows') as HTMLSelectElement).value).toBe('4. Widths::width-xl')
+    await userEvent.selectOptions(screen.getByLabelText('MD breakpoint follows'), '4. Widths::width-2xl')
+    expect(screen.getByLabelText('MD breakpoint width')).toHaveValue(1024)
+    await userEvent.selectOptions(screen.getByLabelText('MD breakpoint follows'), '')
+    expect(screen.getByLabelText('MD breakpoint width')).toHaveValue(1024)
+    expect((screen.getByLabelText('MD breakpoint follows') as HTMLSelectElement).value).toBe('')
     fireEvent.change(md, { target: { value: '834' } })
     expect(s().imported!.collections.find((c) => c.name === 'Breakpoints')!.variables.find((v) => v.name === 'breakpoint-md')!.values.Value).toEqual({ v: 834 })
   })
@@ -217,7 +223,7 @@ describe('the Untitled theme', () => {
   it('grids: the Grids screen layout with Untitled\'s widths and containers, and no columns or breakpoints', async () => {
     at('/grids')
     // breakpoints, widths and containers; no columns, gutters or sidebar
-    expect(within(screen.getByRole('group', { name: 'Breakpoint' })).getAllByRole('button').map((b) => b.textContent)).toEqual(['XXL1400', 'MD768', 'XS390'])
+    expect(within(screen.getByRole('group', { name: 'Breakpoint' })).getAllByRole('button').map((b) => b.textContent)).toEqual(['XXL1440', 'MD768', 'XS384'])
     expect(screen.getByRole('group', { name: 'Width' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Container' })).toBeInTheDocument()
     expect(within(screen.getByRole('group', { name: 'Width' })).getAllByRole('button')).toHaveLength(12)
@@ -270,6 +276,22 @@ describe('the Untitled theme', () => {
     expect(screen.getByText(/At XXL it follows Spacing\/192/)).toBeInTheDocument()
     const v = s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((x) => x.name === 'width-xl')!
     expect([v.values.XXL.v, v.values.MD.v, v.values.XS.v]).toEqual([768, 700, 768])
+  })
+
+  it('grids: the breakpoints are made from width tokens, and follow them', async () => {
+    at('/grids')
+    expect((screen.getByLabelText('XXL breakpoint follows') as HTMLSelectElement).value).toBe('4. Widths::width-4xl')
+    await userEvent.selectOptions(screen.getByLabelText('XXL breakpoint follows'), '4. Widths::width-3xl')
+    expect(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^XXL/ })).toHaveTextContent('1280')
+    await userEvent.click(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^MD/ }))
+    expect(screen.getByText('MD IS MADE FROM')).toBeInTheDocument()
+    // change the width token the MD breakpoint follows: the breakpoint moves with it
+    await userEvent.click(within(screen.getByRole('group', { name: 'Width' })).getByRole('button', { name: /^xl/ }))
+    fireEvent.change(screen.getByLabelText('width-xl value'), { target: { value: '800' } })
+    fireEvent.blur(screen.getByLabelText('width-xl value'))
+    await userEvent.click(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^XXL/ }))
+    fireEvent.change(screen.getByLabelText('width-xl value'), { target: { value: '800' } })
+    expect(within(screen.getByRole('group', { name: 'Breakpoint' })).getByRole('button', { name: /^MD/ })).toHaveTextContent('800')
   })
 
   it('grids: the unit switch changes how values show', async () => {

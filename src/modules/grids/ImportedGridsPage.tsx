@@ -86,6 +86,9 @@ export function ImportedGridsPage() {
   const cname = token ? collection : widths[0] ? WIDTHS : CONTAINERS
   const modes = find(cname)!.modes
   const modeId = modes.includes(bp) ? bp : modes[0]
+  const bpName = `breakpoint-${bp.toLowerCase()}`
+  const bpVar = find(BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === bpName)
+  const bpMode = find(BREAKPOINTS_COLLECTION)?.modes[0] ?? 'Value'
   const bpWidth = (name: string) => px(resolved.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name))
   const v = value(cname, current)
   const alias = current.values[modeId]?.a
@@ -115,6 +118,11 @@ export function ImportedGridsPage() {
         <div role="group" aria-label="Breakpoint" className="flex flex-wrap gap-2">
           {[['XXL', 'breakpoint-xxl'], ['MD', 'breakpoint-md'], ['XS', 'breakpoint-xs']].map(([label, name]) => <button key={label} type="button" aria-pressed={bp === label} onClick={() => setBp(label)} className={pill(bp === label)}>{label}<span className="font-mono font-normal opacity-80">{bpWidth(name)}</span></button>)}
         </div>
+        <label htmlFor="bp-follows" className="ml-3 text-[11px] font-semibold tracking-[.08em] text-muted">{bp} IS MADE FROM</label>
+        <select id="bp-follows" aria-label={`${bp} breakpoint follows`} value={bpVar?.values[bpMode]?.a ?? ''} onChange={(e) => (e.target.value ? setImportedAlias(BREAKPOINTS_COLLECTION, bpName, bpMode, e.target.value) : setImportedValue(BREAKPOINTS_COLLECTION, bpName, bpMode, bpWidth(bpName)))} className="inp h-8 w-[230px] font-mono text-xs">
+          <option value="">Own value</option>
+          {[...widths].sort((a, b) => px(resolved.collections.find((x) => x.name === WIDTHS)?.variables.find((x) => x.name === a.name), 'XXL') - px(resolved.collections.find((x) => x.name === WIDTHS)?.variables.find((x) => x.name === b.name), 'XXL')).map((w) => <option key={w.name} value={`${WIDTHS}::${w.name}`}>{w.name} · {px(resolved.collections.find((x) => x.name === WIDTHS)?.variables.find((x) => x.name === w.name), 'XXL')}</option>)}
+        </select>
       </div>
       <div className="flex flex-wrap items-center gap-2 border-b border-line-faint px-7 py-3">
         <span className="mr-1.5 text-[11px] font-semibold tracking-[.08em] text-muted">WIDTH</span>

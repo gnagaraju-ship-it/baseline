@@ -134,11 +134,14 @@ export function untitledThemeData(): ThemeData {
   return { ...defaultThemeData(), type, imported: set, schemaId: UNTITLED_ID }
 }
 
-/** Where the layout changes: the widths the media queries use. */
+/** Which width token each breakpoint is made from, and the value that token has. */
+export const BREAKPOINT_WIDTHS: Array<[string, string, number]> = [['breakpoint-xxl', 'width-4xl', 1440], ['breakpoint-md', 'width-xl', 768], ['breakpoint-xs', 'width-xs', 384]]
+
+/** Where the layout changes: the widths the media queries use. Each follows a width token (XXL the 4xl, MD the xl, XS the xs). */
 export const breakpointsCollection = () => ({
   name: BREAKPOINTS_COLLECTION,
   modes: ['Value'],
-  variables: [['breakpoint-xxl', 1400], ['breakpoint-md', 768], ['breakpoint-xs', 390]].map(([name, v]) => ({ name: name as string, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v: v as number } } }))
+  variables: BREAKPOINT_WIDTHS.map(([name, width, v]) => ({ name, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v, a: `4. Widths::${width}` } } }))
 })
 
 const cloneImported = (set: ImportedSet): ImportedSet => JSON.parse(JSON.stringify(set))

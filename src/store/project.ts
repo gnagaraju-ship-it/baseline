@@ -10,7 +10,7 @@ import {
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
 import { BREAKPOINTS_COLLECTION, makeResponsive, addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
-import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, breakpointsCollection, type Theme, type ThemeData } from '../lib/themes'
+import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, breakpointsCollection, BREAKPOINT_WIDTHS, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
   BREAKPOINTS, GRID_PRESETS, clampColumns, clampGutter, defaultGridSettings,
@@ -445,12 +445,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 8,
+  version: 9,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
   // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 8) return p as never
+    if (version >= 9) return p as never
+    if (version === 8 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(breakpointsFromWidths) } as never
     if (version === 7 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(addBreakpoints) } as never
     if (version === 6 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(upgradeUntitled) } as never
     if (version === 5 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
@@ -489,6 +490,18 @@ function importUntitled(t: Theme): Theme {
   // Version 5 kept all 8 files as read-only imported tokens; the colours are now an editable schema.
   const readOnly = !!d.imported && !d.schemaId && d.imported.collections.some((c) => c.name === '1. Color modes')
   return t.name === UNTITLED_NAME && (mapped || readOnly) ? { ...t, data: untitledThemeData() } : t
+}
+
+/** Version 8 gave Untitled plain breakpoint widths (1400, 768, 390): unless they were changed, they now come from the width tokens. */
+function breakpointsFromWidths(t: Theme): Theme {
+  const set = t.data?.imported
+  const bp = set?.collections.find((c) => c.name === BREAKPOINTS_COLLECTION)
+  if (t.data?.schemaId !== UNTITLED_ID || !set || !bp) return t
+  const plain = [['breakpoint-xxl', 1400], ['breakpoint-md', 768], ['breakpoint-xs', 390]]
+  const untouched = plain.every(([n, v]) => { const x = bp.variables.find((y) => y.name === n)?.values.Value; return x && !x.a && x.v === v })
+  const hasWidths = BREAKPOINT_WIDTHS.every(([, w]) => set.collections.find((c) => c.name === '4. Widths')?.variables.some((v) => v.name === w))
+  if (!untouched || !hasWidths) return t
+  return { ...t, data: { ...t.data, imported: { collections: set.collections.map((c) => (c.name === BREAKPOINTS_COLLECTION ? breakpointsCollection() : c)) } } }
 }
 
 /** Version 7 Untitled has one value per spacing token, width and container: give them XXL, MD and XS (equal), keeping every edit, and add the breakpoint widths. */

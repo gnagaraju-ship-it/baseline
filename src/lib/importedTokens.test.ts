@@ -70,7 +70,7 @@ describe('the Untitled theme', () => {
     expect(sections.find((s) => s.id === 'ramps')!.count).toBe(27 * 11 + 2)
     expect(sections.find((s) => s.id === 'semantic')!.count).toBe(273)
     expect(sections.find((s) => s.id === 'type')!.count).toBe(2 + 8 + 11 + 11)
-    expect(css).toContain('--breakpoint-md: 768px;')
+    expect(css).toContain('--breakpoint-md: var(--width-xl);')
     expect(sections.find((s) => s.id === 'grids')!.count).toBe(15 + 3)
     expect(sections.find((s) => s.id === 'elevation')).toMatchObject({ css: '', count: 0 })
     expect(cssName('Spacing/0․5 (2px)')).toBe('--spacing-0-5-2px')
@@ -215,9 +215,17 @@ describe('editing imported tokens', () => {
   })
 
   it('the breakpoint widths come from the Breakpoints collection', () => {
-    expect(breakpointWidths(set)).toEqual({ md: 768, xxl: 1400 })
-    const next = setImportedValue(setImportedValue(set, 'Breakpoints', 'breakpoint-md', 'Value', 834), 'Breakpoints', 'breakpoint-xxl', 'Value', 1440)
-    expect(breakpointWidths(next)).toEqual({ md: 834, xxl: 1440 })
+    // each breakpoint is made from a width token: XXL the 4xl, MD the xl, XS the xs
+    expect(breakpointWidths(set)).toEqual({ md: 768, xxl: 1440 })
+    const bp = set.collections.find((c) => c.name === 'Breakpoints')!.variables
+    expect(bp.map((v) => [v.name, v.values.Value.a, v.values.Value.v])).toEqual([['breakpoint-xxl', '4. Widths::width-4xl', 1440], ['breakpoint-md', '4. Widths::width-xl', 768], ['breakpoint-xs', '4. Widths::width-xs', 384]])
+    // changing the width token moves the breakpoint
+    const wider = setImportedValue(set, '4. Widths', 'width-xl', 'XXL', 800)
+    expect(breakpointWidths(wider).md).toBe(800)
+    // a breakpoint can follow another width, or take a value of its own
+    expect(breakpointWidths(setImportedAlias(set, 'Breakpoints', 'breakpoint-md', 'Value', '4. Widths::width-2xl')).md).toBe(1024)
+    const next = setImportedValue(setImportedValue(set, 'Breakpoints', 'breakpoint-md', 'Value', 834), 'Breakpoints', 'breakpoint-xxl', 'Value', 1500)
+    expect(breakpointWidths(next)).toEqual({ md: 834, xxl: 1500 })
     expect(breakpointWidths({ collections: [] })).toEqual({ md: 768, xxl: 1400 })
   })
 
@@ -233,7 +241,7 @@ describe('editing imported tokens', () => {
     expect(css).toContain(':root {\n  --spacing-none: var(--spacing-0-0px);')
     expect(css).toContain('--spacing-xs: var(--spacing-1-4px);') // XS, the base
     expect(css).toContain('@media (min-width: 834px) {\n  :root {\n    --spacing-xs: var(--spacing-2-8px);\n  }\n}')
-    expect(css).toContain('@media (min-width: 1400px) {\n  :root {\n    --spacing-xs: var(--spacing-3-12px);\n  }\n}')
+    expect(css).toContain('@media (min-width: 1440px) {\n  :root {\n    --spacing-xs: var(--spacing-3-12px);\n  }\n}')
     expect(css.match(/--spacing-sm:/g)).toHaveLength(1) // what did not change is not repeated
   })
 
