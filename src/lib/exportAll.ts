@@ -1,6 +1,7 @@
 /**
  * One export for the whole system: every module's CSS in a single file, with a count of the tokens it holds.
  */
+import { themeSlugs } from './themes'
 import { buildPalettes, toCss, tokenRows, type PaletteSettings } from './colour'
 import { toElevationCss, type ElevationSettings } from './elevation'
 import { toGridCss, type GridSettings } from './grid'
@@ -50,4 +51,27 @@ export function exportAll(s: ExportInput): { css: string; count: number } {
     css: sections.map((x) => `/* ${x.title} */\n${x.css}`).join('\n\n') + '\n',
     count: sections.reduce((n, x) => n + x.count, 0)
   }
+}
+
+export interface NamedTheme { name: string; data: ExportInput }
+
+/** Rewrites the root selectors of one theme's CSS. The first theme stays the default and also answers to :root. */
+export function scopeCss(css: string, slug: string, isDefault: boolean): string {
+  const brand = `[data-brand="${slug}"]`
+  return css
+    .replace(/^(\s*):root \{/gm, (_, ind) => `${ind}${isDefault ? `:root, ${brand}` : brand} {`)
+    .replace(/^(\s*)\[data-theme="dark"\] \{/gm, (_, ind) => `${ind}${isDefault ? `[data-theme="dark"], ${brand}[data-theme="dark"]` : `${brand}[data-theme="dark"]`} {`)
+}
+
+/** Sections for every theme. One theme gives exactly the plain sections; several are scoped by data-brand. */
+export function themedSections(themes: NamedTheme[]): ExportSection[] {
+  if (themes.length === 1) return exportSections(themes[0].data)
+  const slugs = themeSlugs(themes)
+  const per = themes.map((t) => exportSections(t.data))
+  return per[0].map((sec, i) => ({
+    id: sec.id,
+    title: sec.title,
+    css: per.map((list, n) => `/* Theme: ${themes[n].name} */\n${scopeCss(list[i].css, slugs[n], n === 0)}`).join('\n\n'),
+    count: per.reduce((sum, list) => sum + list[i].count, 0)
+  }))
 }

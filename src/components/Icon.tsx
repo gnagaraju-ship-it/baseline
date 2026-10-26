@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export type IconName =
   | 'folder' | 'color' | 'type' | 'grid' | 'spacing' | 'elevation' | 'monitor' | 'docs' | 'moon'
-  | 'close' | 'tokens' | 'contrast' | 'eye' | 'edit' | 'download' | 'copy' | 'export' | 'image' | 'updown' | 'trash' | 'reset' | 'sun'
+  | 'close' | 'tokens' | 'contrast' | 'eye' | 'edit' | 'download' | 'copy' | 'export' | 'image' | 'updown' | 'trash' | 'reset' | 'sun' | 'themes'
 
 const PATHS: Record<IconName, ReactNode> = {
   folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
@@ -41,6 +41,7 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M5 17a3 3 0 0 1 3-3h11" />
     </>
   ),
+  themes: <path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   moon: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
   tokens: (

@@ -6,6 +6,9 @@
 //   Responsive  type sizes, grid, spacing       (modes XXL, MD and XS, one value per breakpoint)
 //   Spacing     the spacing scale               (one mode)
 // plus text styles (Type) and effect styles (Elevation). Importing again updates in place.
+// A file with several themes ("Themes") gets a mode per theme in each collection where the themes differ:
+// "Ocean" in a one-mode collection, "Ocean / Light" or "Ocean / XXL" in the others. Collections where every
+// theme holds the same values keep their normal modes.
 
 figma.showUI(__html__, { width: 440, height: 560, themeColors: true });
 
@@ -108,33 +111,102 @@ function literal(doc, raw, mode) {
   return raw;
 }
 
+// The themes in a file: a multi-theme file has a "Themes" object, anything else is one theme.
+function themesOf(input) {
+  if (input && typeof input.Themes === 'object' && input.Themes) {
+    var ext = input.$extensions && input.$extensions['com.baseline'];
+    var names = ext && ext.themes ? ext.themes.filter(function (n) { return input.Themes[n]; }) : [];
+    Object.keys(input.Themes).forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });
+    return names.map(function (n) { return { name: n, doc: input.Themes[n] }; });
+  }
+  return [{ name: 'Default', doc: input }];
+}
+
+function rawFor(leaf, base) {
+  var m = modesOf(leaf);
+  return m && m[base] !== undefined ? m[base] : leaf.$value;
+}
+
 /**
  * Creates or updates variables and styles for the chosen groups of a design tokens document.
  * Returns counts and lists of anything skipped or replaced. Throws a readable Error when the document is not usable.
  */
-async function importTokens(doc, groups) {
-  if (!doc || typeof doc !== 'object') throw new Error('This is not a design tokens file.');
-  var wanted = ORDER.filter(function (g) { return doc[g] && groups.indexOf(g) >= 0; });
-  var wantsElevation = doc.Elevation && groups.indexOf('Elevation') >= 0;
+async function importTokens(input, groups) {
+  if (!input || typeof input !== 'object') throw new Error('This is not a design tokens file.');
+  var themes = themesOf(input);
+  if (!themes.length) throw new Error('This is not a design tokens file.');
+  var doc = themes[0].doc; // the document the helpers below read; set to each theme's own while its values are written
+  var wanted = ORDER.filter(function (g) { return themes.some(function (th) { return th.doc[g]; }) && groups.indexOf(g) >= 0; });
+  var wantsElevation = themes.some(function (th) { return th.doc.Elevation; }) && groups.indexOf('Elevation') >= 0;
   if (!wanted.length && !wantsElevation) throw new Error('Nothing to import: no known groups were selected.');
 
   var collections = await figma.variables.getLocalVariableCollectionsAsync();
   var variables = await figma.variables.getLocalVariablesAsync();
-  var created = 0, updated = 0, styles = 0, replaced = [], skipped = [];
-  var byCollection = {};
+  var created = 0, updated = 0, styles = 0, replaced = [], skipped = [], limited = [];
+  var byCollection = {}, blocked = {};
   var placed = {}; // DTCG path ("Type.heading-xl.size") -> variable
+
+  // Per collection: do the themes hold different values? Only then does every theme get its own modes.
+  var differs = {};
+  var entries = [], entryAt = {};
+  wanted.forEach(function (group) {
+    themes.forEach(function (th, ti) {
+      var items = [];
+      walk(th.doc[group], [group], items);
+      items.forEach(function (it) {
+        var key = it.path.join('.');
+        var e = entryAt[key];
+        if (!e) { e = entryAt[key] = { group: group, path: it.path, leaf: it.leaf, leaves: {} }; entries.push(e); }
+        e.leaves[ti] = it.leaf;
+      });
+    });
+  });
+  entries.forEach(function (e) {
+    var where = placement(e.group, e.path, e.leaf);
+    var sigs = Object.keys(e.leaves).map(function (ti) {
+      var leaf = e.leaves[ti];
+      return JSON.stringify(baseModesFor(where, leaf).map(function (m) { return rawFor(leaf, m); }));
+    });
+    if (Object.keys(e.leaves).length < themes.length || sigs.some(function (x) { return x !== sigs[0]; })) differs[where.collection] = true;
+  });
+
+  function baseModesFor(where, leaf) {
+    var modes = modesOf(leaf);
+    return where.collection === 'Responsive' ? BREAKPOINT_MODES : modes ? Object.keys(modes) : [COLLECTIONS[where.collection][0]];
+  }
+
+  // The Figma mode a theme's value for a base mode (Light, XXL, Value) is written to.
+  function modeNameFor(collection, ti, base) {
+    if (!differs[collection] || themes.length < 2) return base;
+    return COLLECTIONS[collection].length > 1 ? themes[ti].name + ' / ' + base : themes[ti].name;
+  }
+
+  function requiredModes(name) {
+    if (!differs[name] || themes.length < 2) return COLLECTIONS[name];
+    var out = [];
+    themes.forEach(function (th, ti) { COLLECTIONS[name].forEach(function (m) { out.push(modeNameFor(name, ti, m)); }); });
+    return out;
+  }
 
   async function collectionFor(name) {
     if (byCollection[name]) return byCollection[name];
-    var modes = COLLECTIONS[name];
+    if (blocked[name]) return null;
+    var modes = requiredModes(name);
     var c = collections.find(function (x) { return x.name === name; });
     if (!c) {
       c = figma.variables.createVariableCollection(name);
       c.renameMode(c.modes[0].modeId, modes[0]);
     }
-    modes.forEach(function (m) {
-      if (!c.modes.find(function (x) { return x.name === m; })) c.addMode(m);
-    });
+    try {
+      modes.forEach(function (m) {
+        if (!c.modes.find(function (x) { return x.name === m; })) c.addMode(m);
+      });
+    } catch (e) {
+      // Figma limits the modes per collection by plan: leave this collection out and import the rest.
+      blocked[name] = true;
+      limited.push(name + ' needs ' + modes.length + ' modes' + (e && e.message ? ' (' + e.message + ')' : ''));
+      return null;
+    }
     byCollection[name] = c;
     return c;
   }
@@ -209,55 +281,58 @@ async function importTokens(doc, groups) {
     throw new Error('Semantic tokens need the Primitives variables. Import the Primitives group too.');
   }
 
-  for (var g = 0; g < wanted.length; g++) {
-    var group = wanted[g];
-    var items = [];
-    walk(doc[group], [group], items);
-    for (var i = 0; i < items.length; i++) {
-      var it = items[i];
-      var type = it.leaf.$type;
-      if (type === 'shadow') continue;
-      var where = placement(group, it.path, it.leaf);
-      var c = await collectionFor(where.collection);
-      var modes = modesOf(it.leaf);
-      var isTracking = group === 'Type' && it.path[it.path.length - 1] === 'letter-spacing';
-      var isResponsive = where.collection === 'Responsive';
+  for (var ei = 0; ei < entries.length; ei++) {
+    var e = entries[ei];
+    var group = e.group;
+    var type = e.leaf.$type;
+    if (type === 'shadow') continue;
+    var where = placement(group, e.path, e.leaf);
+    var c = await collectionFor(where.collection);
+    if (!c) continue;
+    var isTracking = group === 'Type' && e.path[e.path.length - 1] === 'letter-spacing';
+    var themed = differs[where.collection] && themes.length > 1;
+    var targets = themed ? themes.map(function (th, ti) { return ti; }) : [0];
 
-      // The value for each mode of the collection.
-      var perMode = {};
-      var bad = null;
-      var modeNames = isResponsive ? BREAKPOINT_MODES : modes ? Object.keys(modes) : [COLLECTIONS[where.collection][0]];
+    // The value for each mode of the collection, per theme when the themes differ.
+    var writes = [];
+    var bad = null;
+    for (var ti = 0; ti < targets.length && bad === null; ti++) {
+      var theme = targets[ti];
+      var leaf = e.leaves[theme] || e.leaf;
+      doc = themes[theme].doc;
+      var modeNames = baseModesFor(where, leaf);
       for (var mi = 0; mi < modeNames.length; mi++) {
         var mode = modeNames[mi];
-        var raw = modes && modes[mode] !== undefined ? modes[mode] : it.leaf.$value;
+        var raw = rawFor(leaf, mode);
         var value;
         if (type !== 'color' && type !== 'fontFamily' && !(typeof raw === 'string' && raw[0] === '{')) {
           value = resolve(type, raw);
-          if (isTracking && isNumber(value)) value = trackingPx(it.path[1], value, mode);
+          if (isTracking && isNumber(value)) value = trackingPx(e.path[1], value, mode);
           if (!isNumber(value)) { bad = raw; break; }
         } else {
           value = resolve(type, raw);
         }
-        perMode[mode] = value;
+        writes.push({ mode: modeNameFor(where.collection, theme, mode), value: value });
       }
-      // A number that cannot be read is reported by name and skipped, instead of stopping the whole import.
-      if (bad !== null) { skipped.push(where.collection + '/' + where.name + ' (' + JSON.stringify(bad) + ')'); continue; }
-
-      var v = upsert(c, where.name, type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
-      placed[it.path.join('.')] = v;
-      if (it.leaf.$description) v.description = it.leaf.$description === 'em' ? 'px = em x font size' : it.leaf.$description;
-      try { v.scopes = scopesFor(group, it.path); } catch (e) {}
-      var css = cssName(group, it.path);
-      if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (e) {} }
-      Object.keys(perMode).forEach(function (m) {
-        try {
-          v.setValueForMode(modeId(c, m), perMode[m]);
-        } catch (e) {
-          throw new Error(where.collection + '/' + where.name + ': ' + (e && e.message ? e.message : e));
-        }
-      });
     }
+    // A number that cannot be read is reported by name and skipped, instead of stopping the whole import.
+    if (bad !== null) { skipped.push(where.collection + '/' + where.name + ' (' + JSON.stringify(bad) + ')'); continue; }
+
+    var v = upsert(c, where.name, type === 'color' ? 'COLOR' : type === 'fontFamily' ? 'STRING' : 'FLOAT');
+    placed[e.path.join('.')] = v;
+    if (e.leaf.$description) v.description = e.leaf.$description === 'em' ? 'px = em x font size' : e.leaf.$description;
+    try { v.scopes = scopesFor(group, e.path); } catch (err) {}
+    var css = cssName(group, e.path);
+    if (css) { try { v.setVariableCodeSyntax('WEB', 'var(' + css + ')'); } catch (err) {} }
+    writes.forEach(function (w) {
+      try {
+        v.setValueForMode(modeId(c, w.mode), w.value);
+      } catch (err) {
+        throw new Error(where.collection + '/' + where.name + ': ' + (err && err.message ? err.message : err));
+      }
+    });
   }
+  doc = themes[0].doc;
 
   // Text styles: one per type step (and weight variant), using the font, bound to the variables above.
   var textStyles = 0, missingFonts = [];
@@ -290,10 +365,16 @@ async function importTokens(doc, groups) {
 
   if (wantsElevation) {
     var existing = await figma.getLocalEffectStylesAsync();
+    // Effect styles cannot hold variables, so themes whose shadows differ get a folder each.
+    var perTheme = themes.map(function (th) { var list = []; walk(th.doc.Elevation, ['Elevation'], list); return list; });
+    var sameShadows = themes.length < 2 || perTheme.every(function (l) { return JSON.stringify(l) === JSON.stringify(perTheme[0]); });
     var shadows = [];
-    walk(doc.Elevation, ['Elevation'], shadows);
+    perTheme.forEach(function (list, ti) {
+      if (sameShadows && ti > 0) return;
+      list.forEach(function (x) { shadows.push({ path: x.path, leaf: x.leaf, theme: sameShadows ? null : themes[ti].name }); });
+    });
     shadows.forEach(function (s) {
-      var name = 'elevation/' + s.path.slice(1).join('/');
+      var name = 'elevation/' + (s.theme ? s.theme + '/' : '') + s.path.slice(1).join('/');
       var style = existing.find(function (x) { return x.name === name; });
       if (!style) { style = figma.createEffectStyle(); style.name = name; }
       styles++;
@@ -306,7 +387,7 @@ async function importTokens(doc, groups) {
     });
   }
 
-  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped, replaced: replaced };
+  return { created: created, updated: updated, styles: styles, textStyles: textStyles, missingFonts: missingFonts, skipped: skipped, replaced: replaced, limited: limited, themes: themes.length > 1 ? themes.map(function (t) { return t.name; }) : [] };
 }
 
 figma.ui.onmessage = async function (msg) {
@@ -315,7 +396,7 @@ figma.ui.onmessage = async function (msg) {
   try {
     var result = await importTokens(msg.doc, msg.groups);
     figma.ui.postMessage({ type: 'done', result: result });
-    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : '') + (result.replaced && result.replaced.length ? '. Replaced ' + result.replaced.length + ' variables that had the wrong type' : '') + (result.skipped && result.skipped.length ? '. Skipped ' + result.skipped.length + ' values that were not numbers' : ''));
+    figma.notify('Baseline: ' + result.created + ' variables created, ' + result.updated + ' updated' + (result.styles ? ', ' + result.styles + ' shadow styles' : '') + (result.textStyles ? ', ' + result.textStyles + ' text styles' : '') + (result.missingFonts && result.missingFonts.length ? '. Fonts not available in Figma: ' + result.missingFonts.join(', ') : '') + (result.replaced && result.replaced.length ? '. Replaced ' + result.replaced.length + ' variables that had the wrong type' : '') + (result.limited && result.limited.length ? '. Not imported, too many modes for your Figma plan: ' + result.limited.join('; ') : '') + (result.skipped && result.skipped.length ? '. Skipped ' + result.skipped.length + ' values that were not numbers' : ''));
   } catch (e) {
     figma.ui.postMessage({ type: 'error', message: e && e.message ? e.message : String(e) });
   }

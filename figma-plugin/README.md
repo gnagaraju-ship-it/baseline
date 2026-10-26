@@ -30,3 +30,9 @@ Colours switch by setting a frame's **Semantic** mode to Light or Dark. Sizes sw
 The frame widths are the variables `grid/width` (1400, 768, 390 by default).
 
 Variables get Figma scopes and their CSS name (for example `var(--primary-10)`, `var(--type-heading-xl-size)`).
+
+## Themes
+
+A file exported with several themes has a mode per theme in each collection where the themes differ: **Primitives**, **Type** and **Spacing** use the theme name as the mode ("Ocean"); **Semantic** and **Responsive** use "Ocean / Light" or "Ocean / XXL". Collections where every theme holds the same values keep the normal modes (Semantic stays Light and Dark when only the ramps differ, because its values point at Primitives). Set a frame's Primitives, Semantic and Responsive modes to switch it to a theme. Elevation styles are not variable-bound, so themes with different shadows get `elevation/<Theme>/<name>`.
+
+Figma limits the number of modes per collection by plan. A collection that needs more is reported ("Responsive needs 6 modes") and skipped; everything else is imported.

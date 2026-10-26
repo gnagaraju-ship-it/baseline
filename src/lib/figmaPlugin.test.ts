@@ -3,6 +3,7 @@ import { defaultSettings } from './colour'
 import { defaultElevationSettings } from './elevation'
 import type { ExportInput } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
+import { cloneData, defaultThemeData, type ThemeData } from './themes'
 import { PLUGIN_FILES, PLUGIN_FOLDER, pluginZip } from './figmaPlugin'
 import { defaultGridSettings } from './grid'
 import { defaultSpacingSettings } from './spacing'
@@ -127,7 +128,7 @@ describe('plugin import', () => {
     expect(count('Responsive')).toBe(11 * 3 + 6 + 12)
     expect(count('Spacing')).toBe(17)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 24 + 51 + 17, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [] })
+    expect(done.result).toEqual({ created: 144 + 58 + 24 + 51 + 17, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [], limited: [], themes: [] })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -403,5 +404,93 @@ describe('plugin import', () => {
     expect(p.posted).toHaveLength(0)
     await p.send({ type: 'cancel' })
     expect(closed).toBe(true)
+  })
+})
+
+describe('plugin import: themes', () => {
+  const GROUPS = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation']
+  const themed = (change: (d: ThemeData) => void) => {
+    const base = defaultThemeData()
+    const other = cloneData(base)
+    change(other)
+    return JSON.parse(buildExport([{ name: 'Default', data: base }, { name: 'Ocean', data: other }], 'json', ALL_MODULES).text)
+  }
+  const run = async (doc: any, tweak?: (p: ReturnType<typeof loadPlugin>) => void) => {
+    const p = loadPlugin()
+    tweak?.(p)
+    await p.send({ type: 'import', doc, groups: GROUPS })
+    const modes = (name: string) => p.collections.find((c) => c.name === name)?.modes.map((m: any) => m.name)
+    const done = p.posted.find((m) => m.type === 'done')
+    return { p, modes, done, error: p.posted.find((m) => m.type === 'error') }
+  }
+  const valueIn = (p: ReturnType<typeof loadPlugin>, collection: string, variable: string, mode: string) => {
+    const c = p.collections.find((x) => x.name === collection)
+    const v = p.variables.find((x) => x.variableCollectionId === c.id && x.name === variable)
+    return v.valuesByMode[c.modes.find((m: any) => m.name === mode).modeId]
+  }
+
+  it('gives a mode per theme only where the themes differ', async () => {
+    const { modes, done, error, p } = await run(themed((d) => { d.settings.text.primary = '#0EA5E9'; d.grid.columns.xxl = 8 }))
+    expect(error).toBeUndefined()
+    expect(modes('Primitives')).toEqual(['Default', 'Ocean'])
+    expect(modes('Semantic')).toEqual(['Light', 'Dark']) // same remaps: aliases switch through Primitives
+    expect(modes('Type')).toEqual(['Value'])
+    expect(modes('Spacing')).toEqual(['Value'])
+    expect(modes('Responsive')).toEqual(['Default / XXL', 'Default / MD', 'Default / XS', 'Ocean / XXL', 'Ocean / MD', 'Ocean / XS'])
+    expect(done.result.themes).toEqual(['Default', 'Ocean'])
+    // the primary ramp holds each theme's own colours
+    const a = valueIn(p, 'Primitives', 'colour/primary/10', 'Default')
+    const b = valueIn(p, 'Primitives', 'colour/primary/10', 'Ocean')
+    expect(a).not.toEqual(b)
+    // grid columns differ by theme in the Responsive collection
+    expect(valueIn(p, 'Responsive', 'grid/columns', 'Default / XXL')).not.toEqual(valueIn(p, 'Responsive', 'grid/columns', 'Ocean / XXL'))
+  })
+
+  it('splits Semantic into Theme / Light and Theme / Dark when the themes map tokens differently', async () => {
+    const { modes, p } = await run(themed((d) => { d.tokenOverrides['bg|light'] = 'info-10' }))
+    expect(modes('Semantic')).toEqual(['Default / Light', 'Default / Dark', 'Ocean / Light', 'Ocean / Dark'])
+    expect(modes('Primitives')).toEqual(['Value'])
+    const light = (m: string) => valueIn(p, 'Semantic', 'colour/bg', m)
+    expect(light('Default / Light')).not.toEqual(light('Ocean / Light'))
+    expect(light('Default / Dark')).toEqual(light('Ocean / Dark'))
+  })
+
+  it('keeps the normal modes and the same variables when the themes are identical', async () => {
+    const same = await run(themed(() => {}))
+    const one = await run(loadPlugin().doc)
+    for (const c of ['Primitives', 'Semantic', 'Type', 'Responsive', 'Spacing']) expect(same.modes(c)).toEqual(one.modes(c))
+    expect(same.done.result).toMatchObject({ created: one.done.result.created, styles: 5 })
+    expect(same.p.styles.map((x) => x.name)).toEqual(one.p.styles.map((x) => x.name))
+  })
+
+  it('names type and spacing modes after the themes when fonts or spacing differ', async () => {
+    const { modes } = await run(themed((d) => { d.type.headingFont = 'Nunito'; d.spacing.base = 'b8'; d.spacing.on = { ...d.spacing.on, 12: false } }))
+    expect(modes('Type')).toEqual(['Default', 'Ocean'])
+    expect(modes('Spacing')).toEqual(['Default', 'Ocean'])
+  })
+
+  it('makes elevation styles per theme only when the shadows differ', async () => {
+    const { p } = await run(themed((d) => { d.elevation.tokens[0].layers[0].blur = 40 }))
+    expect(p.styles.map((x) => x.name)).toEqual(
+      ['xs', 'sm', 'md', 'lg', 'xl'].map((n) => `elevation/Default/${n}`).concat(['xs', 'sm', 'md', 'lg', 'xl'].map((n) => `elevation/Ocean/${n}`))
+    )
+  })
+
+  it('reports a collection that needs more modes than the plan allows, and still imports the rest', async () => {
+    const limit = (pl: ReturnType<typeof loadPlugin>) => {
+      const make = pl.figma.variables.createVariableCollection
+      pl.figma.variables.createVariableCollection = (name: string) => {
+        const c = make(name)
+        const add = c.addMode.bind(c)
+        c.addMode = (n: string) => { if (c.modes.length >= 2) throw new Error('Limited to 2 modes on this plan'); add(n) }
+        return c
+      }
+    }
+    const tight = await run(themed((d) => { d.tokenOverrides['bg|light'] = 'info-10'; d.grid.columns.xxl = 8 }), limit)
+    expect(tight.error).toBeUndefined()
+    expect(tight.done.result.limited.map((x: string) => x.split(' needs')[0]).sort()).toEqual(['Responsive', 'Semantic'])
+    expect(tight.done.result.limited[0]).toMatch(/needs \d+ modes/)
+    expect(tight.p.collections.map((c: any) => c.name)).toEqual(expect.arrayContaining(['Primitives', 'Type', 'Spacing']))
+    expect(tight.p.variables.some((v: any) => v.name === 'colour/primary/10')).toBe(true)
   })
 })

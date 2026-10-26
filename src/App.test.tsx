@@ -57,6 +57,21 @@ describe('app shell', () => {
     expect(within(dialog).getByText(/206 tokens/)).toBeInTheDocument()
   })
 
+  it('export has a Theme row only with several themes, and all themes go into one file', async () => {
+    at('/')
+    useProject.getState().openExport()
+    expect(screen.queryByRole('radio', { name: /All themes/ })).not.toBeInTheDocument()
+    useProject.getState().closeExport()
+    useProject.getState().createTheme('Ocean')
+    useProject.getState().openExport()
+    const dialog = await screen.findByRole('dialog', { name: 'Export settings' })
+    expect(within(dialog).getByRole('radio', { name: /All themes, one file \(2\)/ })).toBeChecked()
+    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('/* Theme: Default */')
+    await userEvent.click(within(dialog).getByRole('radio', { name: /Active theme only/ }))
+    expect(within(dialog).getByLabelText('Export preview')).not.toHaveTextContent('/* Theme:')
+    expect(within(dialog).getByLabelText('Export preview')).not.toHaveTextContent('data-brand')
+  })
+
   it('the Export button on a screen opens the dialog with that screen\'s modules only', async () => {
     at('/grids')
     await userEvent.click(screen.getByRole('button', { name: /^Export/ }))
@@ -182,16 +197,16 @@ describe('app shell', () => {
     }
   })
 
-  it('resets the whole project after confirmation, and not when cancelled', async () => {
+  it('resets the active theme after confirmation, and not when cancelled', async () => {
     at('/')
     useProject.getState().setUnit('pt')
     useProject.getState().setText('primary', '#0EA5E9')
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    await userEvent.click(screen.getByRole('button', { name: 'Reset project' }))
-    expect(useProject.getState().unit).toBe('pt')
+    await userEvent.click(screen.getByRole('button', { name: 'Reset theme' }))
+    expect(useProject.getState().settings.text.primary).toBe('#0EA5E9')
     confirm.mockReturnValue(true)
-    await userEvent.click(screen.getByRole('button', { name: 'Reset project' }))
-    expect(useProject.getState().unit).toBe('rem')
+    await userEvent.click(screen.getByRole('button', { name: 'Reset theme' }))
+    expect(useProject.getState().unit).toBe('pt') // the unit is shared by every theme
     expect(useProject.getState().settings.text.primary).toBe('#9d00d6')
     confirm.mockRestore()
   })
@@ -247,10 +262,14 @@ describe('persistence', () => {
     useProject.getState().setText('primary', '#0EA5E9')
     useProject.getState().setGridColumns(10)
     const saved = JSON.parse(localStorage.getItem('baseline-project')!)
-    expect(saved.version).toBe(2)
-    expect(saved.state.settings.text.primary).toBe('#0EA5E9')
-    expect(saved.state.grid.columns.xxl).toBe(10)
-    expect(Object.keys(saved.state).sort()).toEqual(['appTheme', 'contrast', 'elevation', 'grid', 'previewMode', 'settings', 'spacing', 'tokenAlpha', 'tokenOverrides', 'type', 'unit'])
+    expect(saved.version).toBe(3)
+    expect(Object.keys(saved.state).sort()).toEqual(['activeThemeId', 'appTheme', 'contrast', 'previewMode', 'themes', 'unit'])
+    expect(saved.state.themes).toHaveLength(1)
+    expect(saved.state.themes[0].name).toBe('Default')
+    // the active theme is saved with its latest edits
+    expect(saved.state.themes[0].data.settings.text.primary).toBe('#0EA5E9')
+    expect(saved.state.themes[0].data.grid.columns.xxl).toBe(10)
+    expect(Object.keys(saved.state.themes[0].data).sort()).toEqual(['elevation', 'grid', 'settings', 'spacing', 'tokenAlpha', 'tokenOverrides', 'type'])
     expect(JSON.stringify(saved)).not.toContain('copied')
   })
 

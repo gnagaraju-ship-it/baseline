@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { copyText, downloadBytes, downloadText } from '../lib/browser'
 import { PLUGIN_ZIP, pluginZip } from '../lib/figmaPlugin'
-import { exportSections } from '../lib/exportAll'
+import { themedSections, type NamedTheme } from '../lib/exportAll'
 import { EXPORT_MODULES, FORMATS, buildExport, normaliseSelection, ALL_MODULES } from '../lib/exportBuilder'
-import { useProject } from '../store/project'
+import { currentThemes, useProject } from '../store/project'
 import { Icon } from './Icon'
 
 const PREVIEW_LINES = 48
@@ -17,12 +17,15 @@ export function ExportDialog() {
   /** True when the mouse went down on the backdrop itself, so a drag that ends there does not close the dialog. */
   const downOnBackdrop = useRef(false)
 
-  const input = {
-    settings: project.settings, tokenOverrides: project.tokenOverrides, tokenAlpha: project.tokenAlpha, type: project.type,
-    grid: project.grid, spacing: project.spacing, elevation: project.elevation
-  }
-  const sections = useMemo(() => (d.open ? exportSections(input) : []), [d.open, project.settings, project.tokenOverrides, project.tokenAlpha, project.type, project.grid, project.spacing, project.elevation]) // eslint-disable-line react-hooks/exhaustive-deps
-  const built = useMemo(() => (d.open ? buildExport(input, d.format, d.modules) : null), [d.open, d.format, d.modules, project.settings, project.tokenOverrides, project.tokenAlpha, project.type, project.grid, project.spacing, project.elevation]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [scope, setScope] = useState<'all' | 'active'>('all')
+  const several = project.themes.length > 1
+  const themes = useMemo<NamedTheme[]>(() => {
+    if (!d.open) return []
+    const list = currentThemes(project).map((t) => ({ id: t.id, name: t.name, data: t.data }))
+    return several && scope === 'all' ? list : list.filter((t) => t.id === project.activeThemeId)
+  }, [d.open, scope, several, project.themes, project.activeThemeId, project.settings, project.tokenOverrides, project.tokenAlpha, project.type, project.grid, project.spacing, project.elevation]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sections = useMemo(() => (d.open ? themedSections(themes) : []), [d.open, themes])
+  const built = useMemo(() => (d.open ? buildExport(themes, d.format, d.modules) : null), [d.open, d.format, d.modules, themes])
 
   useEffect(() => {
     if (!d.open) return
@@ -100,6 +103,18 @@ export function ExportDialog() {
                 </div>
               )}
             </fieldset>
+
+            {several && (
+              <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                <legend className="mb-2 p-0 text-xs font-semibold uppercase tracking-[.08em] text-muted">Theme</legend>
+                {([['all', `All themes, one file (${project.themes.length})`, 'Each theme is scoped by data-brand in CSS, and is a mode in Figma'], ['active', 'Active theme only', currentThemes(project).find((t) => t.id === project.activeThemeId)?.name ?? '']] as const).map(([id, label, note]) => (
+                  <label key={id} className={`flex cursor-pointer items-start gap-2.5 rounded-[10px] border p-3 ${scope === id ? 'border-accent-ring bg-accent-wash' : 'border-line'}`}>
+                    <input type="radio" name="export-theme" checked={scope === id} onChange={() => setScope(id)} className="mt-0.5 h-4 w-4 accent-accent" />
+                    <span className="flex flex-col"><span className="text-[13px] font-semibold">{label}</span><span className="text-xs text-muted">{note}</span></span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
 
             <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
               <legend className="mb-2 flex w-full items-center justify-between p-0 text-xs font-semibold uppercase tracking-[.08em] text-muted">

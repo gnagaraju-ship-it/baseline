@@ -9,6 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
+import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
   BREAKPOINTS, GRID_PRESETS, clampColumns, clampGutter, defaultGridSettings,
@@ -135,8 +136,34 @@ interface ProjectState {
   setPickerPalette: (palette: PaletteRef) => void
   setTokenOverride: (name: string, mode: Mode, ref: string) => void
   setTokenAlpha: (name: string, mode: Mode, percent: number) => void
+  /** Named themes. The top-level fields are the working copy of the active one. */
+  themes: Theme[]
+  activeThemeId: string
+  createTheme: (name?: string) => void
+  duplicateTheme: (id: string) => void
+  renameTheme: (id: string, name: string) => void
+  deleteTheme: (id: string) => void
+  switchTheme: (id: string) => void
+  /** Puts the active theme back to the Baseline defaults. */
+  resetTheme: () => void
+  /** Everything back to a single default theme. */
   reset: () => void
 }
+
+type Working = Pick<ProjectState, 'settings' | 'tokenOverrides' | 'tokenAlpha' | 'type' | 'grid' | 'spacing' | 'elevation'>
+
+/** The theme data currently being edited. */
+export const pickData = (s: Working): ThemeData => ({
+  settings: s.settings, tokenOverrides: s.tokenOverrides, tokenAlpha: s.tokenAlpha, type: s.type, grid: s.grid, spacing: s.spacing, elevation: s.elevation
+})
+
+/** Every theme with the active one brought up to date from the working copy. */
+export function currentThemes(s: Working & { themes: Theme[]; activeThemeId: string }): Theme[] {
+  return s.themes.map((t) => (t.id === s.activeThemeId ? { ...t, data: pickData(s) } : t))
+}
+
+/** What switching to a theme changes: its data, plus the view state that must not point at the old theme. */
+const loadTheme = (data: ThemeData) => ({ ...data, openToken: null, pickerPalette: null, selected: { key: 'primary' as PaletteKey, index: 9 } })
 
 export type AppTheme = 'light' | 'dark'
 
@@ -319,8 +346,54 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       else next[overrideKey(name, mode)] = clampAlpha(percent)
       return { tokenAlpha: next }
     }),
+  themes: [{ id: 'theme-1', name: 'Default', data: defaultThemeData() }],
+  activeThemeId: 'theme-1',
+  createTheme: (name) =>
+    set((s) => {
+      if (s.themes.length >= MAX_THEMES) return {}
+      const saved = currentThemes(s)
+      const id = nextThemeId(saved)
+      const theme: Theme = { id, name: uniqueName(name?.trim() || `Theme ${saved.length + 1}`, saved.map((t) => t.name)), data: defaultThemeData() }
+      return { themes: [...saved, theme], activeThemeId: id, ...loadTheme(theme.data) }
+    }),
+  duplicateTheme: (id) =>
+    set((s) => {
+      if (s.themes.length >= MAX_THEMES) return {}
+      const saved = currentThemes(s)
+      const from = saved.find((t) => t.id === id)
+      if (!from) return {}
+      const copy: Theme = { id: nextThemeId(saved), name: uniqueName(`${from.name} copy`, saved.map((t) => t.name)), data: cloneData(from.data) }
+      return { themes: [...saved, copy], activeThemeId: copy.id, ...loadTheme(copy.data) }
+    }),
+  renameTheme: (id, name) =>
+    set((s) => {
+      const saved = currentThemes(s)
+      const wanted = name.trim()
+      if (!wanted) return {}
+      const others = saved.filter((t) => t.id !== id).map((t) => t.name)
+      return { themes: saved.map((t) => (t.id === id ? { ...t, name: uniqueName(wanted, others) } : t)) }
+    }),
+  deleteTheme: (id) =>
+    set((s) => {
+      if (s.themes.length <= 1) return {}
+      const saved = currentThemes(s)
+      const left = saved.filter((t) => t.id !== id)
+      if (id !== s.activeThemeId) return { themes: left }
+      return { themes: left, activeThemeId: left[0].id, ...loadTheme(left[0].data) }
+    }),
+  switchTheme: (id) =>
+    set((s) => {
+      if (id === s.activeThemeId) return {}
+      const saved = currentThemes(s)
+      const target = saved.find((t) => t.id === id)
+      if (!target) return {}
+      return { themes: saved, activeThemeId: id, ...loadTheme(target.data) }
+    }),
+  resetTheme: () => set({ ...loadTheme(defaultThemeData()) }),
   reset: () =>
     set({
+      themes: [{ id: 'theme-1', name: 'Default', data: defaultThemeData() }],
+      activeThemeId: 'theme-1',
       settings: defaultSettings(),
       side: 'brand',
       selected: { key: 'primary', index: 9 },
@@ -341,25 +414,35 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 2,
-  // Version 2 added tertiary and utility colours: older saves get their defaults.
-  migrate: (persisted) => {
-    const p = persisted as { settings?: Record<string, unknown> }
-    return { ...p, settings: { ...defaultSettings(), ...(p.settings ?? {}) } } as never
+  version: 3,
+  // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
+  // project saved before themes becomes one theme named "Default".
+  migrate: (persisted, version) => {
+    const p = (persisted ?? {}) as Record<string, any>
+    if (version >= 3 && Array.isArray(p.themes)) return p as never
+    const data = completeData({
+      settings: p.settings, tokenOverrides: p.tokenOverrides, tokenAlpha: p.tokenAlpha, type: p.type, grid: p.grid, spacing: p.spacing, elevation: p.elevation
+    })
+    return { contrast: p.contrast, previewMode: p.previewMode, appTheme: p.appTheme, unit: p.unit, themes: [{ id: 'theme-1', name: 'Default', data }], activeThemeId: 'theme-1' } as never
   },
-  // Only the project data is saved, never the actions or transient UI such as the copied flash and open pickers.
+  // The saved state keeps the active theme's data inside `themes`; the working copy is rebuilt from it on load.
+  merge: (persisted, current) => {
+    const p = (persisted ?? {}) as Record<string, any>
+    const themes: Theme[] = Array.isArray(p.themes) && p.themes.length
+      ? p.themes.map((t: Theme) => ({ id: t.id, name: t.name, data: completeData(t.data) }))
+      : current.themes
+    const activeThemeId = themes.some((t) => t.id === p.activeThemeId) ? p.activeThemeId : themes[0].id
+    const active = themes.find((t) => t.id === activeThemeId)!
+    return { ...current, contrast: p.contrast ?? current.contrast, previewMode: p.previewMode ?? current.previewMode, appTheme: p.appTheme ?? current.appTheme, unit: p.unit ?? current.unit, themes, activeThemeId, ...active.data }
+  },
+  // Only project data is saved, never the actions or transient UI such as the copied flash and open pickers.
   partialize: (s) => ({
-    settings: s.settings,
-    tokenOverrides: s.tokenOverrides,
-    tokenAlpha: s.tokenAlpha,
+    themes: currentThemes(s),
+    activeThemeId: s.activeThemeId,
     contrast: s.contrast,
     previewMode: s.previewMode,
     appTheme: s.appTheme,
-    unit: s.unit,
-    type: s.type,
-    grid: s.grid,
-    spacing: s.spacing,
-    elevation: s.elevation
+    unit: s.unit
   })
 }))
 

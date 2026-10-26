@@ -1,5 +1,6 @@
 import { NumberField } from '../../components/NumberField'
 import { Logo } from '../../components/Logo'
+import { ThemeMenu } from '../../components/ThemeMenu'
 import { BREAKPOINTS, GRID_PRESETS, breakpoint, type GridPresetKey } from '../../lib/grid'
 import { useProject } from '../../store/project'
 
@@ -26,7 +27,8 @@ export function GridsSettings() {
     <>
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
         <Logo size={32} />
-        <div className="text-base font-semibold">Grids</div>
+        <div className="flex-1 text-base font-semibold">Grids</div>
+        <ThemeMenu variant="chip" />
       </div>
 
       <div className="flex flex-col gap-[22px] p-5">

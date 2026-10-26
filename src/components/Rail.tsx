@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useProject } from '../store/project'
 import { Icon, type IconName } from './Icon'
 import { Logo } from './Logo'
+import { ThemeMenu } from './ThemeMenu'
 
 const COLOUR_ROUTES = ['/', '/tokens', '/contrast']
 
@@ -38,14 +39,16 @@ export function Rail() {
   const { pathname } = useLocation()
   const project = useProject()
 
-  function resetProject() {
-    if (window.confirm('Reset the whole project to its defaults? Your colours, type, grid, spacing and elevation settings will be lost.')) project.reset()
+  function resetTheme() {
+    if (window.confirm('Reset this theme to its defaults? Its colours, type, grid, spacing and elevation settings will be lost.')) project.resetTheme()
   }
 
   return (
     <nav aria-label="Workspace" className="flex w-16 flex-none flex-col items-center gap-1.5 border-r border-line-soft py-3.5">
       <Logo size={40} className="mb-3.5" />
       <RailStub label="Projects" icon="folder" />
+      <Sep />
+      <ThemeMenu variant="rail" />
       <Sep />
       <RailLink to="/" label="Color" icon="color" active={COLOUR_ROUTES.includes(pathname)} />
       <RailLink to="/type" label="Typography" icon="type" active={pathname === '/type'} />
@@ -57,7 +60,7 @@ export function Rail() {
       <RailStub label="Documentation" icon="docs" />
       <div className="flex-1" />
       <RailButton label="All modules export settings" icon="download" title="Export settings — choose format and modules" onClick={() => project.openExport()} />
-      <RailButton label="Reset project" icon="reset" onClick={resetProject} />
+      <RailButton label="Reset theme" icon="reset" onClick={resetTheme} />
       <button
         type="button"
         aria-label="Toggle dark mode"

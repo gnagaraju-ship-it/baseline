@@ -1,7 +1,7 @@
 /**
  * What the Export dialog produces: the chosen modules, in the chosen format.
  */
-import { exportSections, type ExportInput, type ExportModule } from './exportAll'
+import { themedSections, type ExportInput, type ExportModule, type NamedTheme } from './exportAll'
 import { buildFigmaTokens } from './figmaExport'
 
 export type ExportFormat = 'css' | 'json'
@@ -42,19 +42,27 @@ export interface BuiltExport {
   lines: number
 }
 
-export function buildExport(input: ExportInput, format: ExportFormat, selection: ExportModule[]): BuiltExport {
+/** `input` is one theme's data, or a list of named themes (several themes go into one file). */
+export function buildExport(input: ExportInput | NamedTheme[], format: ExportFormat, selection: ExportModule[]): BuiltExport {
+  const themes: NamedTheme[] = Array.isArray(input) ? input : [{ name: 'Default', data: input }]
   const chosen = normaliseSelection(selection)
-  const sections = exportSections(input).filter((s) => chosen.includes(s.id))
+  const sections = themedSections(themes).filter((s) => chosen.includes(s.id))
   const count = sections.reduce((n, s) => n + s.count, 0)
   const file = FORMATS.find((f) => f.id === format)!.file
   let text: string
   if (format === 'css') {
     text = sections.length ? sections.map((s) => `/* ${s.title} */\n${s.css}`).join('\n\n') + '\n' : ''
   } else {
-    const doc = buildFigmaTokens(input) as Record<string, unknown>
     const keep = new Set(chosen.map((m) => GROUP[m]))
-    const out: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(doc)) if (k.startsWith('$') || keep.has(k)) out[k] = v
+    const pick = (data: ExportInput) => {
+      const doc = buildFigmaTokens(data) as Record<string, unknown>
+      const out: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(doc)) if (k.startsWith('$') || keep.has(k)) out[k] = v
+      return out
+    }
+    const out = themes.length === 1
+      ? pick(themes[0].data)
+      : { $extensions: { 'com.baseline': { themes: themes.map((t) => t.name) } }, Themes: Object.fromEntries(themes.map((t) => [t.name, pick(t.data)])) }
     text = chosen.length ? JSON.stringify(out, null, 2) + '\n' : ''
   }
   return { text, filename: file, mime: format === 'css' ? 'text/css' : 'application/json', count, lines: text ? text.split('\n').length - 1 : 0 }
