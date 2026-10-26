@@ -89,6 +89,58 @@ describe('v2 screens', () => {
     expect(screen.queryByRole('dialog', { name: /Export Default/ })).not.toBeInTheDocument()
   })
 
+  it('type: Default\'s scale in three groups, driven by base size and ratio', async () => {
+    at('/v2/type')
+    for (const g of ['HEADING', 'BODY', 'LABEL']) expect(screen.getByRole('region', { name: g })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'body-md, 14px, line 24px' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Base size'), { target: { value: '16' } })
+    expect(screen.getByRole('button', { name: 'body-md, 16px, line 24px' })).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByLabelText('Scale ratio'), '1.25')
+    expect(useV2.getState().themes.default[0].type).toMatchObject({ base: 16, ratio: 1.25 })
+    const heading = screen.getByLabelText('Heading font')
+    await userEvent.clear(heading)
+    await userEvent.type(heading, 'Inter')
+    expect(useV2.getState().themes.default[0].type?.headingFont).toBe('Inter')
+  })
+
+  it('type: a single step can be set by hand and put back', async () => {
+    at('/v2/type')
+    await userEvent.click(screen.getByRole('button', { name: /^body-md, 14px/ }))
+    const size = screen.getByLabelText('SIZE (PX)')
+    await userEvent.clear(size)
+    await userEvent.type(size, '20')
+    expect(screen.getByRole('button', { name: /^body-md, 20px/ })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Reset this step' }))
+    expect(screen.getByRole('button', { name: /^body-md, 14px/ })).toBeInTheDocument()
+  })
+
+  it('type: Untitled\'s named steps with their exact sizes, and no scale controls', async () => {
+    at('/v2/type')
+    await userEvent.click(screen.getByRole('button', { name: 'Untitled' }))
+    expect(screen.getByRole('region', { name: 'TEXT' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'DISPLAY' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'text-md, 16px, line 24px' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'display-2xl, 72px, line 90px' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Scale ratio')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('LETTER SPACING (EM)')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /^text-md, 16px/ }))
+    expect(screen.queryByLabelText('LETTER SPACING (EM)')).not.toBeInTheDocument()
+    const size = screen.getByLabelText('SIZE (PX)')
+    await userEvent.clear(size)
+    await userEvent.type(size, '18')
+    expect(screen.getByRole('button', { name: 'text-md, 18px, line 27px' })).toBeInTheDocument()
+  })
+
+  it('export includes the type collection', async () => {
+    at('/v2')
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }))
+    const dialog = screen.getByRole('dialog', { name: /Export Default/ })
+    expect(within(dialog).getByRole('checkbox', { name: /Type/ })).toBeChecked()
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Primitives/ }))
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /Semantic/ }))
+    expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--type-heading-xl-size:')
+  })
+
   it('v2 never writes what v1 saves', async () => {
     localStorage.setItem('baseline-project', 'v1 data')
     at('/v2')

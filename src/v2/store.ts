@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { clampAlpha, norm } from '../lib/colour'
-import { emptyTheme, overrideKey, type Cell, type System, type Theme } from './model'
+import { emptyTheme, overrideKey, type Cell, type System, type Theme, type ThemeType } from './model'
 import { resolveSystem, type ResolvedSystem } from './resolve'
 import { builtInSystems } from './systems'
 
@@ -25,6 +25,10 @@ export interface V2State {
   setCell: (collection: string, path: string, modeId: string, cell: Cell | null) => void
   /** An opacity for a colour cell, in percent. */
   setOpacity: (collection: string, path: string, modeId: string, percent: number, resolvedHex: string) => void
+  /** Base size, ratio, grid or fonts of the type; undefined puts one back to the system's own. */
+  setType: (patch: Partial<Omit<ThemeType, 'steps'>>) => void
+  /** A size, line height or tracking for one type step; undefined puts it back. */
+  setStep: (step: string, patch: { size?: number; lh?: number; tr?: number }) => void
   resetTheme: () => void
 }
 
@@ -114,7 +118,22 @@ export const useV2 = create<V2State>()(
           const a = Math.round((p / 100) * 255).toString(16).padStart(2, '0').toUpperCase()
           get().setCell(collection, path, modeId, p >= 100 ? null : { value: `#${hex}${a}` })
         },
-        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {} }))
+        setType: (patch) =>
+          edit((t) => {
+            const type = { ...t.type, ...patch }
+            for (const k of Object.keys(type) as Array<keyof typeof type>) if (type[k] === undefined) delete type[k]
+            return { ...t, type }
+          }),
+        setStep: (step, patch) =>
+          edit((t) => {
+            const steps = { ...(t.type?.steps ?? {}) }
+            const merged = { ...steps[step], ...patch }
+            for (const k of Object.keys(merged) as Array<keyof typeof merged>) if (merged[k] === undefined) delete merged[k]
+            if (Object.keys(merged).length) steps[step] = merged
+            else delete steps[step]
+            return { ...t, type: { ...t.type, steps } }
+          }),
+        resetTheme: () => edit((t) => ({ ...t, ramps: {}, overrides: {}, type: {} }))
       }
     },
     {

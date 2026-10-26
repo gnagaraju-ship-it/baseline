@@ -62,6 +62,32 @@ describe('v2 store', () => {
     expect(resolved().find(refOf('Semantic', 'bg-fill'))!.cells.light.overridden).toBe(false)
   })
 
+  it('changes the type of a theme: scale, fonts and single steps, and puts them back', () => {
+    const size = () => resolved().find(refOf('Type', 'type/body-md/size'))!.cells.value.value
+    expect(size()).toBe(14)
+    s().setType({ base: 16, ratio: 1.2, bodyFont: 'Inter' })
+    expect(size()).toBe(16)
+    expect(resolved().find(refOf('Type', 'type/font/body'))!.cells.value.value).toBe('Inter')
+    s().setStep('body-md', { size: 19 })
+    expect(size()).toBe(19)
+    s().setStep('body-md', { size: undefined })
+    expect(size()).toBe(16)
+    expect(resolved().theme.type?.steps).toEqual({})
+    s().setType({ base: undefined, ratio: undefined, bodyFont: undefined })
+    expect(size()).toBe(14)
+    s().setStep('body-md', { lh: 40 })
+    s().resetTheme()
+    expect(resolved().find(refOf('Type', 'type/body-md/line'))!.cells.value.value).toBe(24)
+  })
+
+  it('a fixed system keeps its own sizes whatever the scale controls say', () => {
+    s().setSystem('untitled')
+    s().setType({ base: 20, ratio: 1.5 })
+    expect(resolved().find(refOf('6. Typography', 'Font size/text-md'))!.cells.value.value).toBe(16)
+    s().setStep('text-md', { size: 17 })
+    expect(resolved().find(refOf('6. Typography', 'Font size/text-md'))!.cells.value.value).toBe(17)
+  })
+
   it('saves only themes and the choices, and restores them on reload', async () => {
     s().setRamp('primary', '#0EA5E9')
     s().addTheme('Ocean')
@@ -93,8 +119,22 @@ describe('v2 exports', () => {
     expect(css).toContain('--bg-fill: var(--primary-10);')
     expect(css).toContain('[data-theme="dark"] {')
     expect(css).toContain('--bg-fill: var(--primary-9);')
-    expect(count).toBe(7 * 16 + 32 + 58)
+    expect(count).toBe(7 * 16 + 32 + 58 + 46)
     expect(systemCss(resolved(), ['Semantic']).css).not.toContain('--primary-10: #')
+  })
+
+  it('CSS: type with units, names from the policy', () => {
+    const css = systemCss(resolved(), ['Type']).css
+    expect(css).toContain('--type-body-md-size: 14px;')
+    expect(css).toContain('--type-body-md-track: 0em;')
+    expect(css).toContain('--type-body-md-weight: 400;')
+    expect(css).toContain('--type-font-heading: "Raleway";')
+    s().setSystem('untitled')
+    const u = systemCss(resolved(), ['6. Typography']).css
+    expect(u).toContain('--font-size-text-md: 16px;')
+    expect(u).toContain('--line-height-display-2xl: 90px;')
+    expect(u).toContain('--font-family-font-family-body: "Inter";')
+    expect(u).not.toContain('-track')
   })
 
   it('CSS: Untitled uses the names of its files', () => {
@@ -102,7 +142,7 @@ describe('v2 exports', () => {
     const { css, count } = systemCss(resolved())
     expect(css).toContain('--colors-brand-600: #7F56D9;')
     expect(css).toContain('--colors-text-text-primary-900: var(--colors-neutral-900);')
-    expect(count).toBe(27 * 11 + 2 + 273)
+    expect(count).toBe(27 * 11 + 2 + 273 + 32)
   })
 
   it('CSS follows the theme: a new brand colour reaches the ramp and nothing else changes', () => {
@@ -116,7 +156,7 @@ describe('v2 exports', () => {
   it('JSON: the collections the Figma plugin imports, with modes and links', () => {
     s().setSystem('untitled')
     const set = systemSet(resolved())
-    expect(set.collections.map((c) => [c.name, c.modes.length, c.variables.length])).toEqual([['_Primitives', 1, 27 * 11 + 2], ['1. Color modes', 2, 273]])
+    expect(set.collections.map((c) => [c.name, c.modes.length, c.variables.length])).toEqual([['_Primitives', 1, 27 * 11 + 2], ['1. Color modes', 2, 273], ['6. Typography', 1, 32]])
     const doc = JSON.parse(systemJson(resolved()))
     const token = doc.Imported['1. Color modes'].Colors.Text['text-primary (900)']
     expect(token.$extensions['com.baseline'].alias['Light mode']).toBe('_Primitives::Colors/Neutral/900')

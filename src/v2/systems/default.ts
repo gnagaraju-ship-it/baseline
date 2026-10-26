@@ -1,6 +1,8 @@
 import { buildPalettes, defaultSettings } from '../../lib/colour'
+import { computeGroups, defaultTypeSettings } from '../../lib/typeScale'
 import { ALPHA, DEFAULT_SCHEMA } from '../../lib/tokens'
-import { emptyTheme, refOf, type Cell, type Collection, type RampRecipe, type System, type Variable } from '../model'
+import { emptyTheme, refOf, type Cell, type Collection, type RampRecipe, type System, type TypeSetup, type Variable } from '../model'
+import { typeRows, typeVariables } from '../typeScale'
 
 const PRIMITIVES = 'Primitives'
 const SEMANTIC = 'Semantic'
@@ -52,11 +54,26 @@ export function defaultSystem(): System {
     }))
   }
 
+  const v1 = defaultTypeSettings()
+  const type: TypeSetup = {
+    collection: 'Type',
+    kind: 'scale',
+    base: v1.base,
+    ratio: v1.ratio,
+    grid: v1.grid,
+    headingFont: v1.headingFont,
+    bodyFont: v1.bodyFont,
+    steps: computeGroups({ ...v1, tablet: { on: false, pct: 0 }, mobile: { on: false, pct: 0 } }).flatMap((g) => g.rows.map((r) => ({ name: r.name, group: g.title, font: r.font, weight: r.weight, tr: r.tr }))),
+    paths: { size: 'type/{step}/size', line: 'type/{step}/line', track: 'type/{step}/track', weight: 'type/{step}/weight', headingFont: 'type/font/heading', bodyFont: 'type/font/body' }
+  }
+  const typeCollection: Collection = { name: 'Type', kind: 'type', modes: [{ id: 'value', name: 'Value' }], variables: typeVariables(type, typeRows(type, undefined)) }
+
   return {
     id: 'default',
     name: 'Default',
-    collections: [primitives, semantic],
+    collections: [primitives, semantic, typeCollection],
     recipes,
+    type,
     naming: { prefix: '--', separator: '-' },
     themes: [emptyTheme('base', 'Base')]
   }

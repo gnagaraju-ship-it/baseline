@@ -1,5 +1,6 @@
 import { overrideKey, refOf, splitRef, type Cell, type Collection, type CollectionKind, type Mode, type System, type Theme, type VarType, type Variable } from './model'
 import { rampSteps } from './recipes'
+import { stepPath, typeRows } from './typeScale'
 
 export interface ResolvedCell {
   /** The value after following links. */
@@ -15,6 +16,7 @@ export interface ResolvedVariable {
   type: VarType
   group?: string
   kind?: Variable['kind']
+  unit?: Variable['unit']
   cells: Record<string, ResolvedCell>
 }
 
@@ -34,10 +36,24 @@ export function resolveSystem(system: System, themeId: string): ResolvedSystem {
   const theme = system.themes.find((t) => t.id === themeId) ?? system.themes[0]
 
   // 1. the ramps of the recipes
-  const rampValue = new Map<string, string>()
+  const rampValue = new Map<string, string | number>()
   for (const r of system.recipes) {
     const steps = rampSteps(r, theme.ramps[r.id])
     r.steps.forEach((label, i) => rampValue.set(refOf(r.collection, `${r.family}/${label}`), `#${steps[i]}`))
+  }
+
+  // 1b. the type of the system for the theme: sizes, line heights, tracking, weights and the two fonts
+  if (system.type) {
+    const t = system.type
+    const set = (path: string | undefined, value: string | number) => path && rampValue.set(refOf(t.collection, path), value as string)
+    set(t.paths.headingFont, theme.type?.headingFont ?? t.headingFont)
+    set(t.paths.bodyFont, theme.type?.bodyFont ?? t.bodyFont)
+    for (const r of typeRows(t, theme.type)) {
+      set(stepPath(t, 'size', r.name), r.size)
+      set(stepPath(t, 'line', r.name), r.lh)
+      set(stepPath(t, 'track', r.name), r.tr)
+      set(stepPath(t, 'weight', r.name), r.weight)
+    }
   }
 
   // 2. cells: the system's own, a ramp's generated colour, or the theme's override
@@ -72,6 +88,7 @@ export function resolveSystem(system: System, themeId: string): ResolvedSystem {
       type: v.type,
       group: v.group,
       kind: v.kind,
+      unit: v.unit,
       cells: Object.fromEntries(
         c.modes.map((m) => {
           const { cell, overridden } = cellOf(c, v, m)

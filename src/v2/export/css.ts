@@ -12,7 +12,7 @@ function selectorFor(collection: ResolvedCollection, modeName: string, index: nu
 function valueOf(r: ResolvedSystem, v: ResolvedVariable, cell: ResolvedCell): string {
   const policy = r.system.naming
   if (cell.alias !== undefined && r.find(cell.alias)) return `var(${cssName(policy, splitRef(cell.alias)[1])})`
-  if (typeof cell.value === 'number') return `${cell.value}px`
+  if (typeof cell.value === 'number') return `${cell.value}${v.unit ?? 'px'}`
   return v.type === 'string' && !/^#[0-9A-F]{6,8}$/i.test(cell.value) ? JSON.stringify(cell.value) : cell.value
 }
 

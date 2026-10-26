@@ -16,6 +16,8 @@ export interface Variable {
   type: VarType
   /** Value per mode id. A mode a variable has no cell for falls back to its first mode. */
   cells: Record<string, Cell>
+  /** Written after a number in CSS (px by default; em for tracking, empty for weights). */
+  unit?: 'px' | 'em' | ''
   /** A heading to group variables under on screens (Text, Border ...). */
   group?: string
   /** The token kind the colour contrast is judged for (surface, fill, text, border, alpha). */
@@ -48,6 +50,44 @@ export interface RampRecipe {
   group: 'brand' | 'neutral' | 'status' | 'other'
 }
 
+/** A named type step. In a fixed system its size and line height are its own; in a scale they come from the base and ratio. */
+export interface TypeStepDef {
+  name: string
+  group: string
+  font: 'heading' | 'body'
+  size?: number
+  lh?: number
+  /** Letter spacing in em. */
+  tr?: number
+  weight?: number
+}
+
+/** How a system's type is made: from a base size and ratio ("scale"), or from sizes written down ("fixed"). */
+export interface TypeSetup {
+  collection: string
+  kind: 'scale' | 'fixed'
+  base: number
+  ratio: number
+  /** Line heights snap to this grid (scale only). */
+  grid: number
+  headingFont: string
+  bodyFont: string
+  steps: TypeStepDef[]
+  /** Variable paths, with {step} for the step's name. A property without a path is not exported. */
+  paths: { size: string; line: string; track?: string; weight?: string; headingFont: string; bodyFont: string }
+}
+
+/** What a theme changes in the type. */
+export interface ThemeType {
+  base?: number
+  ratio?: number
+  grid?: number
+  headingFont?: string
+  bodyFont?: string
+  /** A size, line height or tracking of its own for one step. */
+  steps?: Record<string, { size?: number; lh?: number; tr?: number }>
+}
+
 export interface NamingPolicy {
   /** Put before every CSS custom property, for example "--". */
   prefix: string
@@ -61,6 +101,7 @@ export interface Theme {
   ramps: Record<string, string>
   /** A different cell for a variable in a mode, by `<collection>::<path>|<mode id>`. */
   overrides: Record<string, Cell>
+  type?: ThemeType
 }
 
 export interface System {
@@ -68,6 +109,7 @@ export interface System {
   name: string
   collections: Collection[]
   recipes: RampRecipe[]
+  type?: TypeSetup
   naming: NamingPolicy
   themes: Theme[]
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPalettes, defaultSettings } from '../lib/colour'
+import { computeGroups, defaultTypeSettings } from '../lib/typeScale'
 import { resolveAll } from '../lib/tokens'
 import { cssName, slug } from './naming'
 import { overrideKey, refOf } from './model'
@@ -27,6 +28,7 @@ describe('Default as data', () => {
     expect(prim.variables.filter((v) => v.path.startsWith('primary/'))).toHaveLength(16)
     expect(prim.variables).toHaveLength(7 * 16 + 32)
     expect(sem.variables).toHaveLength(58)
+    expect(r.collections).toHaveLength(3)
     expect(sem.modes.map((m) => m.name)).toEqual(['Light', 'Dark'])
   })
 
@@ -110,5 +112,62 @@ describe('themes', () => {
     const [b] = builtInSystems()
     a.collections[0].variables.length = 0
     expect(b.collections[0].variables.length).toBeGreaterThan(0)
+  })
+})
+
+describe('type as data', () => {
+  const typeVar = (r: ReturnType<typeof resolveSystem>, c: string, path: string) => r.find(refOf(c, path))!.cells.value.value
+
+  it('Default: a scale of 11 steps from base 14 and ratio 1.125, equal to v1', () => {
+    const sys = defaultSystem()
+    const r = resolveSystem(sys, 'base')
+    expect(sys.type!.steps.map((s) => s.name)).toEqual(['heading-xl', 'heading-lg', 'heading-md', 'heading-sm', 'body-lg', 'body-md', 'body-sm', 'label-lg', 'label-md', 'label-sm', 'label-xs'])
+    const v1 = computeGroups({ ...defaultTypeSettings(), tablet: { on: false, pct: 0 }, mobile: { on: false, pct: 0 } }).flatMap((g) => g.rows)
+    for (const row of v1) {
+      expect(typeVar(r, 'Type', `type/${row.name}/size`)).toBe(row.size)
+      expect(typeVar(r, 'Type', `type/${row.name}/line`)).toBe(row.lh)
+      expect(typeVar(r, 'Type', `type/${row.name}/track`)).toBe(row.tr)
+      expect(typeVar(r, 'Type', `type/${row.name}/weight`)).toBe(row.weight)
+    }
+    expect(typeVar(r, 'Type', 'type/font/heading')).toBe('Raleway')
+    expect(r.find(refOf('Type', 'type/body-md/track'))!.unit).toBe('em')
+  })
+
+  it('Untitled: eleven named steps with the sizes of the files, Inter, and the weight names', () => {
+    const r = resolveSystem(untitledSystem(), 'base')
+    expect(typeVar(r, '6. Typography', 'Font size/text-md')).toBe(16)
+    expect(typeVar(r, '6. Typography', 'Line height/text-md')).toBe(24)
+    expect(typeVar(r, '6. Typography', 'Font size/display-2xl')).toBe(72)
+    expect(typeVar(r, '6. Typography', 'Line height/display-2xl')).toBe(90)
+    expect(typeVar(r, '6. Typography', 'Font family/font-family-body')).toBe('Inter')
+    expect(typeVar(r, '6. Typography', 'Font weight/semibold')).toBe('Semibold')
+    expect(r.collections[2].variables).toHaveLength(32)
+  })
+
+  it('a theme changes the scale: base and ratio move every step, fonts change, and nothing else does', () => {
+    const sys = defaultSystem()
+    sys.themes.push({ id: 't', name: 'T', ramps: {}, overrides: {}, type: { base: 16, ratio: 1.25, headingFont: 'Inter' } })
+    const base = resolveSystem(sys, 'base')
+    const t = resolveSystem(sys, 't')
+    expect(typeVar(t, 'Type', 'type/body-md/size')).toBe(16)
+    expect(typeVar(base, 'Type', 'type/body-md/size')).toBe(14)
+    expect(Number(typeVar(t, 'Type', 'type/heading-xl/size'))).toBeGreaterThan(Number(typeVar(base, 'Type', 'type/heading-xl/size')))
+    expect(typeVar(t, 'Type', 'type/font/heading')).toBe('Inter')
+    expect(typeVar(t, 'Type', 'type/font/body')).toBe('Nunito')
+    expect(t.find(refOf('Primitives', 'primary/10'))!.cells.value.value).toBe(base.find(refOf('Primitives', 'primary/10'))!.cells.value.value)
+  })
+
+  it('a step\'s own size, and in a fixed system its line height follows in proportion', () => {
+    const u = untitledSystem()
+    u.themes.push({ id: 't', name: 'T', ramps: {}, overrides: {}, type: { steps: { 'text-md': { size: 18 }, 'text-sm': { size: 15, lh: 22 } } } })
+    const r = resolveSystem(u, 't')
+    expect(typeVar(r, '6. Typography', 'Font size/text-md')).toBe(18)
+    expect(typeVar(r, '6. Typography', 'Line height/text-md')).toBe(27)
+    expect(typeVar(r, '6. Typography', 'Line height/text-sm')).toBe(22)
+    expect(typeVar(r, '6. Typography', 'Font size/text-lg')).toBe(18)
+    const d = defaultSystem()
+    d.themes.push({ id: 't', name: 'T', ramps: {}, overrides: {}, type: { steps: { 'body-md': { size: 20, lh: 30, tr: 0.02 } } } })
+    const rd = resolveSystem(d, 't')
+    expect([typeVar(rd, 'Type', 'type/body-md/size'), typeVar(rd, 'Type', 'type/body-md/line'), typeVar(rd, 'Type', 'type/body-md/track')]).toEqual([20, 30, 0.02])
   })
 })
