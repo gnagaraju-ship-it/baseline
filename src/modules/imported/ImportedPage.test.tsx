@@ -151,48 +151,27 @@ describe('the Untitled theme', () => {
     expect(box).toBeChecked()
   })
 
-  it('spacing: a value for each breakpoint, each following its own step', async () => {
+  it('spacing: one value per token, following a step of the scale or its own', async () => {
     at('/spacing')
-    expect(screen.getByRole('columnheader', { name: 'XXL' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'MD' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'XS' })).toBeInTheDocument()
+    // breakpoints apply to widths, not to spacing: no breakpoint columns or controls here
+    expect(screen.queryByRole('columnheader', { name: 'XXL' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('MD breakpoint width')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' }))
-    for (const m of ['XXL', 'MD', 'XS']) expect((screen.getByLabelText(`spacing-xs ${m} follows`) as HTMLSelectElement).value).toBe('_Primitives::Spacing/1 (4px)')
-    // MD follows a bigger step: only MD moves
-    await userEvent.selectOptions(screen.getByLabelText('spacing-xs MD follows'), '_Primitives::Spacing/2 (8px)')
-    expect(screen.getByLabelText('spacing-xs MD')).toHaveValue(8)
-    expect(screen.getByLabelText('spacing-xs XXL')).toHaveValue(4)
-    expect(screen.getByLabelText('spacing-xs XS')).toHaveValue(4)
-    expect(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' })).toHaveTextContent('space-2 (8px)')
-    // a value of its own at XS
-    const xs = screen.getByLabelText('spacing-xs XS')
-    await userEvent.clear(xs)
-    await userEvent.type(xs, '3')
-    expect((screen.getByLabelText('spacing-xs XS follows') as HTMLSelectElement).value).toBe('')
-    expect(screen.getByRole('row', { name: 'spacing-xs, 0.25rem' })).toHaveTextContent('own value')
-    // editing the scale moves every breakpoint that follows that step
-    fireEvent.blur(xs)
+    const follows = screen.getByLabelText('spacing-xs follows') as HTMLSelectElement
+    expect(follows.value).toBe('_Primitives::Spacing/1 (4px)')
+    await userEvent.selectOptions(follows, '_Primitives::Spacing/2 (8px)')
+    expect(screen.getByLabelText('spacing-xs Mode 1')).toHaveValue(8)
+    expect(screen.getByRole('row', { name: 'spacing-xs, 0.5rem' })).toHaveTextContent('space-2 (8px)')
+    const px = screen.getByLabelText('spacing-xs Mode 1')
+    await userEvent.clear(px)
+    await userEvent.type(px, '9')
+    expect((screen.getByLabelText('spacing-xs follows') as HTMLSelectElement).value).toBe('')
+    expect(screen.getByRole('row', { name: 'spacing-xs, 0.563rem' })).toHaveTextContent('own value')
+    // editing the scale moves the tokens that follow that step
+    fireEvent.blur(px)
     await userEvent.click(screen.getByRole('button', { name: 'Edit Spacing/2 (8px)' }))
     fireEvent.change(screen.getByLabelText('Spacing/2 (8px) Style'), { target: { value: '10' } })
-    fireEvent.blur(screen.getByLabelText('Spacing/2 (8px) Style'))
-    await userEvent.click(screen.getByRole('row', { name: /^spacing-xs,/ }))
-    expect(screen.getByLabelText('spacing-xs MD')).toHaveValue(10)
-  })
-
-  it('spacing: the breakpoint widths are in the panel and can be changed', async () => {
-    at('/spacing')
-    const md = screen.getByLabelText('MD breakpoint width')
-    expect(md).toHaveValue(768)
-    expect(screen.getByLabelText('XXL breakpoint width')).toHaveValue(1440)
-    expect(screen.getByLabelText('XS breakpoint width')).toHaveValue(384)
-    expect((screen.getByLabelText('MD breakpoint follows') as HTMLSelectElement).value).toBe('4. Widths::width-xl')
-    await userEvent.selectOptions(screen.getByLabelText('MD breakpoint follows'), '4. Widths::width-2xl')
-    expect(screen.getByLabelText('MD breakpoint width')).toHaveValue(1024)
-    await userEvent.selectOptions(screen.getByLabelText('MD breakpoint follows'), '')
-    expect(screen.getByLabelText('MD breakpoint width')).toHaveValue(1024)
-    expect((screen.getByLabelText('MD breakpoint follows') as HTMLSelectElement).value).toBe('')
-    fireEvent.change(md, { target: { value: '834' } })
-    expect(s().imported!.collections.find((c) => c.name === 'Breakpoints')!.variables.find((v) => v.name === 'breakpoint-md')!.values.Value).toEqual({ v: 834 })
+    expect(screen.getByRole('row', { name: 'spacing-md, 0.625rem' })).toBeInTheDocument()
   })
 
   it('spacing: rename, remove and the radius tiles still work', async () => {
@@ -300,10 +279,9 @@ describe('the Untitled theme', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 768px')
   })
 
-  it('type: responsive controls, but no weight variants or letter spacing, which the files do not have', async () => {
+  it('type: no responsive scaling, weight variants or letter spacing, which the files do not have', async () => {
     at('/type')
-    expect(screen.getByText('Responsive')).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Tablet scaling' })).toBeInTheDocument()
+    expect(screen.queryByText('Responsive')).not.toBeInTheDocument()
     await userEvent.click(within(screen.getByRole('region', { name: 'TEXT' })).getByText('text-md'))
     expect(screen.queryByRole('group', { name: 'Weight variants' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('LETTER SPACING (EM)')).not.toBeInTheDocument()

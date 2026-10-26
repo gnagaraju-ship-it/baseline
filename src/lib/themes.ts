@@ -128,8 +128,8 @@ export function untitledThemeData(): ThemeData {
     mobile: { on: false, pct: -15 },
     fixed: untitledType.steps as FixedStep[]
   }
-  // Spacing tokens, widths and containers have a value per breakpoint, starting equal; the breakpoint widths are tokens too.
-  set.collections = set.collections.map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? makeResponsive(c) : c))
+  // Only the widths change by breakpoint (a value per breakpoint, equal to start with); the breakpoints themselves are made from them.
+  set.collections = set.collections.map((c) => (c.name === '4. Widths' ? makeResponsive(c) : c))
   set.collections.push(breakpointsCollection())
   return { ...defaultThemeData(), type, imported: set, schemaId: UNTITLED_ID }
 }

@@ -52,4 +52,4 @@ Choose the **Imported tokens** row in the plugin window to import them. Importin
 
 ## Breakpoints in the Untitled variables
 
-`3. Spacing`, `4. Widths`, `5. Containers` and `6. Typography` have the modes **XXL, MD, XS**, and the `Breakpoints` collection holds the widths where the layout changes (1400, 768, 390 unless you changed them). Set a frame's mode in each of those collections to preview a breakpoint. In the CSS the same values are written mobile first: the XS values in `:root`, then `@media (min-width: 768px)` and `(min-width: 1400px)` with only what changes.
+Only `4. Widths` has the modes **XXL, MD, XS**. The `Breakpoints` collection holds the widths where the layout changes; each is linked to a width token (XXL to `width-4xl`, MD to `width-xl`, XS to `width-xs`), so changing that width moves the breakpoint. Set a frame's mode in `4. Widths` to preview a breakpoint. In the CSS the widths are written mobile first: the XS values in `:root`, then `@media (min-width: …)` at the MD and XXL breakpoint widths with only what changes. Spacing, containers, radius and type have one value each.

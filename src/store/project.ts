@@ -9,7 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
-import { BREAKPOINTS_COLLECTION, makeResponsive, addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
+import { BREAKPOINTS_COLLECTION, makeResponsive, makeSingle, addImported, addNamedImported, setImportedOff as setOff, setImportedAlias, removeImported, renameImported, resetImported, setImportedValue, type ImportedSet } from '../lib/importedTokens'
 import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, breakpointsCollection, BREAKPOINT_WIDTHS, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
@@ -445,14 +445,19 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 9,
+  version: 10,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
   // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 9) return p as never
-    if (version === 8 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(breakpointsFromWidths) } as never
-    if (version === 7 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(addBreakpoints) } as never
+    if (version >= 10) return p as never
+    if (version >= 7 && Array.isArray(p.themes)) {
+      // each step of the way, so a save from any of these versions ends up current
+      let themes: Theme[] = p.themes
+      if (version === 7) themes = themes.map(addBreakpoints)
+      if (version <= 8) themes = themes.map(breakpointsFromWidths)
+      return { ...p, themes: themes.map(breakpointsForWidthsOnly) } as never
+    }
     if (version === 6 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(upgradeUntitled) } as never
     if (version === 5 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
     if (version === 4 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
@@ -492,6 +497,14 @@ function importUntitled(t: Theme): Theme {
   return t.name === UNTITLED_NAME && (mapped || readOnly) ? { ...t, data: untitledThemeData() } : t
 }
 
+/** Version 9 gave spacing tokens and containers a value per breakpoint too: only the widths have them, so those go back to one value (the XXL one). */
+function breakpointsForWidthsOnly(t: Theme): Theme {
+  const set = t.data?.imported
+  if (t.data?.schemaId !== UNTITLED_ID || !set) return t
+  const back: Record<string, string> = { '3. Spacing': 'Mode 1', '5. Containers': 'Value' }
+  return { ...t, data: { ...t.data, imported: { collections: set.collections.map((c) => (back[c.name] ? makeSingle(c, back[c.name]) : c)) } } }
+}
+
 /** Version 8 gave Untitled plain breakpoint widths (1400, 768, 390): unless they were changed, they now come from the width tokens. */
 function breakpointsFromWidths(t: Theme): Theme {
   const set = t.data?.imported
@@ -508,7 +521,7 @@ function breakpointsFromWidths(t: Theme): Theme {
 function addBreakpoints(t: Theme): Theme {
   const set = t.data?.imported
   if (t.data?.schemaId !== UNTITLED_ID || !set || set.collections.some((c) => c.name === BREAKPOINTS_COLLECTION)) return t
-  const collections = set.collections.map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? makeResponsive(c) : c))
+  const collections = set.collections.map((c) => (c.name === '4. Widths' ? makeResponsive(c) : c))
   return { ...t, data: { ...t.data, imported: { collections: [...collections, breakpointsCollection()] } } }
 }
 

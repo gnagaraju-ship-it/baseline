@@ -208,20 +208,35 @@ describe('themes in the store', () => {
     expect(u.settings.hex).toEqual({ brand: '#0EA5E9' })
   })
 
-  it('gives a version 7 Untitled its breakpoints, keeping every edit', async () => {
+  it('gives a version 7 Untitled its breakpoints on the widths only, keeping every edit', async () => {
     const u = untitledThemeData()
-    // as version 7 saved it: one mode and no Breakpoints collection
-    const one = u.imported!.collections.filter((c) => c.name !== 'Breakpoints').map((c) => (['3. Spacing', '4. Widths', '5. Containers'].includes(c.name) ? { ...c, modes: ['Mode 1'], variables: c.variables.map((v) => ({ ...v, values: { 'Mode 1': v.values.XXL } })) } : c))
-    one.find((c) => c.name === '3. Spacing')!.variables[2].values['Mode 1'] = { v: 7 } // spacing-xs edited to 7
+    // as version 7 saved it: one mode everywhere and no Breakpoints collection
+    const one = u.imported!.collections.filter((c) => c.name !== 'Breakpoints').map((c) => (c.name === '4. Widths' ? { ...c, modes: ['Mode 1'], variables: c.variables.map((v) => ({ ...v, values: { 'Mode 1': v.values.XXL } })) } : c))
+    one.find((c) => c.name === '4. Widths')!.variables[0].values['Mode 1'] = { v: 333 } // width-xxs edited
     const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
     localStorage.setItem('baseline-project', JSON.stringify({ version: 7, state: { themes: [def, { id: 'theme-2', name: 'Untitled', data: { ...pickData(s()), schemaId: 'untitled-ui', imported: { collections: one } } }], activeThemeId: 'theme-1' } }))
     await useProject.persist.rehydrate()
     const imported = s().themes[1].data.imported!
     expect(imported.collections.map((c) => c.name)).toContain('Breakpoints')
-    const spacing = imported.collections.find((c) => c.name === '3. Spacing')!
-    expect(spacing.modes).toEqual(['XXL', 'MD', 'XS'])
-    expect(spacing.variables[2].values).toEqual({ XXL: { v: 7 }, MD: { v: 7 }, XS: { v: 7 } })
-    expect(imported.collections.find((c) => c.name === '2. Radius')!.modes).toEqual(['Mode 1'])
+    const widths = imported.collections.find((c) => c.name === '4. Widths')!
+    expect(widths.modes).toEqual(['XXL', 'MD', 'XS'])
+    expect(widths.variables[0].values).toEqual({ XXL: { v: 333 }, MD: { v: 333 }, XS: { v: 333 } })
+    expect(imported.collections.find((c) => c.name === '3. Spacing')!.modes).toEqual(['Mode 1'])
+    expect(imported.collections.find((c) => c.name === 'Breakpoints')!.variables[1].values.Value.a).toBe('4. Widths::width-xl')
+  })
+
+  it('takes the breakpoints off spacing tokens and containers in a version 9 Untitled, keeping the XXL values and the widths', async () => {
+    const u = untitledThemeData()
+    const all = u.imported!.collections.map((c) => (['3. Spacing', '5. Containers'].includes(c.name) ? { ...c, modes: ['XXL', 'MD', 'XS'], variables: c.variables.map((v) => ({ ...v, values: { XXL: v.values[c.modes[0]], MD: { v: 1 }, XS: { v: 2 } } })) } : c))
+    const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 9, state: { themes: [def, { id: 'theme-2', name: 'Untitled', data: { ...u, imported: { collections: all } } }], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    const imported = s().themes[1].data.imported!
+    const c = (n: string) => imported.collections.find((x) => x.name === n)!
+    expect(c('3. Spacing').modes).toEqual(['Mode 1'])
+    expect(c('5. Containers').modes).toEqual(['Value'])
+    expect(c('3. Spacing').variables[2].values['Mode 1'].v).toBe(4)
+    expect(c('4. Widths').modes).toEqual(['XXL', 'MD', 'XS'])
   })
 
   it('makes the breakpoints of a version 8 Untitled follow the width tokens, unless they were changed', async () => {

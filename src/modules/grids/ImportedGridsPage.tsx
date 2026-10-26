@@ -143,7 +143,7 @@ export function ImportedGridsPage() {
             <h1 className="m-0 mb-1.5 text-[22px] font-semibold tracking-[-0.01em]">{current.name} · {formatSpacing(v, unit)}</h1>
             <p className="m-0 text-[13px] text-muted">
               {isPadding ? `Space kept free on each side of a container: ${formatSpacing(v, unit)}.` : `A ${formatSpacing(v, unit)} wide ${cname === WIDTHS ? 'width' : 'container'}, ${Math.round((v / FULL) * 100)}% of a 1920px screen.`}
-              {alias ? ` At ${modeId} it follows ${alias.split('::')[1]}.` : ` At ${modeId} it has a value of its own.`}
+              {alias ? ` ${modes.length > 1 ? `At ${modeId} it` : 'It'} follows ${alias.split('::')[1]}.` : ` ${modes.length > 1 ? `At ${modeId} it` : 'It'} has a value of its own.`}
             </p>
           </div>
           <span className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs text-ink-3">{cname === WIDTHS ? 'Width' : 'Container'} <span className="font-mono text-muted">{rank} of {sorted.length}</span></span>

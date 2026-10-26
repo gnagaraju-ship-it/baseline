@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icon'
 import { Logo } from '../../components/Logo'
 import { NumberField } from '../../components/NumberField'
 import { ThemeMenu } from '../../components/ThemeMenu'
-import { BREAKPOINTS_COLLECTION, followers, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
+import { followers, resolveSet, type ImportedCollection, type ImportedVariable } from '../../lib/importedTokens'
 import { untitledThemeData } from '../../lib/themes'
 import { barWidth, formatSpacing, parseCustom } from '../../lib/spacing'
 import { useProject } from '../../store/project'
@@ -30,6 +30,7 @@ function Panel() {
   const reset = s.resetImportedCollection
   const set = s.imported
   const original = untitledThemeData().imported!
+  const count = (c: string, prefix?: string) => set?.collections.find((x) => x.name === c)?.variables.filter((v) => !prefix || v.name.startsWith(prefix)).length ?? 0
   const asFiles = [PRIM, SPACING, RADIUS].every((c) => JSON.stringify(set?.collections.find((x) => x.name === c)) === JSON.stringify(original.collections.find((x) => x.name === c)))
   return (
     <>
@@ -47,31 +48,15 @@ function Panel() {
           </div>
           <p className="m-0 text-xs leading-[1.55] text-muted">{asFiles ? 'The values of the Untitled files.' : 'Changed from the Untitled files. Pick Untitled to put all of it back.'}</p>
         </section>
-        <section aria-label="Breakpoints" className="flex flex-col gap-2">
-          <div className="flex justify-between"><h3 className={h3}>Breakpoints</h3><span className="text-[11px] text-muted">3 ON</span></div>
-          {[['XXL', 'breakpoint-xxl'], ['MD', 'breakpoint-md'], ['XS', 'breakpoint-xs']].map(([label, name]) => {
-            const bps = set?.collections.find((x) => x.name === BREAKPOINTS_COLLECTION)
-            const v = bps?.variables.find((x) => x.name === name)
-            const mode = bps?.modes[0] ?? 'Value'
-            const resolvedV = resolveSet(set!).collections.find((x) => x.name === BREAKPOINTS_COLLECTION)?.variables.find((x) => x.name === name)
-            const widths = [...(set?.collections.find((x) => x.name === '4. Widths')?.variables ?? [])]
-            const wv = (w: ImportedVariable) => Number(resolveSet(set!).collections.find((x) => x.name === '4. Widths')?.variables.find((x) => x.name === w.name)?.values.XXL?.v ?? 0)
-            widths.sort((x, y) => wv(x) - wv(y))
-            return (
-              <div key={name} className="flex flex-col gap-1.5 py-1">
-                <div className="flex items-center gap-2.5">
-                  <label htmlFor={`bp-${name}`} className="flex-1 text-[13px] font-medium">{label}</label>
-                  <NumberField id={`bp-${name}`} ariaLabel={`${label} breakpoint width`} value={Number(resolvedV?.values[mode]?.v ?? 0)} min={0} className="h-8 w-[84px] px-1.5 text-right" onCommit={(n) => n !== null && v && s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, n)} />
-                  <span className="text-xs text-muted">px</span>
-                </div>
-                <select aria-label={`${label} breakpoint follows`} value={v?.values[mode]?.a ?? ''} onChange={(e) => (e.target.value ? s.setImportedAlias(BREAKPOINTS_COLLECTION, name, mode, e.target.value) : s.setImportedValue(BREAKPOINTS_COLLECTION, name, mode, Number(resolvedV?.values[mode]?.v ?? 0)))} className="inp h-8 w-full font-mono text-xs">
-                  <option value="">Own value</option>
-                  {widths.map((w) => <option key={w.name} value={`4. Widths::${w.name}`}>{w.name} · {wv(w)}</option>)}
-                </select>
-              </div>
-            )
-          })}
-          <p className="m-0 text-xs leading-[1.55] text-muted">Each breakpoint is made from a width token (its XXL value), so changing that width moves the breakpoint. Tokens, widths and containers have a value for each breakpoint; XS is the base and the CSS changes them from the MD and XXL widths up. Values are stored in px; the unit switch changes how they show.</p>
+        <section className="flex flex-col gap-2">
+          <div className="flex justify-between"><h3 className={h3}>Sections</h3><span className="text-[11px] text-muted">3</span></div>
+          {[['Scale', count(PRIM, 'Spacing/'), 'steps'], ['Tokens', count(SPACING), 'tokens'], ['Radius', count(RADIUS), 'sizes']].map(([name, n, unit]) => (
+            <div key={name} className="flex min-h-[34px] items-center gap-2.5">
+              <span className="flex-1 text-[13px] font-medium">{name}</span>
+              <span className="font-mono text-xs text-muted">{n} {unit}</span>
+            </div>
+          ))}
+          <p className="m-0 text-xs leading-[1.55] text-muted">Spacing and radius are one number each. Breakpoints apply to widths: see the Grids screen. Values are stored in px; the unit switch changes how they show.</p>
         </section>
       </div>
       <div className="flex-1" />
@@ -197,7 +182,7 @@ export function ImportedSpacingPage() {
           <div className="overflow-x-auto">
             <div role="table" aria-label="Spacing tokens" className="min-w-[600px]">
               <div role="row" className={`${head} grid border-b border-line py-2`} style={{ gridTemplateColumns: `minmax(0,1.4fr) repeat(${tokenModes.length}, minmax(0,1fr))` }}>
-                <span role="columnheader">TOKEN</span>{tokenModes.map((m) => <span key={m} role="columnheader" className="text-center">{m.toUpperCase()}</span>)}
+                <span role="columnheader">TOKEN</span>{tokenModes.map((m) => <span key={m} role="columnheader" className="text-center">{tokenModes.length > 1 ? m.toUpperCase() : 'VALUE'}</span>)}
               </div>
               <div className={`${head} pb-1 pt-3.5`}>SPACING</div>
               {tokens.map((t) => {

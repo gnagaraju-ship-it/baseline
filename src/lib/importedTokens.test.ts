@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import full from '../data/untitled-ui.json'
 import { exportSections } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
-import { breakpointWidths, isResponsive, makeResponsive, followers, setImportedOff, addImported, addNamedImported, setImportedAlias, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
+import { breakpointWidths, isResponsive, makeResponsive, makeSingle, followers, setImportedOff, addImported, addNamedImported, setImportedAlias, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
 import { defaultThemeData, untitledThemeData } from './themes'
 
 const source = full as ImportedSet
@@ -46,11 +46,11 @@ describe('the Untitled theme', () => {
     expect(set.collections.map((c) => [c.name, c.variables.length])).toEqual([
       ['_Primitives', 32], ['2. Radius', 11], ['3. Spacing', 17], ['4. Widths', 12], ['5. Containers', 3], ['Breakpoints', 3]
     ])
-    // spacing tokens, widths and containers have a value per breakpoint, equal to start with
-    for (const n of ['3. Spacing', '4. Widths', '5. Containers']) expect(set.collections.find((c) => c.name === n)!.modes).toEqual(['XXL', 'MD', 'XS'])
-    expect(set.collections.find((c) => c.name === '2. Radius')!.modes).toEqual(['Mode 1'])
-    const xs = set.collections.find((c) => c.name === '3. Spacing')!.variables.find((v) => v.name === 'spacing-xs')!
-    expect(xs.values.XXL).toEqual(xs.values.XS)
+    // only the widths have a value per breakpoint, equal to start with; the other collections have one value
+    expect(set.collections.find((c) => c.name === '4. Widths')!.modes).toEqual(['XXL', 'MD', 'XS'])
+    for (const n of ['2. Radius', '3. Spacing', '5. Containers']) expect(set.collections.find((c) => c.name === n)!.modes).toHaveLength(1)
+    const w = set.collections.find((c) => c.name === '4. Widths')!.variables.find((v) => v.name === 'width-xl')!
+    expect(w.values.XXL).toEqual(w.values.XS)
   })
 
   it('writes exactly the tokens of the files, with the names they have there', () => {
@@ -79,9 +79,9 @@ describe('the Untitled theme', () => {
   it('turns the colours into collections named like the Figma files, with aliases', () => {
     const [prim, modes, typo] = schemaCollections(untitled)
     expect(typo.name).toBe('6. Typography')
-    expect(typo.variables.find((v) => v.name === 'Font size/display-2xl')!.values.XXL.v).toBe(72)
-    expect(typo.variables.find((v) => v.name === 'Line height/text-md')!.values.XXL.v).toBe(24)
-    expect(typo.variables.find((v) => v.name === 'Font family/font-family-body')!.values.MD.v).toBe('Inter')
+    expect(typo.variables.find((v) => v.name === 'Font size/display-2xl')!.values.Value.v).toBe(72)
+    expect(typo.variables.find((v) => v.name === 'Line height/text-md')!.values.Value.v).toBe(24)
+    expect(typo.variables.find((v) => v.name === 'Font family/font-family-body')!.values.Value.v).toBe('Inter')
     expect(typo.variables).toHaveLength(2 + 8 + 11 + 11)
     expect(prim.name).toBe('_Primitives')
     expect(prim.variables.find((v) => v.name === 'Colors/Brand/600')!.values.Style.v).toBe('#7F56D9')
@@ -91,7 +91,7 @@ describe('the Untitled theme', () => {
     expect(bg.values['Light mode']).toEqual({ v: '#FFFFFF', a: '_Primitives::Colors/Base/white' })
     const merged = withSchemaColours(set, untitled)
     expect(merged.collections.map((c) => c.name)).toEqual(['_Primitives', '1. Color modes', '6. Typography', '2. Radius', '3. Spacing', '4. Widths', '5. Containers', 'Breakpoints'])
-    expect(typo.modes).toEqual(['XXL', 'MD', 'XS'])
+    expect(typo.modes).toEqual(['Value'])
     // the primitives share one collection with the spacing
     expect(merged.collections[0].variables.some((v) => v.name.startsWith('Spacing/'))).toBe(true)
   })
@@ -120,30 +120,28 @@ describe('the Untitled theme', () => {
 })
 
 describe('editing imported tokens', () => {
-  const value = (s: ImportedSet, c: string, n: string, m = 'XXL') => resolveSet(s).collections.find((x) => x.name === c)!.variables.find((v) => v.name === n)!.values[m].v
+  const value = (s: ImportedSet, c: string, n: string, m = 'Mode 1') => resolveSet(s).collections.find((x) => x.name === c)!.variables.find((v) => v.name === n)!.values[m].v
   const spacing = '3. Spacing'
 
   it('follows an alias to its primitive, so editing the primitive moves the tokens that point at it', () => {
     expect(value(set, spacing, 'spacing-xs')).toBe(4)
     const next = setImportedValue(set, '_Primitives', 'Spacing/1 (4px)', 'Style', 5)
     expect(value(next, spacing, 'spacing-xs')).toBe(5)
-    expect(value(next, '4. Widths', 'width-xxs')).toBe(320) // other chains are untouched
+    expect(value(next, '4. Widths', 'width-xxs', 'XXL')).toBe(320) // other chains are untouched
     expect(value(set, spacing, 'spacing-xs')).toBe(4) // the original is not changed
   })
 
   it('a value typed on a token that pointed at another is its own from then on', () => {
-    const next = setImportedValue(set, spacing, 'spacing-xs', 'XXL', 7)
+    const next = setImportedValue(set, spacing, 'spacing-xs', 'Mode 1', 7)
     const v = next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!
-    expect(v.values.XXL).toEqual({ v: 7 })
-    expect(v.values.MD.a).toBe('_Primitives::Spacing/1 (4px)') // the other breakpoints are untouched
+    expect(v.values['Mode 1']).toEqual({ v: 7 })
     expect(value(setImportedValue(next, '_Primitives', 'Spacing/1 (4px)', 'Style', 9), spacing, 'spacing-xs')).toBe(7)
   })
 
   it('renames a token and repoints the aliases at it; a taken or empty name is refused', () => {
     const next = renameImported(set, '_Primitives', 'Spacing/1 (4px)', 'Spacing/one')
     const xs = next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!
-    expect(xs.values.XXL.a).toBe('_Primitives::Spacing/one')
-    expect(xs.values.XS.a).toBe('_Primitives::Spacing/one')
+    expect(xs.values['Mode 1'].a).toBe('_Primitives::Spacing/one')
     expect(value(next, spacing, 'spacing-xs')).toBe(4)
     expect(renameImported(set, spacing, 'spacing-xs', 'spacing-md')).toBe(set)
     expect(renameImported(set, spacing, 'spacing-xs', '  ')).toBe(set)
@@ -158,11 +156,11 @@ describe('editing imported tokens', () => {
     const removed = removeImported(set, '_Primitives', 'Spacing/1 (4px)')
     expect(removed.collections[0].variables.some((v) => v.name === 'Spacing/1 (4px)')).toBe(false)
     expect(value(removed, spacing, 'spacing-xs')).toBe(4)
-    expect(removed.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values.XXL.a).toBeUndefined()
+    expect(removed.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values['Mode 1'].a).toBeUndefined()
   })
 
   it('resets one collection and leaves the others alone', () => {
-    const edited = setImportedValue(setImportedValue(set, '2. Radius', 'radius-md', 'Mode 1', 99), spacing, 'spacing-xs', 'XXL', 1)
+    const edited = setImportedValue(setImportedValue(set, '2. Radius', 'radius-md', 'Mode 1', 99), spacing, 'spacing-xs', 'Mode 1', 1)
     const back = resetImported(edited, set, '2. Radius')
     expect(value(back, '2. Radius', 'radius-md', 'Mode 1')).toBe(8)
     expect(value(back, spacing, 'spacing-xs')).toBe(1)
@@ -175,15 +173,14 @@ describe('editing imported tokens', () => {
     expect(css).toContain('--spacing-1-4px: 5px;')
     const doc = importedDoc(withSchemaColours(data.imported!, data), ['spacing']) as any
     expect(doc.Imported['3. Spacing']['spacing-xs'].$value).toBe(5)
-    expect(doc.Imported['3. Spacing']['spacing-xs'].$extensions['com.baseline'].alias.XXL).toBe('_Primitives::Spacing/1 (4px)')
+    expect(doc.Imported['3. Spacing']['spacing-xs'].$extensions['com.baseline'].alias['Mode 1']).toBe('_Primitives::Spacing/1 (4px)')
   })
 
   it('points a token at another step, and adds a named step once', () => {
-    const next = setImportedAlias(set, spacing, 'spacing-xs', 'MD', '_Primitives::Spacing/2 (8px)')
-    expect(value(next, spacing, 'spacing-xs', 'MD')).toBe(8)
-    expect(value(next, spacing, 'spacing-xs', 'XXL')).toBe(4) // only the MD breakpoint moved
-    expect(next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values.MD.a).toBe('_Primitives::Spacing/2 (8px)')
-    expect(setImportedAlias(set, spacing, 'spacing-xs', 'XXL', '_Primitives::Spacing/nope')).toBe(set)
+    const next = setImportedAlias(set, spacing, 'spacing-xs', 'Mode 1', '_Primitives::Spacing/2 (8px)')
+    expect(value(next, spacing, 'spacing-xs')).toBe(8)
+    expect(next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values['Mode 1'].a).toBe('_Primitives::Spacing/2 (8px)')
+    expect(setImportedAlias(set, spacing, 'spacing-xs', 'Mode 1', '_Primitives::Spacing/nope')).toBe(set)
     const added = addNamedImported(set, '_Primitives', 'Spacing/custom (36px)', 36)
     expect(value(added, '_Primitives', 'Spacing/custom (36px)', 'Style')).toBe(36)
     expect(addNamedImported(added, '_Primitives', 'Spacing/custom (36px)', 40).collections[0].variables).toHaveLength(added.collections[0].variables.length)
@@ -201,7 +198,7 @@ describe('editing imported tokens', () => {
     expect(JSON.stringify(setImportedOff(off, '_Primitives', free.name, false))).toBe(JSON.stringify(set))
   })
 
-  it('makeResponsive copies the first mode into XXL, MD and XS, keeps links and off switches, and does nothing twice', () => {
+  it('makeResponsive copies the first mode into XXL, MD and XS, keeps links and off switches, and does nothing twice; makeSingle undoes it', () => {
     const radius = set.collections.find((c) => c.name === '2. Radius')!
     expect(isResponsive(radius)).toBe(false)
     const r = makeResponsive({ ...radius, variables: radius.variables.map((v, i) => (i === 0 ? { ...v, off: true } : v)) })
@@ -209,9 +206,13 @@ describe('editing imported tokens', () => {
     expect(r.variables[0].off).toBe(true)
     expect(r.variables[1].values).toEqual({ XXL: { v: 2 }, MD: { v: 2 }, XS: { v: 2 } })
     expect(makeResponsive(r)).toBe(r)
-    const spacingVars = set.collections.find((c) => c.name === '3. Spacing')!.variables
-    expect(spacingVars[0].values.MD).toEqual(spacingVars[0].values.XXL) // links kept
-    expect(spacingVars[0].values.MD.a).toBeDefined()
+    const widths = set.collections.find((c) => c.name === '4. Widths')!.variables
+    expect(widths[0].values.MD).toEqual(widths[0].values.XXL) // links kept
+    expect(widths[0].values.MD.a).toBeDefined()
+    const back = makeSingle({ ...r, variables: r.variables.map((v) => ({ ...v, values: { ...v.values, MD: { v: 99 } } })) }, 'Mode 1')
+    expect(back.modes).toEqual(['Mode 1'])
+    expect(back.variables[1].values).toEqual({ 'Mode 1': { v: 2 } }) // the XXL value
+    expect(makeSingle(radius, 'x')).toBe(radius)
   })
 
   it('the breakpoint widths come from the Breakpoints collection', () => {
@@ -230,30 +231,29 @@ describe('editing imported tokens', () => {
   })
 
   it('CSS: equal breakpoints are one block, different ones are mobile first from the breakpoint widths', () => {
-    const plain = exportSections({ ...untitled }).find((x) => x.id === 'spacing')!.css
+    const plain = exportSections({ ...untitled }).find((x) => x.id === 'grids')!.css
     expect(plain).not.toContain('@media')
-    expect(plain).toContain('--spacing-xs: var(--spacing-1-4px);')
-    // MD follows a bigger step, and the MD breakpoint is 834
-    let next = setImportedAlias(set, '3. Spacing', 'spacing-xs', 'MD', '_Primitives::Spacing/2 (8px)')
-    next = setImportedAlias(next, '3. Spacing', 'spacing-xs', 'XXL', '_Primitives::Spacing/3 (12px)')
+    expect(plain).toContain('--width-xl: var(--spacing-192-768px);')
+    // the xl width follows a bigger step at MD and a still bigger one at XXL, and the MD breakpoint is 834
+    let next = setImportedAlias(set, '4. Widths', 'width-xl', 'MD', '_Primitives::Spacing/256 (1,024px)')
+    next = setImportedAlias(next, '4. Widths', 'width-xl', 'XXL', '_Primitives::Spacing/320 (1,280px)')
     next = setImportedValue(next, 'Breakpoints', 'breakpoint-md', 'Value', 834)
-    const css = exportSections({ ...untitled, imported: next }).find((x) => x.id === 'spacing')!.css
-    expect(css).toContain(':root {\n  --spacing-none: var(--spacing-0-0px);')
-    expect(css).toContain('--spacing-xs: var(--spacing-1-4px);') // XS, the base
-    expect(css).toContain('@media (min-width: 834px) {\n  :root {\n    --spacing-xs: var(--spacing-2-8px);\n  }\n}')
-    expect(css).toContain('@media (min-width: 1440px) {\n  :root {\n    --spacing-xs: var(--spacing-3-12px);\n  }\n}')
-    expect(css.match(/--spacing-sm:/g)).toHaveLength(1) // what did not change is not repeated
+    const css = exportSections({ ...untitled, imported: next }).find((x) => x.id === 'grids')!.css
+    expect(css).toContain(':root {\n  --width-xxs: var(--spacing-80-320px);')
+    expect(css).toContain('--width-xl: var(--spacing-192-768px);') // XS, the base
+    expect(css).toContain('@media (min-width: 834px) {\n  :root {\n    --width-xl: var(--spacing-256-1-024px);\n  }\n}')
+    expect(css).toContain('@media (min-width: 1440px) {\n  :root {\n    --width-xl: var(--spacing-320-1-280px);\n  }\n}')
+    expect(css.match(/--width-sm:/g)).toHaveLength(1) // what did not change is not repeated
+    // spacing and type are one block whatever the breakpoints say
+    expect(exportSections({ ...untitled, imported: next }).find((x) => x.id === 'spacing')!.css).not.toContain('@media')
   })
 
-  it('type: the sizes follow the Tablet and Mobile percentages at MD and XS', () => {
-    const data = { ...untitled, type: { ...untitled.type, tablet: { on: true, pct: -10 }, mobile: { on: true, pct: -20 } }, grid: { ...untitled.grid, on: { xxl: true, md: true, xs: true } } }
+  it('type has one size per step: the Tablet and Mobile percentages do not make modes', () => {
+    const data = { ...untitled, type: { ...untitled.type, tablet: { on: true, pct: -10 }, mobile: { on: true, pct: -20 } } }
     const typo = schemaCollections(data)[2]
+    expect(typo.modes).toEqual(['Value'])
     const size = typo.variables.find((v) => v.name === 'Font size/display-lg')!
-    expect([size.values.XXL.v, size.values.MD.v, size.values.XS.v]).toEqual([48, 43, 38])
-    const text = typo.variables.find((v) => v.name === 'Font size/text-md')!
-    expect([text.values.XXL.v, text.values.MD.v, text.values.XS.v]).toEqual([16, 16, 16]) // body text does not shrink
-    const css = exportSections(data).find((x) => x.id === 'type')!.css
-    expect(css).toContain('@media (min-width: 768px)')
-    expect(css).toContain('--font-size-display-lg: 38px;')
+    expect(size.values.Value.v).toBe(48)
+    expect(exportSections(data).find((x) => x.id === 'type')!.css).not.toContain('@media')
   })
 })

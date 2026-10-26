@@ -79,6 +79,12 @@ export function breakpointWidths(set: ImportedSet): { md: number; xxl: number } 
   return { md: at('breakpoint-md', 768), xxl: at('breakpoint-xxl', 1400) }
 }
 
+/** One mode again: the XXL values of a responsive collection under a single mode name. */
+export function makeSingle(c: ImportedCollection, mode: string): ImportedCollection {
+  if (!isResponsive(c)) return c
+  return { ...c, modes: [mode], variables: c.variables.map((v) => ({ ...v, values: { [mode]: v.values.XXL ?? Object.values(v.values)[0] } })) }
+}
+
 /** The collection with a value per breakpoint: every value of its first mode copied into XXL, MD and XS. Links stay links. */
 export function makeResponsive(c: ImportedCollection): ImportedCollection {
   if (isResponsive(c)) return c
@@ -208,27 +214,20 @@ export function schemaCollections(s: ExportInput): ImportedCollection[] {
   ]
 }
 
-/** "6. Typography": fonts, the weights of the file, and the size and line height of every step at XXL, MD and XS. */
+/** "6. Typography": fonts, the weights of the file, and the size and line height of every step. */
 function typographyCollection(s: ExportInput): ImportedCollection {
-  const by = typeByBreakpoint(s.type, s.grid)
-  const rows = by.xxl.flatMap((g) => g.rows)
-  const at = (k: 'xxl' | 'md' | 'xs') => by[k].flatMap((g) => g.rows)
-  const modes = [...RESPONSIVE_MODES]
-  const keys = ['xxl', 'md', 'xs'] as const
-  const str = (name: string, v: string) => ({ name, type: 'string' as const, scopes: ['ALL_SCOPES'], values: Object.fromEntries(modes.map((m) => [m, { v }])) })
-  const num = (name: string, pick: (r: (typeof rows)[number]) => number, step: string) => ({
-    name, type: 'number' as const, scopes: ['ALL_SCOPES'],
-    values: Object.fromEntries(modes.map((m, i) => [m, { v: pick(at(keys[i]).find((r) => r.name === step)!) }]))
-  })
+  const rows = typeByBreakpoint(s.type, s.grid).xxl.flatMap((g) => g.rows)
+  const str = (name: string, v: string) => ({ name, type: 'string' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
+  const num = (name: string, v: number) => ({ name, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
   return {
     name: '6. Typography',
-    modes,
+    modes: ['Value'],
     variables: [
       str('Font family/font-family-display', s.type.headingFont),
       str('Font family/font-family-body', s.type.bodyFont),
       ...untitledType.weights.map((w) => str(w.name, String(w.value))),
-      ...rows.map((r) => num(`Font size/${r.name}`, (x) => x.size, r.name)),
-      ...rows.map((r) => num(`Line height/${r.name}`, (x) => x.lh, r.name))
+      ...rows.map((r) => num(`Font size/${r.name}`, r.size)),
+      ...rows.map((r) => num(`Line height/${r.name}`, r.lh))
     ]
   }
 }
