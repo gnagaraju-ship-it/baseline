@@ -2,6 +2,8 @@
  * Themes: named, complete sets of token styles and settings. The store keeps the active theme's data as its working
  * copy; this file holds the pure helpers around it.
  */
+import untitledUi from '../data/untitled-ui.json'
+import type { ImportedSet } from './importedTokens'
 import { defaultSettings, type PaletteSettings } from './colour'
 import { defaultElevationSettings, type ElevationSettings } from './elevation'
 import { defaultGridSettings, type GridSettings } from './grid'
@@ -19,6 +21,8 @@ export interface ThemeData {
   grid: GridSettings
   spacing: SpacingSettings
   elevation: ElevationSettings
+  /** Tokens kept as imported. A theme with these uses them in place of everything above. */
+  imported?: ImportedSet
 }
 
 export interface Theme {
@@ -94,26 +98,16 @@ export function completeData(partial: Partial<ThemeData> | undefined): ThemeData
     type: { ...d.type, ...(p.type ?? {}) },
     grid: { ...d.grid, ...(p.grid ?? {}) },
     spacing: { ...d.spacing, ...(p.spacing ?? {}) },
-    elevation: { ...d.elevation, ...(p.elevation ?? {}) }
+    elevation: { ...d.elevation, ...(p.elevation ?? {}) },
+    ...(p.imported ? { imported: p.imported } : {})
   }
 }
 
 export const UNTITLED_NAME = 'Untitled'
 
-/**
- * The Untitled UI system mapped onto what Baseline holds: its brand (Original, 600), status colours (Blue, Green, Yellow,
- * Orange and Red 600/500), Inter for headings and body at a 16px base, and its spacing scale (0 to 160). Its 11-step ramps,
- * radius, widths and containers have no place in Baseline and are not imported.
- */
+/** Untitled UI, exactly as in the Figma files it was built from (see scripts/build-untitled.mjs). */
 export function untitledThemeData(): ThemeData {
-  const d = defaultThemeData()
-  d.settings.text = { primary: '#7F56D9', info: '#2563EB', success: '#16A34A', caution: '#EAB308', warning: '#EA580C', critical: '#DC2626' }
-  d.settings.neutral = { enabled: true, preset: 'zinc' }
-  d.type.headingFont = 'Inter'
-  d.type.bodyFont = 'Inter'
-  d.type.base = 16
-  const steps = [0, 2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 160]
-  d.spacing.extra = [128, 160]
-  d.spacing.on = { ...Object.fromEntries(Object.keys(d.spacing.on).map((k) => [k, false])), ...Object.fromEntries(steps.map((v) => [v, true])) }
-  return d
+  return { ...defaultThemeData(), imported: cloneImported(untitledUi as ImportedSet) }
 }
+
+const cloneImported = (set: ImportedSet): ImportedSet => JSON.parse(JSON.stringify(set))

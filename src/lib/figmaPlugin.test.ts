@@ -3,7 +3,7 @@ import { defaultSettings } from './colour'
 import { defaultElevationSettings } from './elevation'
 import type { ExportInput } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
-import { cloneData, defaultThemeData, type ThemeData } from './themes'
+import { cloneData, defaultThemeData, untitledThemeData, type ThemeData } from './themes'
 import { PLUGIN_FILES, PLUGIN_FOLDER, pluginZip } from './figmaPlugin'
 import { defaultGridSettings } from './grid'
 import { defaultSpacingSettings } from './spacing'
@@ -128,7 +128,7 @@ describe('plugin import', () => {
     expect(count('Responsive')).toBe(11 * 3 + 6 + 12)
     expect(count('Spacing')).toBe(17)
     expect(p.styles.map((s) => s.name)).toEqual(['elevation/xs', 'elevation/sm', 'elevation/md', 'elevation/lg', 'elevation/xl'])
-    expect(done.result).toEqual({ created: 144 + 58 + 24 + 51 + 17, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [], limited: [], themes: [] })
+    expect(done.result).toEqual({ created: 144 + 58 + 24 + 51 + 17, updated: 0, styles: 5, textStyles: 11, missingFonts: [], skipped: [], replaced: [], limited: [], themes: [], imported: 0 })
     expect(p.notes[0]).toContain('created')
   })
 
@@ -492,5 +492,86 @@ describe('plugin import: themes', () => {
     expect(tight.done.result.limited[0]).toMatch(/needs \d+ modes/)
     expect(tight.p.collections.map((c: any) => c.name)).toEqual(expect.arrayContaining(['Primitives', 'Type', 'Spacing']))
     expect(tight.p.variables.some((v: any) => v.name === 'colour/primary/10')).toBe(true)
+  })
+})
+
+describe('plugin import: imported tokens (Untitled)', () => {
+  const GROUPS = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation', 'Imported']
+  const doc = () => JSON.parse(buildExport([{ name: 'Default', data: defaultThemeData() }, { name: 'Untitled', data: untitledThemeData() }], 'json', ALL_MODULES).text)
+  const col = (p: ReturnType<typeof loadPlugin>, name: string) => p.collections.find((c) => c.name === name)
+  const vars = (p: ReturnType<typeof loadPlugin>, name: string) => p.variables.filter((v) => v.variableCollectionId === col(p, name).id)
+
+  it('creates the collections with their own modes, and leaves the generated ones with normal modes', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: doc(), groups: GROUPS })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    const done = p.posted.find((m) => m.type === 'done').result
+    expect(done.imported).toBe(8)
+    expect(done.limited).toEqual([])
+    expect(col(p, 'Primitives').modes.map((m: any) => m.name)).toEqual(['Value']) // one generated theme: no theme modes
+    expect(col(p, '1. Color modes').modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
+    expect(col(p, 'Brand palette').modes.map((m: any) => m.name)).toHaveLength(10)
+    expect(vars(p, '_Primitives')).toHaveLength(343)
+    expect(vars(p, '1. Color modes')).toHaveLength(273)
+    expect(vars(p, '6. Typography')).toHaveLength(32)
+    expect(vars(p, 'Brand palette')).toHaveLength(11)
+  })
+
+  it('keeps aliases between collections and the values of every mode', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: doc(), groups: GROUPS })
+    const bg = vars(p, '1. Color modes').find((v) => v.name === 'Colors/Background/bg-primary')
+    const modes = col(p, '1. Color modes').modes
+    const white = vars(p, '_Primitives').find((v) => v.name === 'Colors/Base/white')
+    expect(bg.valuesByMode[modes[0].modeId]).toEqual({ type: 'VARIABLE_ALIAS', id: white.id })
+    expect(bg.valuesByMode[modes[1].modeId].type).toBe('VARIABLE_ALIAS')
+    const brand = vars(p, 'Brand palette').find((v) => v.name === 'Brand/600')
+    const original = col(p, 'Brand palette').modes.find((m: any) => m.name === 'Original')
+    expect(brand.valuesByMode[original.modeId].r).toBeCloseTo(0x7f / 255, 3) // Original is a plain colour
+    expect(brand.valuesByMode[col(p, 'Brand palette').modes[0].modeId].type).toBe('VARIABLE_ALIAS') // Blue points at a primitive
+    const size = vars(p, '6. Typography').find((v) => v.name === 'Font size/text-md')
+    expect(Object.values(size.valuesByMode)).toEqual([16])
+    const family = vars(p, '6. Typography').find((v) => v.name === 'Font family/font-family-body')
+    expect(Object.values(family.valuesByMode)).toEqual(['Inter'])
+    expect(bg.scopes).toEqual(expect.any(Array))
+  })
+
+  it('does nothing for imported tokens unless the group is chosen, and updates in place on a second run', async () => {
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: doc(), groups: ['Primitives'] })
+    expect(col(p, '_Primitives')).toBeUndefined()
+    await p.send({ type: 'import', doc: doc(), groups: GROUPS })
+    const before = p.variables.length
+    await p.send({ type: 'import', doc: doc(), groups: GROUPS })
+    expect(p.variables.length).toBe(before)
+    expect(p.posted.filter((m) => m.type === 'done').pop().result.created).toBe(0)
+  })
+
+  it('reports the Brand palette when the plan allows fewer than 10 modes, and imports the rest', async () => {
+    const p = loadPlugin()
+    const make = p.figma.variables.createVariableCollection
+    p.figma.variables.createVariableCollection = (name: string) => {
+      const c = make(name)
+      const add = c.addMode.bind(c)
+      c.addMode = (n: string) => { if (c.modes.length >= 4) throw new Error('Limited to 4 modes'); add(n) }
+      return c
+    }
+    await p.send({ type: 'import', doc: doc(), groups: GROUPS })
+    const done = p.posted.find((m) => m.type === 'done').result
+    expect(done.limited).toHaveLength(1)
+    expect(done.limited[0]).toMatch(/^Brand palette needs 10 modes/)
+    expect(done.imported).toBe(7)
+  })
+
+  it('the plugin window lists Imported tokens for a multi-theme file', async () => {
+    const html = file('ui.html')
+    document.body.innerHTML = /<body[^>]*>([\s\S]*?)<script>/.exec(html)![1]
+    new Function(/<script>([\s\S]*)<\/script>/.exec(html)![1])()
+    const paste = document.getElementById('paste') as HTMLTextAreaElement
+    paste.value = JSON.stringify(doc())
+    paste.dispatchEvent(new Event('input'))
+    const labels = [...document.querySelectorAll('#groups label')].map((l) => l.textContent)
+    expect(labels.some((t) => t!.startsWith('Imported tokens') && t!.endsWith('702'))).toBe(true)
+    expect(labels.some((t) => t!.startsWith('Colour ramps'))).toBe(true)
   })
 })

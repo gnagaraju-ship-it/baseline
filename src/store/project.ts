@@ -9,6 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
+import type { ImportedSet } from '../lib/importedTokens'
 import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
@@ -105,6 +106,8 @@ interface ProjectState {
   setSpacingSame: (same: boolean) => void
   toggleSpacingBreakpoint: (key: BreakpointKey) => void
   elevation: ElevationSettings
+  /** Tokens kept as imported, when the active theme is an imported set. */
+  imported?: ImportedSet
   applyElevationPreset: (preset: ElevationPresetKey) => void
   setShadowColour: (text: string) => void
   renameElevation: (i: number, text: string) => void
@@ -150,11 +153,12 @@ interface ProjectState {
   reset: () => void
 }
 
-type Working = Pick<ProjectState, 'settings' | 'tokenOverrides' | 'tokenAlpha' | 'type' | 'grid' | 'spacing' | 'elevation'>
+type Working = Pick<ProjectState, 'settings' | 'tokenOverrides' | 'tokenAlpha' | 'type' | 'grid' | 'spacing' | 'elevation' | 'imported'>
 
 /** The theme data currently being edited. */
 export const pickData = (s: Working): ThemeData => ({
-  settings: s.settings, tokenOverrides: s.tokenOverrides, tokenAlpha: s.tokenAlpha, type: s.type, grid: s.grid, spacing: s.spacing, elevation: s.elevation
+  settings: s.settings, tokenOverrides: s.tokenOverrides, tokenAlpha: s.tokenAlpha, type: s.type, grid: s.grid, spacing: s.spacing, elevation: s.elevation,
+  ...(s.imported ? { imported: s.imported } : {})
 })
 
 /** Every theme with the active one brought up to date from the working copy. */
@@ -163,7 +167,7 @@ export function currentThemes(s: Working & { themes: Theme[]; activeThemeId: str
 }
 
 /** What switching to a theme changes: its data, plus the view state that must not point at the old theme. */
-const loadTheme = (data: ThemeData) => ({ ...data, openToken: null, pickerPalette: null, selected: { key: 'primary' as PaletteKey, index: 9 } })
+const loadTheme = (data: ThemeData) => ({ ...data, imported: data.imported, openToken: null, pickerPalette: null, selected: { key: 'primary' as PaletteKey, index: 9 } })
 
 export type AppTheme = 'light' | 'dark'
 
@@ -389,7 +393,8 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       if (!target) return {}
       return { themes: saved, activeThemeId: id, ...loadTheme(target.data) }
     }),
-  resetTheme: () => set({ ...loadTheme(defaultThemeData()) }),
+  // An imported theme goes back to the tokens it was imported with.
+  resetTheme: () => set((s) => ({ ...loadTheme(s.imported ? untitledThemeData() : defaultThemeData()) })),
   reset: () =>
     set({
       themes: [{ id: 'theme-1', name: 'Default', data: defaultThemeData() }],
@@ -410,16 +415,18 @@ export const useProject = create<ProjectState>()(persist((set) => ({
       type: defaultTypeSettings(),
       grid: defaultGridSettings(),
       spacing: defaultSpacingSettings(),
-      elevation: defaultElevationSettings()
+      elevation: defaultElevationSettings(),
+      imported: undefined
     })
 }), {
   name: 'baseline-project',
-  version: 4,
+  version: 5,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
   // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 4) return p as never
+    if (version >= 5) return p as never
+    if (version === 4 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
     if (version === 3 && Array.isArray(p.themes)) return { ...p, themes: withUntitled(p.themes) } as never
     const data = completeData({
       settings: p.settings, tokenOverrides: p.tokenOverrides, tokenAlpha: p.tokenAlpha, type: p.type, grid: p.grid, spacing: p.spacing, elevation: p.elevation
@@ -446,6 +453,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     unit: s.unit
   })
 }))
+
+/** Version 4 saved Untitled as a mapping onto Baseline's generators. If it was never edited, it becomes the imported tokens. */
+function importUntitled(t: Theme): Theme {
+  const d = t.data
+  const unedited = t.name === UNTITLED_NAME && !d.imported && d.settings?.text?.primary === '#7F56D9' && d.type?.headingFont === 'Inter' && d.type?.base === 16
+  return unedited ? { ...t, data: untitledThemeData() } : t
+}
 
 /** Adds the Untitled theme after the saved ones, unless one with that name exists or there is no room. */
 function withUntitled(themes: Theme[]): Theme[] {

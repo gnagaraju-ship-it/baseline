@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { MAX_THEMES } from '../lib/themes'
+import { MAX_THEMES, untitledThemeData } from '../lib/themes'
 import { currentThemes, pickData, useProject } from './project'
 
 const s = () => useProject.getState()
@@ -166,9 +166,40 @@ describe('themes in the store', () => {
     expect(s().themes.map((t) => t.name)).toEqual(['Mine', 'Untitled'])
     expect(s().activeThemeId).toBe('Mine')
     expect(s().settings.text.primary).toBe('#111111')
-    expect(s().themes[1].data.settings.text.primary).toBe('#7F56D9')
+    expect(s().themes[1].data.imported?.collections).toHaveLength(8)
     localStorage.setItem('baseline-project', JSON.stringify({ version: 3, state: { themes: [mk('untitled', '#222222')], activeThemeId: 'untitled' } }))
     await useProject.persist.rehydrate()
     expect(s().themes.map((t) => t.name)).toEqual(['untitled'])
+  })
+
+  it('turns an unedited version 4 Untitled (mapped onto the generators) into the imported tokens, and leaves an edited one', async () => {
+    const mapped = (primary: string) => ({
+      id: 'theme-2', name: 'Untitled',
+      data: { ...pickData(s()), settings: { ...s().settings, text: { ...s().settings.text, primary } }, type: { ...s().type, headingFont: 'Inter', base: 16 } }
+    })
+    const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 4, state: { themes: [def, mapped('#7F56D9')], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    expect(s().themes[0].data.imported).toBeUndefined()
+    expect(s().themes[1].data.imported?.collections.map((c) => c.name)).toHaveLength(8)
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 4, state: { themes: [def, mapped('#123456')], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    expect(s().themes[1].data.imported).toBeUndefined()
+  })
+
+  it('switching to an imported theme carries its tokens, and resetting it restores them', () => {
+    const data = untitledThemeData()
+    useProject.setState({ themes: [...s().themes, { id: 'theme-9', name: 'Untitled', data }] })
+    s().switchTheme('theme-9')
+    expect(s().imported).toBe(data.imported)
+    s().switchTheme(s().themes[0].id)
+    expect(s().imported).toBeUndefined()
+    s().switchTheme('theme-9')
+    useProject.setState({ imported: { collections: [] } })
+    s().resetTheme()
+    expect(s().imported?.collections).toHaveLength(8)
+    s().switchTheme(s().themes[0].id)
+    s().resetTheme()
+    expect(s().imported).toBeUndefined()
   })
 })

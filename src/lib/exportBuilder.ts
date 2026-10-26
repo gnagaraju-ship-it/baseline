@@ -3,6 +3,7 @@
  */
 import { themedSections, type ExportInput, type ExportModule, type NamedTheme } from './exportAll'
 import { buildFigmaTokens } from './figmaExport'
+import { importedDoc } from './importedTokens'
 
 export type ExportFormat = 'css' | 'json'
 
@@ -54,7 +55,8 @@ export function buildExport(input: ExportInput | NamedTheme[], format: ExportFor
     text = sections.length ? sections.map((s) => `/* ${s.title} */\n${s.css}`).join('\n\n') + '\n' : ''
   } else {
     const keep = new Set(chosen.map((m) => GROUP[m]))
-    const pick = (data: ExportInput) => {
+    const pick = (data: ExportInput): Record<string, unknown> => {
+      if (data.imported) return importedDoc(data.imported, chosen)
       const doc = buildFigmaTokens(data) as Record<string, unknown>
       const out: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(doc)) if (k.startsWith('$') || keep.has(k)) out[k] = v

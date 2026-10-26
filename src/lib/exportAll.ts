@@ -1,6 +1,7 @@
 /**
  * One export for the whole system: every module's CSS in a single file, with a count of the tokens it holds.
  */
+import { importedSections, type ImportedSet } from './importedTokens'
 import { themeSlugs } from './themes'
 import { buildPalettes, toCss, tokenRows, type PaletteSettings } from './colour'
 import { toElevationCss, type ElevationSettings } from './elevation'
@@ -19,6 +20,8 @@ export interface ExportInput {
   grid: GridSettings
   spacing: SpacingSettings
   elevation: ElevationSettings
+  /** Tokens kept as imported; when set they replace everything the generators above would make. */
+  imported?: ImportedSet
 }
 
 export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' | 'elevation'
@@ -26,6 +29,7 @@ export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' |
 export interface ExportSection { id: ExportModule; title: string; css: string; count: number }
 
 export function exportSections(s: ExportInput): ExportSection[] {
+  if (s.imported) return importedSections(s.imported)
   const palettes = buildPalettes(s.settings)
   const rows = tokenRows(palettes)
   const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha)
@@ -60,7 +64,7 @@ export function scopeCss(css: string, slug: string, isDefault: boolean): string 
   const brand = `[data-brand="${slug}"]`
   return css
     .replace(/^(\s*):root \{/gm, (_, ind) => `${ind}${isDefault ? `:root, ${brand}` : brand} {`)
-    .replace(/^(\s*)\[data-theme="dark"\] \{/gm, (_, ind) => `${ind}${isDefault ? `[data-theme="dark"], ${brand}[data-theme="dark"]` : `${brand}[data-theme="dark"]`} {`)
+    .replace(/^(\s*)(\[data-(?!brand=)[a-z-]+="[^"]+"\]) \{/gm, (_, ind, sel) => `${ind}${isDefault ? `${sel}, ${brand}${sel}` : `${brand}${sel}`} {`)
 }
 
 /** Sections for every theme. One theme gives exactly the plain sections; several are scoped by data-brand. */
@@ -71,7 +75,7 @@ export function themedSections(themes: NamedTheme[]): ExportSection[] {
   return per[0].map((sec, i) => ({
     id: sec.id,
     title: sec.title,
-    css: per.map((list, n) => `/* Theme: ${themes[n].name} */\n${scopeCss(list[i].css, slugs[n], n === 0)}`).join('\n\n'),
+    css: per.flatMap((list, n) => (list[i].css ? [`/* Theme: ${themes[n].name} */\n${scopeCss(list[i].css, slugs[n], n === 0)}`] : [])).join('\n\n'),
     count: per.reduce((sum, list) => sum + list[i].count, 0)
   }))
 }

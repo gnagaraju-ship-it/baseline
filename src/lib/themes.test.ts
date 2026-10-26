@@ -55,13 +55,15 @@ describe('theme data', () => {
 })
 
 describe('untitledThemeData', () => {
-  it('maps the Untitled UI brand, status colours, Inter and spacing scale', async () => {
-    const { exportSections } = await import('./exportAll')
+  it('holds exactly the imported Untitled UI tokens', () => {
     const d = untitledThemeData()
-    expect(d.settings.text.primary).toBe('#7F56D9')
-    expect([d.type.headingFont, d.type.bodyFont, d.type.base]).toEqual(['Inter', 'Inter', 16])
-    const spacing = exportSections(d).find((x) => x.id === 'spacing')!
-    expect(spacing.count).toBe(17)
-    expect(JSON.stringify(d)).not.toBe(JSON.stringify(defaultThemeData()))
+    const sets = d.imported!.collections
+    expect(sets.map((c) => [c.name, c.variables.length, c.modes.length])).toEqual([
+      ['_Primitives', 343, 1], ['Brand palette', 11, 10], ['1. Color modes', 273, 2], ['2. Radius', 11, 1],
+      ['3. Spacing', 17, 1], ['4. Widths', 12, 1], ['5. Containers', 3, 1], ['6. Typography', 32, 1]
+    ])
+    // an independent copy
+    d.imported!.collections[0].variables.length = 0
+    expect(untitledThemeData().imported!.collections[0].variables).toHaveLength(343)
   })
 })

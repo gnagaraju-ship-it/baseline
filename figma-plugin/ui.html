@@ -58,9 +58,10 @@
     Type: 'Type scale (fonts, sizes by breakpoint, text styles)',
     Grid: 'Grids (by breakpoint)',
     Spacing: 'Spacing (scale and by breakpoint)',
-    Elevation: 'Elevation (shadow styles)'
+    Elevation: 'Elevation (shadow styles)',
+    Imported: 'Imported tokens (own collections and modes)'
   };
-  var ORDER = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation'];
+  var ORDER = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation', 'Imported'];
   var doc = null;
 
   var $ = function (id) { return document.getElementById(id); };
@@ -69,6 +70,15 @@
     if (!node || typeof node !== 'object') return 0;
     if ('$value' in node) return 1;
     return Object.keys(node).reduce(function (n, k) { return k[0] === '$' ? n : n + count(node[k]); }, 0);
+  }
+
+  // The token documents in a file: one per theme in a multi-theme file, otherwise the file itself.
+  function docsOf(parsed) {
+    return parsed && parsed.Themes && typeof parsed.Themes === 'object' ? Object.keys(parsed.Themes).map(function (k) { return parsed.Themes[k]; }) : [parsed];
+  }
+
+  function groupCount(parsed, g) {
+    return docsOf(parsed).reduce(function (n, d) { return n + (d && d[g] ? count(d[g]) : 0); }, 0);
   }
 
   function setStatus(kind, text) {
@@ -89,7 +99,7 @@
     setStatus('', '');
     try {
       var parsed = JSON.parse(text);
-      var found = ORDER.filter(function (g) { return parsed[g] && count(parsed[g]) > 0; });
+      var found = ORDER.filter(function (g) { return groupCount(parsed, g) > 0; });
       if (!found.length) throw new Error('No Baseline token groups were found in this file. Export it from Baseline with the JSON format.');
       doc = parsed;
       $('fileName').textContent = name || 'Pasted JSON';
@@ -100,7 +110,7 @@
         box.type = 'checkbox'; box.value = g; box.checked = true;
         box.addEventListener('change', refresh);
         var text = document.createElement('span'); text.textContent = LABELS[g];
-        var n = document.createElement('span'); n.className = 'n'; n.textContent = count(parsed[g]);
+        var n = document.createElement('span'); n.className = 'n'; n.textContent = groupCount(parsed, g);
         label.appendChild(box); label.appendChild(text); label.appendChild(n);
         $('groups').appendChild(label);
       });

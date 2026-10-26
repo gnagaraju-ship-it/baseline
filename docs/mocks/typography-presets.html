@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock: Typography presets</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ground:#fff; --panel:#fafafa; --line:#e4e4e7; --soft:#f4f4f5; --ink:#18181b; --muted:#52525b; --accent:#e2531b; --accent-text:#c2410c; --tint:#fff1eb; --btn:#d2400b; --ok:#15803d; --warn:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.5 Inter, system-ui, sans-serif; color:var(--ink); background:var(--ground); }
+  .mock-banner { background:#18181b; color:#fafafa; padding:8px 20px; font-size:12px; display:flex; gap:12px; align-items:center; }
+  .mock-banner b { background:var(--accent); color:#fff; border-radius:4px; padding:1px 6px; font-size:10px; letter-spacing:.06em; }
+  .app { display:grid; grid-template-columns: 64px 340px minmax(0,1fr); min-height: calc(100vh - 36px); }
+  .rail { border-right:1px solid #eaeaec; background:var(--panel); display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 0; }
+  .logo { width:40px; height:40px; border-radius:10px; background:#18181b; display:grid; place-items:center; margin-bottom:12px; }
+  .logo i { display:block; width:18px; height:3px; border-radius:2px; background:#a1a1aa; box-shadow: 0 -7px 0 #fafafa, 0 7px 0 var(--accent); }
+  .ri { width:44px; height:44px; border-radius:10px; border:1px solid transparent; display:grid; place-items:center; color:var(--muted); font-weight:700; }
+  .ri.on { background:#fff; border-color:var(--line); color:var(--ink); }
+  aside { border-right:1px solid #eaeaec; background:var(--panel); padding:0; overflow:auto; }
+  aside header { display:flex; gap:12px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line); font-weight:600; font-size:16px; }
+  .sec { padding:18px 20px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:10px; }
+  h3 { margin:0; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; display:flex; justify-content:space-between; }
+  .tag { font-size:10px; border:1px solid var(--line); border-radius:4px; padding:2px 6px; color:var(--muted); letter-spacing:.06em; background:#fff; }
+  .preset { display:grid; gap:8px; }
+  .pcard { text-align:left; border:1px solid var(--line); background:#fff; border-radius:10px; padding:10px 12px; cursor:pointer; display:grid; grid-template-columns: 1fr auto; gap:2px 8px; font:inherit; }
+  .pcard:hover { border-color:#a1a1aa; }
+  .pcard[aria-pressed=true] { border-color:#f5b49a; background:var(--tint); box-shadow:0 0 0 3px #ffe4da; }
+  .pcard b { font-size:13px; }
+  .pcard small { grid-column:1 / -1; color:var(--muted); font-size:12px; }
+  .pcard .n { font:600 11px 'JetBrains Mono', monospace; color:var(--muted); align-self:center; }
+  .pcard.pending { border-style:dashed; }
+  .pill { height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--line); background:#fff; font:500 12px Inter; cursor:pointer; }
+  .pill[aria-pressed=true] { background:#18181b; color:#fff; border-color:#18181b; }
+  label.f { display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:500; }
+  select, input[type=number] { height:34px; border:1px solid var(--line); border-radius:8px; padding:0 8px; font:13px 'JetBrains Mono', monospace; background:#fff; color:var(--ink); }
+  main { min-width:0; display:flex; flex-direction:column; }
+  .top { height:64px; border-bottom:1px solid #eaeaec; padding:0 24px 0 28px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .tabs { display:flex; gap:4px; height:100%; }
+  .tab { display:flex; align-items:center; gap:8px; padding:0 14px; font-weight:500; color:var(--muted); border:0; background:none; font-size:14px; }
+  .tab.on { color:var(--ink); font-weight:600; box-shadow: inset 0 -2px 0 var(--accent); }
+  .badge { background:var(--tint); color:var(--accent-text); border-radius:6px; padding:0 6px; font-size:11px; font-weight:600; height:20px; display:inline-flex; align-items:center; }
+  .btn { height:40px; border-radius:9px; padding:0 14px; font:600 13px Inter; border:0; background:var(--btn); color:#fff; }
+  .seg { display:inline-flex; background:#f0f0f2; padding:3px; border-radius:9px; gap:2px; }
+  .seg button { height:30px; border:0; border-radius:7px; padding:0 12px; background:transparent; font:500 13px Inter; color:var(--muted); cursor:pointer; }
+  .seg button[aria-pressed=true] { background:#fff; color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+  .body { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:0; flex:1; }
+  .scale { padding:24px 28px 56px; min-width:0; }
+  .head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  h1 { margin:0 0 4px; font-size:22px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); margin:0; max-width:560px; }
+  .grp { margin:22px 0 8px; display:flex; gap:10px; align-items:baseline; }
+  .grp h2 { margin:0; font-size:12px; letter-spacing:.08em; font-weight:700; }
+  .grp span { color:var(--muted); font-size:12px; }
+  .row { border:1px solid var(--line); border-radius:10px; margin-bottom:8px; background:#fff; display:grid; grid-template-columns: 170px minmax(0,1fr) 320px; gap:16px; align-items:center; padding:10px 14px; min-height:64px; }
+  .row.edited { border-color:#f08a5d; }
+  .name { font:13px 'JetBrains Mono', monospace; color:var(--muted); display:flex; flex-direction:column; gap:2px; }
+  .name em { font-style:normal; color:var(--accent-text); font-size:10px; letter-spacing:.06em; font-weight:700; }
+  .sample { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ctl { display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; }
+  .ctl label { display:flex; flex-direction:column; gap:2px; font:600 9.5px 'JetBrains Mono', monospace; letter-spacing:.06em; color:var(--muted); }
+  .ctl input, .ctl select { width:100%; height:30px; font-size:12px; padding:0 6px; }
+  aside.vars { border-left:1px solid #eaeaec; border-right:0; background:var(--panel); padding:20px; display:flex; flex-direction:column; gap:16px; }
+  .vbox { background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .vbox h4 { margin:0; font-size:13px; display:flex; justify-content:space-between; }
+  .vbox code, .code { font:11.5px/1.6 'JetBrains Mono', monospace; color:#3f3f46; }
+  .tbl { width:100%; border-collapse:collapse; font:11.5px 'JetBrains Mono', monospace; }
+  .tbl td, .tbl th { padding:3px 4px; border-bottom:1px solid #f0f0f2; text-align:right; }
+  .tbl th:first-child, .tbl td:first-child { text-align:left; }
+  .tbl th { color:var(--muted); font-weight:600; font-size:10px; letter-spacing:.06em; }
+  .note { font-size:12px; color:var(--muted); line-height:1.55; }
+  .note b { color:var(--ink); }
+  .pend { border:1px dashed #d4d4d8; border-radius:10px; padding:14px; background:#fffbeb; color:#92400e; font-size:13px; }
+  .reset { border:0; background:none; color:var(--accent-text); font:600 12px Inter; padding:0; cursor:pointer; }
+  .flag { color:var(--warn); }
+  @media (max-width: 1200px) { .body { grid-template-columns:1fr; } aside.vars { border-left:0; border-top:1px solid #eaeaec; } .row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="mock-banner"><b>MOCK</b> Typography presets. Click around: choose a preset, edit any value, switch breakpoint, watch the variables on the right. Nothing here is built yet.</div>
+<div class="app">
+  <nav class="rail" aria-label="Workspace"><div class="logo"><i></i></div><div class="ri">C</div><div class="ri on">T</div><div class="ri">G</div><div class="ri">S</div><div class="ri">E</div></nav>
+
+  <aside aria-label="Type settings">
+    <header><span class="logo" style="width:32px;height:32px;margin:0;border-radius:8px"><i style="width:14px;box-shadow:0 -5px 0 #fafafa,0 5px 0 var(--accent)"></i></span> Type Scale</header>
+
+    <div class="sec">
+      <h3>Platform <span class="tag">PROJECT</span></h3>
+      <div class="seg" role="group" aria-label="Platform" style="width:100%">
+        <button aria-pressed="false" style="flex:1">Website</button><button aria-pressed="true" style="flex:1">Web app</button><button aria-pressed="false" style="flex:1">iOS</button><button aria-pressed="false" style="flex:1">watchOS</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Style preset <span class="tag">NEW</span></h3>
+      <div class="preset" id="presets" role="group" aria-label="Style preset"></div>
+      <p class="note">Choosing a preset replaces the styles below. Every value stays editable, and the variables follow your edits.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Fonts</h3>
+      <label class="f">Heading / Display<select id="fh"></select></label>
+      <label class="f">Body / Label<select id="fb"></select></label>
+      <p class="note" id="fontNote"></p>
+    </div>
+
+    <div class="sec">
+      <h3>Names</h3>
+      <div class="seg" role="group" aria-label="Style names" style="width:100%">
+        <button id="nPreset" aria-pressed="true" style="flex:1">Preset names</button><button id="nBase" aria-pressed="false" style="flex:1">Baseline names</button>
+      </div>
+      <p class="note" id="nameNote"></p>
+    </div>
+
+    <div class="sec" style="border-bottom:0">
+      <h3>Responsive</h3>
+      <label class="f"><span style="display:flex;justify-content:space-between">Tablet (MD) headline size <b id="tabv" style="font-family:'JetBrains Mono'">−8%</b></span><input id="tab" type="range" min="-30" max="0" value="-8"></label>
+      <label class="f"><span style="display:flex;justify-content:space-between">Mobile (XS) headline size <b id="mobv" style="font-family:'JetBrains Mono'">−15%</b></span><input id="mob" type="range" min="-30" max="0" value="-15"></label>
+      <p class="note">Large headline styles shrink on smaller breakpoints, body and label styles stay put.</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div class="tabs"><button class="tab on">Scale <span class="badge" id="cnt">15</span></button><button class="tab">Preview</button><button class="tab">Export</button></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="seg" role="group" aria-label="Unit"><button aria-pressed="false">rem</button><button aria-pressed="true">px</button><button aria-pressed="false">pt</button></div>
+        <button class="btn">Export <span class="badge" style="background:rgba(255,255,255,.2);color:#fff" id="cnt2">15</span></button>
+      </div>
+    </div>
+
+    <div class="body">
+      <section class="scale">
+        <div class="head">
+          <div><h1 id="title">Material Design 3</h1><p class="sub" id="desc"></p></div>
+          <div class="seg" role="group" aria-label="Breakpoint" id="bps">
+            <button data-bp="xxl" aria-pressed="true">XXL 1400</button><button data-bp="md" aria-pressed="false">MD 768</button><button data-bp="xs" aria-pressed="false">XS 390</button>
+          </div>
+        </div>
+        <div id="list"></div>
+      </section>
+
+      <aside class="vars" aria-label="Generated variables">
+        <div class="vbox">
+          <h4>Figma variables <span class="badge" id="vcount"></span></h4>
+          <table class="tbl" id="vtable"></table>
+          <p class="note">The sample row shows one style across the three modes of the <b>Responsive</b> collection. Set a frame to XXL, MD or XS and text follows.</p>
+        </div>
+        <div class="vbox">
+          <h4>What gets created</h4>
+          <div class="code" id="what"></div>
+        </div>
+        <div class="vbox">
+          <h4>CSS preview</h4>
+          <pre class="code" style="margin:0;white-space:pre-wrap" id="css"></pre>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+/* Preset data: [name, size, line height, weight, tracking in px, group] — Material 3 type scale and Apple HIG iOS are the published values. */
+var M3 = [
+  ['display-large',57,64,400,-0.25,'DISPLAY'],['display-medium',45,52,400,0,'DISPLAY'],['display-small',36,44,400,0,'DISPLAY'],
+  ['headline-large',32,40,400,0,'HEADLINE'],['headline-medium',28,36,400,0,'HEADLINE'],['headline-small',24,32,400,0,'HEADLINE'],
+  ['title-large',22,28,400,0,'TITLE'],['title-medium',16,24,500,0.15,'TITLE'],['title-small',14,20,500,0.1,'TITLE'],
+  ['body-large',16,24,400,0.5,'BODY'],['body-medium',14,20,400,0.25,'BODY'],['body-small',12,16,400,0.4,'BODY'],
+  ['label-large',14,20,500,0.1,'LABEL'],['label-medium',12,16,500,0.5,'LABEL'],['label-small',11,16,500,0.5,'LABEL']
+];
+var HIG = [
+  ['large-title',34,41,400,0.37,'HEADINGS'],['title-1',28,34,400,0.36,'HEADINGS'],['title-2',22,28,400,0.35,'HEADINGS'],['title-3',20,25,400,0.38,'HEADINGS'],
+  ['headline',17,22,600,-0.41,'TEXT'],['body',17,22,400,-0.41,'TEXT'],['callout',16,21,400,-0.32,'TEXT'],['subhead',15,20,400,-0.24,'TEXT'],
+  ['footnote',13,18,400,-0.08,'SMALL'],['caption-1',12,16,400,0,'SMALL'],['caption-2',11,13,400,0.07,'SMALL']
+];
+var WATCH = [
+  ['large-title',32,36,400,0,'HEADINGS'],['title-1',24,28,400,0,'HEADINGS'],['title-2',20,24,400,0,'HEADINGS'],['title-3',18,22,400,0,'HEADINGS'],
+  ['headline',16,21,600,0,'TEXT'],['body',16,21,400,0,'TEXT'],['caption',15,18,400,0,'SMALL'],['footnote',14,16,400,0,'SMALL'],['footnote-2',13,15,400,0,'SMALL']
+];
+var UNTITLED = [
+  ['display-2xl',72,90,600,-1.44,'DISPLAY'],['display-xl',60,72,600,-1.2,'DISPLAY'],['display-lg',48,60,600,-0.96,'DISPLAY'],['display-md',36,44,600,-0.72,'DISPLAY'],['display-sm',30,38,600,0,'DISPLAY'],['display-xs',24,32,600,0,'DISPLAY'],
+  ['text-xl',20,30,400,0,'TEXT'],['text-lg',18,28,400,0,'TEXT'],['text-md',16,24,400,0,'TEXT'],['text-sm',14,20,400,0,'TEXT'],['text-xs',12,18,400,0,'TEXT']
+];
+var BASE = [
+  ['heading-xl',25,32,500,-0.25,'HEADING'],['heading-lg',22,24,500,-0.22,'HEADING'],['heading-md',20,24,500,-0.2,'HEADING'],['heading-sm',18,24,500,-0.18,'HEADING'],
+  ['body-lg',16,24,400,0,'BODY'],['body-md',14,24,400,0,'BODY'],['body-sm',12,16,400,0,'BODY'],
+  ['label-lg',14,16,500,0.14,'LABEL'],['label-md',12,16,500,0.12,'LABEL'],['label-sm',11,16,500,0.11,'LABEL'],['label-xs',10,16,500,0.1,'LABEL']
+];
+var FONTS = ['Roboto','Inter','SF Pro','Raleway','Nunito','Manrope','DM Sans','Playfair Display','Lora'];
+var PRESETS = [
+  { id:'baseline', label:'Baseline scale', sub:'Ratio based: base size, ratio and line grid (what you have today)', data:BASE, h:'Raleway', b:'Nunito', shrink:['HEADING'], desc:'A modular scale from your base size and ratio. Edit any step.', names:'heading-xl, body-md, label-sm' },
+  { id:'m3', label:'Material Design 3', sub:'Google. 15 styles: Display, Headline, Title, Body, Label', data:M3, h:'Roboto', b:'Roboto', shrink:['DISPLAY','HEADLINE'], desc:'Material Design 3 type scale (md.sys.typescale), Roboto by default.', names:'display-large, title-medium, body-small' },
+  { id:'hig', label:'Apple HIG: iOS', sub:'Apple. 11 text styles from Large Title to Caption 2', data:HIG, h:'SF Pro', b:'SF Pro', shrink:['HEADINGS'], desc:'Apple Human Interface Guidelines text styles at the default Dynamic Type size.', names:'large-title, body, caption-1' },
+  { id:'watch', label:'Apple HIG: watchOS', sub:'Apple. 9 text styles', data:WATCH, h:'SF Pro', b:'SF Pro', shrink:[], desc:'Apple Human Interface Guidelines text styles for watchOS.', names:'large-title, body, footnote-2' },
+  { id:'untitled', label:'Untitled UI', sub:'Display and Text scales. Sample values until you send the file', data:UNTITLED, h:'Inter', b:'Inter', shrink:['DISPLAY'], desc:'Untitled UI type scale. These are placeholder values from the public kit; they will be replaced by the file you provide.', names:'display-2xl, text-md', pending:true },
+  { id:'custom', label:'Custom', sub:'Start from any preset, then add, rename and delete styles', data:BASE, h:'Inter', b:'Inter', shrink:['HEADING'], desc:'Your own list of styles.', names:'anything you name', custom:true }
+];
+var state = { preset:'m3', bp:'xxl', tab:-8, mob:-15, names:'preset', edits:{}, h:'Roboto', b:'Roboto' };
+
+function stack(f){ return f==='SF Pro' ? "-apple-system,'SF Pro Text','Helvetica Neue',Inter,sans-serif" : "'"+f+"',Inter,system-ui,sans-serif"; }
+function cur(){ return PRESETS.filter(function(p){return p.id===state.preset})[0]; }
+function rows(){
+  var p = cur();
+  return p.data.map(function(r){
+    var e = state.edits[r[0]] || {};
+    var f = (state.bp==='md' ? 1+state.tab/100 : state.bp==='xs' ? 1+state.mob/100 : 1);
+    var shrinks = p.shrink.indexOf(r[5])>=0 && state.bp!=='xxl';
+    var size = e.size!=null ? e.size : r[1];
+    var shown = shrinks ? Math.round(size*f) : size;
+    var lh = e.lh!=null ? e.lh : r[2];
+    if (shrinks && e.lh==null) lh = Math.max(Math.round(lh*f/4)*4, Math.ceil(shown/4)*4);
+    return { name:r[0], group:r[5], size:shown, base:size, lh:lh, w:e.w!=null?e.w:r[3], tr:e.tr!=null?e.tr:r[4], edited: !!state.edits[r[0]], shrinks:shrinks };
+  });
+}
+function render(){
+  var p = cur();
+  document.getElementById('title').textContent = p.label;
+  document.getElementById('desc').textContent = p.desc;
+  var list = document.getElementById('list'); list.innerHTML='';
+  if (p.pending) { var d=document.createElement('div'); d.className='pend'; d.innerHTML='<b>Waiting for your Untitled UI file.</b> The values below are placeholders so you can see how it will look. Send the file and I will load the exact styles, names and fonts.'; list.appendChild(d); }
+  var last=''; var rs = rows();
+  rs.forEach(function(r){
+    if (r.group!==last){ var g=document.createElement('div'); g.className='grp'; g.innerHTML='<h2>'+r.group+'</h2><span>'+rs.filter(function(x){return x.group===r.group}).length+' styles</span>'; list.appendChild(g); last=r.group; }
+    var row=document.createElement('div'); row.className='row'+(r.edited?' edited':'');
+    var fam = (r.group==='DISPLAY'||r.group==='HEADLINE'||r.group==='HEADING'||r.group==='HEADINGS') ? state.h : state.b;
+    row.innerHTML =
+      '<div class="name"><span>'+r.name+'</span>'+(r.edited?'<em>EDITED · <button class="reset" data-reset="'+r.name+'">reset</button></em>':'')+(r.shrinks?'<em style="color:#52525b">'+r.base+' → '+r.size+'px at this breakpoint</em>':'')+'</div>'+
+      '<div class="sample" style="font-family:'+stack(fam)+';font-size:'+Math.min(r.size,60)+'px;line-height:'+r.lh+'px;font-weight:'+r.w+';letter-spacing:'+r.tr+'px">The quick brown fox</div>'+
+      '<div class="ctl">'+
+      '<label>SIZE<input type="number" data-k="size" data-n="'+r.name+'" value="'+r.base+'"></label>'+
+      '<label>LINE<input type="number" data-k="lh" data-n="'+r.name+'" value="'+r.lh+'"></label>'+
+      '<label>WEIGHT<select data-k="w" data-n="'+r.name+'">'+[300,400,500,600,700].map(function(w){return '<option'+(w===r.w?' selected':'')+'>'+w+'</option>'}).join('')+'</select></label>'+
+      '<label>TRACK<input type="number" step="0.01" data-k="tr" data-n="'+r.name+'" value="'+r.tr+'"></label></div>';
+    list.appendChild(row);
+  });
+  document.getElementById('cnt').textContent = rs.length; document.getElementById('cnt2').textContent = rs.length;
+  vars(rs);
+}
+function vars(rs){
+  var p = cur(); var show = rs.filter(function(r){return r.shrinks||r.group===rs[0].group}).slice(0,1)[0] || rs[0];
+  var all = { xxl:null, md:null, xs:null }; var keep=state.bp;
+  ['xxl','md','xs'].forEach(function(b){ state.bp=b; all[b]=rows().filter(function(r){return r.name===show.name})[0]; }); state.bp=keep;
+  var t = document.getElementById('vtable');
+  t.innerHTML = '<tr><th>'+show.name+'</th><th>XXL</th><th>MD</th><th>XS</th></tr>'+
+    '<tr><td>size</td><td>'+all.xxl.size+'</td><td>'+all.md.size+'</td><td>'+all.xs.size+'</td></tr>'+
+    '<tr><td>line-height</td><td>'+all.xxl.lh+'</td><td>'+all.md.lh+'</td><td>'+all.xs.lh+'</td></tr>'+
+    '<tr><td>tracking</td><td>'+all.xxl.tr+'</td><td>'+all.md.tr+'</td><td>'+all.xs.tr+'</td></tr>'+
+    '<tr><td>weight</td><td colspan="3">'+show.w+' (same in every mode)</td></tr>';
+  var n = rs.length;
+  document.getElementById('vcount').textContent = (2 + n*2 + n*3) + ' variables';
+  document.getElementById('what').innerHTML =
+    '<b>Type</b> (1 mode): font-family/heading, font-family/body, '+n+' × family, '+n+' × weight<br>'+
+    '<b>Responsive</b> (XXL, MD, XS): '+n+' × size, line-height, letter-spacing<br>'+
+    '<b>Text styles</b>: '+n+' (<span style="color:var(--ok)">type/'+show.name+'</span> ...), bound to the variables<br>'+
+    '<span class="flag">Note:</span> '+(p.id==='hig'||p.id==='watch'?'SF Pro is Apple’s system font. It is not in Figma by default, so styles are made only if you have it installed; the variables are always made.':'Fonts missing from Figma are skipped and listed after import.');
+  var tok = document.getElementById('nPreset').getAttribute('aria-pressed')==='true' ? show.name : show.name;
+  document.getElementById('css').textContent = ':root {\n  --type-font-heading: '+stack(state.h).split(',')[0]+', …;\n  --type-'+tok+'-weight: '+show.w+';\n  --type-'+tok+'-size: '+all.xs.size+'px;\n  --type-'+tok+'-line: '+all.xs.lh+'px;\n}\n@media (min-width: 768px)  { :root { --type-'+tok+'-size: '+all.md.size+'px; } }\n@media (min-width: 1400px) { :root { --type-'+tok+'-size: '+all.xxl.size+'px; } }';
+  document.getElementById('nameNote').textContent = state.names==='preset' ? 'Styles keep the preset’s own names, for example '+p.names+'.' : 'Styles are renamed to Baseline’s heading / body / label names so every preset exports the same variable names.';
+}
+function renderPresets(){
+  var box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button'); b.className='pcard'+(p.pending?' pending':''); b.setAttribute('aria-pressed', state.preset===p.id);
+    b.innerHTML='<b>'+p.label+'</b><span class="n">'+p.data.length+'</span><small>'+p.sub+'</small>';
+    b.onclick=function(){ state.preset=p.id; state.edits={}; state.h=p.h; state.b=p.b; fonts(); renderPresets(); render(); };
+    box.appendChild(b);
+  });
+}
+function fonts(){
+  ['fh','fb'].forEach(function(id){ var s=document.getElementById(id); s.innerHTML=FONTS.map(function(f){return '<option'+(f===(id==='fh'?state.h:state.b)?' selected':'')+'>'+f+'</option>'}).join(''); });
+  var p=cur(); document.getElementById('fontNote').textContent = 'Preset default: '+p.h+(p.h!==p.b?' / '+p.b:'')+'. Change it and every style follows.';
+}
+document.getElementById('fh').onchange=function(e){state.h=e.target.value;render();};
+document.getElementById('fb').onchange=function(e){state.b=e.target.value;render();};
+document.getElementById('tab').oninput=function(e){state.tab=+e.target.value;document.getElementById('tabv').textContent=state.tab+'%';render();};
+document.getElementById('mob').oninput=function(e){state.mob=+e.target.value;document.getElementById('mobv').textContent=state.mob+'%';render();};
+document.getElementById('nPreset').onclick=function(){state.names='preset';document.getElementById('nPreset').setAttribute('aria-pressed','true');document.getElementById('nBase').setAttribute('aria-pressed','false');render();};
+document.getElementById('nBase').onclick=function(){state.names='base';document.getElementById('nBase').setAttribute('aria-pressed','true');document.getElementById('nPreset').setAttribute('aria-pressed','false');render();};
+document.getElementById('bps').onclick=function(e){var b=e.target.closest('button'); if(!b)return; state.bp=b.dataset.bp; [].forEach.call(document.querySelectorAll('#bps button'),function(x){x.setAttribute('aria-pressed',x===b)}); render();};
+document.getElementById('list').addEventListener('change',function(e){
+  var t=e.target; if(!t.dataset.k) return; var v=parseFloat(t.value); if(isNaN(v)) return;
+  var o=state.edits[t.dataset.n]||(state.edits[t.dataset.n]={}); o[t.dataset.k]=v; render();
+});
+document.getElementById('list').addEventListener('click',function(e){ var r=e.target.dataset.reset; if(r){ delete state.edits[r]; render(); } });
+renderPresets(); fonts(); render();
+</script>
+</body>
+</html>
