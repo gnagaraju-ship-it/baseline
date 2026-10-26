@@ -95,28 +95,53 @@ describe('the Untitled theme', () => {
     expect(rows.find((r) => r.name === 'text-md')).toMatchObject({ size: 18, lh: 27 })
   })
 
-  it('spacing: named tokens that can be edited, renamed, added, removed and reset', async () => {
+  it('spacing: the Spacing screen layout with Untitled\'s scale, tokens and radius', async () => {
     at('/spacing')
-    expect(screen.getByRole('region', { name: '3. Spacing' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '2. Radius' })).toBeInTheDocument()
-    // edit a primitive: the token that points at it follows
+    expect(screen.getByRole('region', { name: 'Scale' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Tokens' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Radius' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Base unit' })).not.toBeInTheDocument() // no Baseline presets
+    expect(screen.getByRole('group', { name: 'Unit' })).toBeInTheDocument()
+    // edit a step of the scale: the token that follows it moves
     const prim = screen.getByLabelText('Spacing/1 (4px) Style')
     await userEvent.clear(prim)
     await userEvent.type(prim, '6')
     expect((screen.getByLabelText('spacing-xs Mode 1') as HTMLInputElement).value).toBe('6')
-    // rename
+    // the unit switch changes how values are shown, not the stored px
+    await userEvent.click(screen.getByRole('button', { name: 'px' }))
+    expect(within(screen.getByRole('region', { name: 'Scale' })).getAllByText('6px').length).toBeGreaterThan(0)
+  })
+
+  it('spacing: point a token at another step, give it its own value, rename, add and remove', async () => {
+    at('/spacing')
+    const follows = screen.getByLabelText('spacing-xs follows') as HTMLSelectElement
+    expect(follows.value).toBe('_Primitives::Spacing/1 (4px)')
+    await userEvent.selectOptions(follows, '_Primitives::Spacing/2 (8px)')
+    expect((screen.getByLabelText('spacing-xs Mode 1') as HTMLInputElement).value).toBe('8')
+    const px = screen.getByLabelText('spacing-xs Mode 1')
+    await userEvent.clear(px)
+    await userEvent.type(px, '9')
+    expect((screen.getByLabelText('spacing-xs follows') as HTMLSelectElement).value).toBe('')
     const name = screen.getByLabelText('radius-md name')
     await userEvent.clear(name)
     await userEvent.type(name, 'radius-medium{Enter}')
     expect(screen.getByLabelText('radius-medium Mode 1')).toBeInTheDocument()
-    // add and remove
-    await userEvent.click(within(screen.getByRole('region', { name: '2. Radius' })).getByRole('button', { name: '+ Add' }))
+    await userEvent.click(screen.getByRole('button', { name: '+ Add radius' }))
     expect(screen.getByLabelText('new name')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Remove new' }))
     expect(screen.queryByLabelText('new name')).not.toBeInTheDocument()
-    // reset the radius collection
-    await userEvent.click(screen.getByRole('button', { name: 'Reset 2. Radius' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reset radius' }))
     expect(screen.getByLabelText('radius-md name')).toBeInTheDocument()
+  })
+
+  it('spacing: a custom step can be added from the scale', async () => {
+    at('/spacing')
+    await userEvent.type(screen.getByLabelText('Custom value in px'), '36')
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByLabelText('Spacing/custom (36px) Style')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Custom value in px'), '999')
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 
   it('grids: widths and containers as named tokens, without Baseline\'s grid controls', async () => {

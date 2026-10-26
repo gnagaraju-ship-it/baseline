@@ -13,6 +13,7 @@ import { ElevationPage } from './modules/elevation/ElevationPage'
 import { NotFoundPage } from './modules/NotFoundPage'
 import { TokensPage } from './modules/tokens/TokensPage'
 import { IMPORTED_ROUTES, ImportedPage } from './modules/imported/ImportedPage'
+import { ImportedSpacingPage } from './modules/spacing/ImportedSpacingPage'
 
 export default function App() {
   const { pathname } = useLocation()
@@ -27,7 +28,7 @@ export default function App() {
 
   return (
     <>
-    {imported && IMPORTED_ROUTES.includes(pathname) ? <ImportedPage /> : (
+    {imported && pathname === '/spacing' ? <ImportedSpacingPage /> : imported && IMPORTED_ROUTES.includes(pathname) ? <ImportedPage /> : (
     <Routes>
       <Route path="/" element={<PalettePage />} />
       <Route path="/tokens" element={<TokensPage />} />

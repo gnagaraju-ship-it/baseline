@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import full from '../data/untitled-ui.json'
 import { exportSections } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
-import { addImported, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
+import { addImported, addNamedImported, setImportedAlias, byModule, cssName, importedCount, importedDoc, moduleOf, removeImported, renameImported, resetImported, resolveSet, schemaCollections, setImportedValue, withSchemaColours, type ImportedSet } from './importedTokens'
 import { defaultThemeData, untitledThemeData } from './themes'
 
 const source = full as ImportedSet
@@ -167,5 +167,15 @@ describe('editing imported tokens', () => {
     const doc = importedDoc(withSchemaColours(data.imported!, data), ['spacing']) as any
     expect(doc.Imported['3. Spacing']['spacing-xs'].$value).toBe(5)
     expect(doc.Imported['3. Spacing']['spacing-xs'].$extensions['com.baseline'].alias['Mode 1']).toBe('_Primitives::Spacing/1 (4px)')
+  })
+
+  it('points a token at another step, and adds a named step once', () => {
+    const next = setImportedAlias(set, spacing, 'spacing-xs', 'Mode 1', '_Primitives::Spacing/2 (8px)')
+    expect(value(next, spacing, 'spacing-xs')).toBe(8)
+    expect(next.collections.find((c) => c.name === spacing)!.variables.find((x) => x.name === 'spacing-xs')!.values['Mode 1'].a).toBe('_Primitives::Spacing/2 (8px)')
+    expect(setImportedAlias(set, spacing, 'spacing-xs', 'Mode 1', '_Primitives::Spacing/nope')).toBe(set)
+    const added = addNamedImported(set, '_Primitives', 'Spacing/custom (36px)', 36)
+    expect(value(added, '_Primitives', 'Spacing/custom (36px)', 'Style')).toBe(36)
+    expect(addNamedImported(added, '_Primitives', 'Spacing/custom (36px)', 40).collections[0].variables).toHaveLength(added.collections[0].variables.length)
   })
 })

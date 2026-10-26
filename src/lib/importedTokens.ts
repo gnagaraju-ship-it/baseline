@@ -278,3 +278,21 @@ export function resetImported(set: ImportedSet, source: ImportedSet, collection:
   const original = source.collections.find((c) => c.name === collection)
   return original ? editCollection(set, collection, () => JSON.parse(JSON.stringify(original))) : set
 }
+
+/** Points a variable at another one (its value becomes the target's). A target that does not exist leaves it as it was. */
+export function setImportedAlias(set: ImportedSet, collection: string, name: string, mode: string, target: string): ImportedSet {
+  const [tc, tn] = target.split('::')
+  const t = resolveSet(set).collections.find((c) => c.name === tc)?.variables.find((v) => v.name === tn)
+  const tv = t && (Object.values(t.values)[0] as ImportedValue | undefined)
+  if (!tv || (tc === collection && tn === name)) return set
+  return editCollection(set, collection, (c) => ({ ...c, variables: c.variables.map((x) => (x.name === name ? { ...x, values: { ...x.values, [mode]: { v: tv.v, a: target } } } : x)) }))
+}
+
+/** Adds a variable with a given name and value (ignored when the name is taken). */
+export function addNamedImported(set: ImportedSet, collection: string, name: string, value: number): ImportedSet {
+  return editCollection(set, collection, (c) =>
+    c.variables.some((x) => x.name === name)
+      ? c
+      : { ...c, variables: [...c.variables, { name, type: 'number', scopes: ['ALL_SCOPES'], values: Object.fromEntries(c.modes.map((m) => [m, { v: value }])) }] }
+  )
+}

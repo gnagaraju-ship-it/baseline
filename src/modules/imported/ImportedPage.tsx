@@ -18,9 +18,9 @@ const TABS: Record<string, { module: ExportModule; label: string }> = {
 }
 
 /** The screens an imported set still has to itself: the colour screens use the theme's colour schema. */
-export const IMPORTED_ROUTES = ['/grids', '/spacing', '/elevation']
+export const IMPORTED_ROUTES = ['/grids', '/elevation']
 
-function NameField({ collection, name }: { collection: string; name: string }) {
+export function NameField({ collection, name }: { collection: string; name: string }) {
   const rename = useProject((s) => s.renameImportedVariable)
   const [draft, setDraft] = useState<string | null>(null)
   const commit = () => {

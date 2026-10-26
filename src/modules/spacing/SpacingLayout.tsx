@@ -12,14 +12,16 @@ interface Props {
   exportCount: number
   onExport: () => void
   children: ReactNode
+  /** A different settings panel, for a theme whose spacing comes from a design system. */
+  panel?: ReactNode
 }
 
 /** Frame for the Spacing screen: rail + spacing settings + Spacing tab, unit switch and Export. */
-export function SpacingLayout({ css, exportCount, onExport, children }: Props) {
+export function SpacingLayout({ css, exportCount, onExport, children, panel }: Props) {
   const unit = useProject((s) => s.unit)
   const setUnit = useProject((s) => s.setUnit)
   return (
-    <AppShell panel={<SpacingSettingsPanel />}>
+    <AppShell panel={panel ?? <SpacingSettingsPanel />}>
       <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-line-soft pl-7 pr-6">
         <nav aria-label="Views" className="flex">
           <span aria-current="page" className="flex h-16 items-center px-3.5 font-semibold text-ink shadow-[inset_0_-2px_0_#E2531B]">Spacing</span>
