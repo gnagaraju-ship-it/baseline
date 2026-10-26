@@ -17,7 +17,9 @@ import {
   type TokenRow
 } from '../../lib/colour'
 import { useProject } from '../../store/project'
+import { SchemaBrand } from './SchemaBrand'
 import { TokensList } from './TokensList'
+import { useSchema } from './useSchema'
 
 const SEMANTIC: Array<{ key: SemanticKey; label: string }> = [
   { key: 'info', label: 'Info' },
@@ -38,6 +40,7 @@ function Divider() {
 export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: TokenRow[] }) {
   const { settings, side, setSide, setText, setAlpha, setSecondary, setTertiary, addUtility, setUtilityHex, renameUtility, removeUtility, setNeutralPreset, setNeutralEnabled, setSemanticEnabled } = useProject()
   const neutral = palettes.find((p) => p.key === 'neutral')
+  const { colour } = useSchema()
 
   return (
     <>
@@ -67,6 +70,8 @@ export function SettingsPanel({ palettes, rows }: { palettes: Palette[]; rows: T
 
       {side === 'tokens' ? (
         <TokensList rows={rows} />
+      ) : colour ? (
+        <SchemaBrand schema={colour} />
       ) : (
         <div className="flex flex-col gap-6 p-5">
           <section className="flex flex-col gap-3">

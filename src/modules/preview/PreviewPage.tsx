@@ -5,6 +5,7 @@ import { fontStack } from '../../lib/typeScale'
 import { useProject } from '../../store/project'
 import { ColourLayout } from '../colour/ColourLayout'
 import { usePalettes } from '../colour/usePalettes'
+import { useSchema } from '../colour/useSchema'
 import { AreaChartCard, BarChartCard, DonutCard, GoalsCard, LineChartCard } from './Charts'
 
 const TYPES = ['Dashboard', 'Mobile', 'Web', 'Components', 'Charts', 'Logos', 'Gradients', 'Text']
@@ -13,10 +14,11 @@ const MODES: Array<[PreviewMode, string]> = [['light', 'Light'], ['dark', 'Dark'
 export function PreviewPage() {
   const openExport = useProject((s) => s.openExport)
   const { palettes, rows } = usePalettes()
+  const { colour } = useSchema()
   const { previewMode, setPreviewMode, flashCopied } = useProject()
   const headingFont = useProject((s) => s.type.headingFont)
   const bodyFont = useProject((s) => s.type.bodyFont)
-  const theme = chartTheme(previewMode, palettes)
+  const theme = chartTheme(previewMode, palettes, colour?.roles)
 
   async function copyAll() {
     flashCopied(await copyText(toCss(rows)))

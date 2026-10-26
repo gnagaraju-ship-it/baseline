@@ -46,10 +46,13 @@ const SLOTS: Partial<Record<keyof ChartTheme, [PaletteKey, number, number]>> = {
   warning: ['warning', 9, 9]
 }
 
-export function chartTheme(mode: PreviewMode, palettes: Palette[]): ChartTheme {
+/** `roles` names the palette that plays each role (primary, neutral, info ...) when a schema calls them something else. */
+export function chartTheme(mode: PreviewMode, palettes: Palette[], roles: Record<string, string> = {}): ChartTheme {
   const theme: ChartTheme = { ...FALLBACK[mode] }
+  // Steps are written for a 16-step ramp; a shorter ramp takes the step at the same position.
   const step = (key: PaletteKey, n: number) => {
-    const h = palettes.find((p) => p.key === key)?.steps[n - 1]
+    const p = palettes.find((x) => x.key === (roles[key] ?? key))
+    const h = p?.steps[p.steps.length === 16 ? n - 1 : Math.round(((n - 1) / 15) * (p.steps.length - 1))]
     return h ? `#${h}` : null
   }
   for (const [slot, [key, light, dark]] of Object.entries(SLOTS) as Array<[keyof ChartTheme, [PaletteKey, number, number]]>) {

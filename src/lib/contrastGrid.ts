@@ -16,10 +16,11 @@ export interface GridColour {
 export const DEFAULT_CELL: readonly [number, number] = [3, 10]
 export const DEFAULT_THRESHOLD: Record<Standard, number> = { apca: 60, wcag: 4.5 }
 
-export function gridColours(palette: Palette): GridColour[] {
+export function gridColours(palette: Palette, labels?: readonly string[]): GridColour[] {
+  const name = (i: number) => palette.labels?.[i] ?? labels?.[i] ?? String(i + 1)
   return [
     { label: 'White', short: 'W', hex: 'FFFFFF' },
-    ...palette.steps.map((hex, i) => ({ label: String(i + 1), short: String(i + 1), hex })),
+    ...palette.steps.map((hex, i) => ({ label: name(i), short: name(i), hex })),
     { label: 'Black', short: 'B', hex: '000000' }
   ]
 }

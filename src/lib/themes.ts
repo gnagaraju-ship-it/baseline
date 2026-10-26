@@ -4,6 +4,7 @@
  */
 import untitledUi from '../data/untitled-ui.json'
 import type { ImportedSet } from './importedTokens'
+import { UNTITLED_ID } from './schemas'
 import { defaultSettings, type PaletteSettings } from './colour'
 import { defaultElevationSettings, type ElevationSettings } from './elevation'
 import { defaultGridSettings, type GridSettings } from './grid'
@@ -23,6 +24,8 @@ export interface ThemeData {
   elevation: ElevationSettings
   /** Tokens kept as imported. A theme with these uses them in place of everything above. */
   imported?: ImportedSet
+  /** The colour schema (ramps, palettes, semantic tokens) the theme is built on; none means Baseline's own. */
+  schemaId?: string
 }
 
 export interface Theme {
@@ -99,15 +102,23 @@ export function completeData(partial: Partial<ThemeData> | undefined): ThemeData
     grid: { ...d.grid, ...(p.grid ?? {}) },
     spacing: { ...d.spacing, ...(p.spacing ?? {}) },
     elevation: { ...d.elevation, ...(p.elevation ?? {}) },
-    ...(p.imported ? { imported: p.imported } : {})
+    ...(p.imported ? { imported: p.imported } : {}),
+    ...(p.schemaId ? { schemaId: p.schemaId } : {})
   }
 }
 
 export const UNTITLED_NAME = 'Untitled'
 
-/** Untitled UI, exactly as in the Figma files it was built from (see scripts/build-untitled.mjs). */
+/**
+ * Untitled UI as it comes from its Figma files. Colours use the Untitled colour schema (editable ramps and tokens); the
+ * collections that Baseline has no screen for yet (type, spacing, radius, widths, containers) are kept as imported.
+ */
 export function untitledThemeData(): ThemeData {
-  return { ...defaultThemeData(), imported: cloneImported(untitledUi as ImportedSet) }
+  const set = cloneImported(untitledUi as ImportedSet)
+  set.collections = set.collections
+    .filter((c) => c.name !== 'Brand palette' && c.name !== '1. Color modes')
+    .map((c) => (c.name === '_Primitives' ? { ...c, variables: c.variables.filter((v) => v.name.startsWith('Spacing/')) } : c))
+  return { ...defaultThemeData(), imported: set, schemaId: UNTITLED_ID }
 }
 
 const cloneImported = (set: ImportedSet): ImportedSet => JSON.parse(JSON.stringify(set))

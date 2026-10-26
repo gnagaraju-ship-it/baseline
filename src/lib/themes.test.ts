@@ -55,15 +55,12 @@ describe('theme data', () => {
 })
 
 describe('untitledThemeData', () => {
-  it('holds exactly the imported Untitled UI tokens', () => {
+  it('is built on the Untitled colour schema, with the other collections kept as imported', () => {
     const d = untitledThemeData()
-    const sets = d.imported!.collections
-    expect(sets.map((c) => [c.name, c.variables.length, c.modes.length])).toEqual([
-      ['_Primitives', 343, 1], ['Brand palette', 11, 10], ['1. Color modes', 273, 2], ['2. Radius', 11, 1],
-      ['3. Spacing', 17, 1], ['4. Widths', 12, 1], ['5. Containers', 3, 1], ['6. Typography', 32, 1]
-    ])
+    expect(d.schemaId).toBe('untitled-ui')
+    expect(d.imported!.collections.map((c) => c.name)).toEqual(['_Primitives', '2. Radius', '3. Spacing', '4. Widths', '5. Containers', '6. Typography'])
     // an independent copy
     d.imported!.collections[0].variables.length = 0
-    expect(untitledThemeData().imported!.collections[0].variables).toHaveLength(343)
+    expect(untitledThemeData().imported!.collections[0].variables).toHaveLength(32)
   })
 })

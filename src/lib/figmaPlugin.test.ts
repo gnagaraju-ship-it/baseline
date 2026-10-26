@@ -495,26 +495,26 @@ describe('plugin import: themes', () => {
   })
 })
 
-describe('plugin import: imported tokens (Untitled)', () => {
+describe('plugin import: Untitled (colour schema and imported collections)', () => {
   const GROUPS = ['Primitives', 'Semantic', 'Type', 'Grid', 'Spacing', 'Elevation', 'Imported']
   const doc = () => JSON.parse(buildExport([{ name: 'Default', data: defaultThemeData() }, { name: 'Untitled', data: untitledThemeData() }], 'json', ALL_MODULES).text)
   const col = (p: ReturnType<typeof loadPlugin>, name: string) => p.collections.find((c) => c.name === name)
   const vars = (p: ReturnType<typeof loadPlugin>, name: string) => p.variables.filter((v) => v.variableCollectionId === col(p, name).id)
 
-  it('creates the collections with their own modes, and leaves the generated ones with normal modes', async () => {
+  it('creates the collections with their own names and modes, and leaves the generated ones with normal modes', async () => {
     const p = loadPlugin()
     await p.send({ type: 'import', doc: doc(), groups: GROUPS })
     expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
     const done = p.posted.find((m) => m.type === 'done').result
-    expect(done.imported).toBe(8)
+    expect(done.imported).toBe(7)
     expect(done.limited).toEqual([])
     expect(col(p, 'Primitives').modes.map((m: any) => m.name)).toEqual(['Value']) // one generated theme: no theme modes
     expect(col(p, '1. Color modes').modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
-    expect(col(p, 'Brand palette').modes.map((m: any) => m.name)).toHaveLength(10)
-    expect(vars(p, '_Primitives')).toHaveLength(343)
+    expect(vars(p, '_Primitives')).toHaveLength(27 * 11 + 2 + 32)
     expect(vars(p, '1. Color modes')).toHaveLength(273)
     expect(vars(p, '6. Typography')).toHaveLength(32)
-    expect(vars(p, 'Brand palette')).toHaveLength(11)
+    expect(vars(p, '2. Radius')).toHaveLength(11)
+    expect(p.collections.some((c) => c.name === 'Brand palette')).toBe(false)
   })
 
   it('keeps aliases between collections and the values of every mode', async () => {
@@ -525,15 +525,12 @@ describe('plugin import: imported tokens (Untitled)', () => {
     const white = vars(p, '_Primitives').find((v) => v.name === 'Colors/Base/white')
     expect(bg.valuesByMode[modes[0].modeId]).toEqual({ type: 'VARIABLE_ALIAS', id: white.id })
     expect(bg.valuesByMode[modes[1].modeId].type).toBe('VARIABLE_ALIAS')
-    const brand = vars(p, 'Brand palette').find((v) => v.name === 'Brand/600')
-    const original = col(p, 'Brand palette').modes.find((m: any) => m.name === 'Original')
-    expect(brand.valuesByMode[original.modeId].r).toBeCloseTo(0x7f / 255, 3) // Original is a plain colour
-    expect(brand.valuesByMode[col(p, 'Brand palette').modes[0].modeId].type).toBe('VARIABLE_ALIAS') // Blue points at a primitive
+    const brand = vars(p, '_Primitives').find((v) => v.name === 'Colors/Brand/600')
+    expect((Object.values(brand.valuesByMode)[0] as any).r).toBeCloseTo(0x7f / 255, 3)
     const size = vars(p, '6. Typography').find((v) => v.name === 'Font size/text-md')
     expect(Object.values(size.valuesByMode)).toEqual([16])
     const family = vars(p, '6. Typography').find((v) => v.name === 'Font family/font-family-body')
     expect(Object.values(family.valuesByMode)).toEqual(['Inter'])
-    expect(bg.scopes).toEqual(expect.any(Array))
   })
 
   it('does nothing for imported tokens unless the group is chosen, and updates in place on a second run', async () => {
@@ -547,20 +544,19 @@ describe('plugin import: imported tokens (Untitled)', () => {
     expect(p.posted.filter((m) => m.type === 'done').pop().result.created).toBe(0)
   })
 
-  it('reports the Brand palette when the plan allows fewer than 10 modes, and imports the rest', async () => {
+  it('reports a collection that needs more modes than the plan allows, and imports the rest', async () => {
     const p = loadPlugin()
     const make = p.figma.variables.createVariableCollection
     p.figma.variables.createVariableCollection = (name: string) => {
       const c = make(name)
       const add = c.addMode.bind(c)
-      c.addMode = (n: string) => { if (c.modes.length >= 4) throw new Error('Limited to 4 modes'); add(n) }
+      c.addMode = (n: string) => { if (c.modes.length >= 1) throw new Error('Limited to 1 mode'); add(n) }
       return c
     }
     await p.send({ type: 'import', doc: doc(), groups: GROUPS })
     const done = p.posted.find((m) => m.type === 'done').result
-    expect(done.limited).toHaveLength(1)
-    expect(done.limited[0]).toMatch(/^Brand palette needs 10 modes/)
-    expect(done.imported).toBe(7)
+    expect(done.limited.some((x: string) => x.startsWith('1. Color modes needs 2 modes'))).toBe(true)
+    expect(vars(p, '6. Typography')).toHaveLength(32)
   })
 
   it('the plugin window lists Imported tokens for a multi-theme file', async () => {
@@ -571,7 +567,7 @@ describe('plugin import: imported tokens (Untitled)', () => {
     paste.value = JSON.stringify(doc())
     paste.dispatchEvent(new Event('input'))
     const labels = [...document.querySelectorAll('#groups label')].map((l) => l.textContent)
-    expect(labels.some((t) => t!.startsWith('Imported tokens') && t!.endsWith('702'))).toBe(true)
+    expect(labels.some((t) => t!.startsWith('Imported tokens'))).toBe(true)
     expect(labels.some((t) => t!.startsWith('Colour ramps'))).toBe(true)
   })
 })

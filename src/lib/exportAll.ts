@@ -2,6 +2,7 @@
  * One export for the whole system: every module's CSS in a single file, with a count of the tokens it holds.
  */
 import { importedSections, type ImportedSet } from './importedTokens'
+import { colourSchema, tokenSchemaOf } from './schemas'
 import { themeSlugs } from './themes'
 import { buildPalettes, toCss, tokenRows, type PaletteSettings } from './colour'
 import { toElevationCss, type ElevationSettings } from './elevation'
@@ -22,6 +23,8 @@ export interface ExportInput {
   elevation: ElevationSettings
   /** Tokens kept as imported; when set they replace everything the generators above would make. */
   imported?: ImportedSet
+  /** The colour schema the theme is built on; none means Baseline's own. */
+  schemaId?: string
 }
 
 export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' | 'elevation'
@@ -29,10 +32,19 @@ export type ExportModule = 'ramps' | 'semantic' | 'type' | 'grids' | 'spacing' |
 export interface ExportSection { id: ExportModule; title: string; css: string; count: number }
 
 export function exportSections(s: ExportInput): ExportSection[] {
-  if (s.imported) return importedSections(s.imported)
-  const palettes = buildPalettes(s.settings)
-  const rows = tokenRows(palettes)
-  const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha)
+  const colour = colourSchema(s.schemaId)
+  const tokenSchema = tokenSchemaOf(colour)
+  const palettes = buildPalettes(s.settings, colour)
+  const rows = tokenRows(palettes, colour?.steps)
+  const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha, tokenSchema)
+  if (s.imported) {
+    // Collections kept as imported, with the colours made from the schema.
+    return importedSections(s.imported).map((sec) =>
+      sec.id === 'ramps' ? { ...sec, css: toCss(rows), count: rows.length }
+      : sec.id === 'semantic' ? { ...sec, css: toTokenCss(resolved.tokens, tokenSchema), count: resolved.resolvedCount }
+      : sec
+    )
+  }
   const type = withGridBreakpoints(s.type, s.grid.on.md, s.grid.on.xs)
   const typeGroups = computeGroups(type)
   const steps = scaleSteps(s.spacing.base, s.spacing.extra)
@@ -41,7 +53,7 @@ export function exportSections(s: ExportInput): ExportSection[] {
 
   return [
     { id: 'ramps', title: 'Colour: palette ramps', css: toCss(rows), count: rows.length },
-    { id: 'semantic', title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens), count: resolved.resolvedCount },
+    { id: 'semantic', title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens, tokenSchema), count: resolved.resolvedCount },
     { id: 'type', title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform), typeFonts(type), typeByBreakpoint(s.type, s.grid)), count: countRows(typeGroups) },
     { id: 'grids', title: 'Grids', css: toGridCss(s.grid), count: Object.values(s.grid.on).filter(Boolean).length },
     { id: 'spacing', title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },

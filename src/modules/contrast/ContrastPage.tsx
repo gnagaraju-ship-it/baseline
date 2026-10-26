@@ -5,6 +5,7 @@ import { gridColours, scoreFor, thresholdInfo } from '../../lib/contrastGrid'
 import { useProject } from '../../store/project'
 import { ColourLayout } from '../colour/ColourLayout'
 import { usePalettes } from '../colour/usePalettes'
+import { useSchema } from '../colour/useSchema'
 import { ContrastGrid } from './ContrastGrid'
 import { DetailCard } from './DetailCard'
 
@@ -14,13 +15,14 @@ const h3 = 'm-0 text-xs font-semibold uppercase tracking-[.08em] text-muted'
 export function ContrastPage() {
   const openExport = useProject((s) => s.openExport)
   const { palettes, rows } = usePalettes()
+  const schema = useSchema()
   const { contrast, setContrastPalette, setContrastStandard, setContrastThreshold, selectContrastCell, flashCopied } = useProject()
   const { standard, cell } = contrast
   const threshold = contrast.threshold[standard]
 
   // The chosen palette may have been removed in the Brand panel; fall back to the first one.
   const palette = palettes.find((p) => p.key === contrast.palette) ?? palettes[0]
-  const colours = gridColours(palette)
+  const colours = gridColours(palette, schema.colour?.steps)
   const text = colours[cell[0]]
   const bg = colours[cell[1]]
   const score = cell[0] === cell[1] ? 0 : scoreFor(standard, text.hex, bg.hex)

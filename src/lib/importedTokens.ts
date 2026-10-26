@@ -2,7 +2,10 @@
  * An imported token set: tokens kept exactly as they were in the files they came from (Figma variable collections),
  * instead of being made by Baseline's generators. Built by scripts/build-untitled.mjs.
  */
-import type { ExportModule, ExportSection } from './exportAll'
+import { buildPalettes, withAlpha } from './colour'
+import type { ExportInput, ExportModule, ExportSection } from './exportAll'
+import { colourSchema, tokenSchemaOf } from './schemas'
+import { isResolved, resolveAll, type ResolvedCell } from './tokens'
 
 export type ImportedType = 'color' | 'number' | 'string'
 
@@ -119,4 +122,49 @@ export function importedAccent(set: ImportedSet): string {
   if (own) return String(own.v)
   const first = set.collections.flatMap((c) => c.variables).find((v) => v.type === 'color')
   return first ? String(Object.values(first.values)[0].v) : '#9d00d6'
+}
+
+const ALL = ['ALL_SCOPES']
+
+/**
+ * The colours of a theme built on a colour schema, written as collections named like the files they came from:
+ * "_Primitives" (ramps) with a "Style" mode and "1. Color modes" (semantic tokens) with Light and Dark modes.
+ */
+export function schemaCollections(s: ExportInput): ImportedCollection[] {
+  const schema = colourSchema(s.schemaId)
+  if (!schema) return []
+  const palettes = buildPalettes(s.settings, schema)
+  const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha, tokenSchemaOf(schema))
+  const nameOf = (key: string) => palettes.find((p) => p.key === key)?.name ?? key
+  const stepName = (p: { labels?: string[] }, i: number) => p.labels?.[i] ?? schema.steps[i]
+
+  const ramps: ImportedVariable[] = palettes.flatMap((p) => [
+    ...p.steps.map((h, i) => ({ name: `Colors/${p.name}/${stepName(p, i)}`, type: 'color' as const, scopes: ALL, values: { Style: { v: `#${h}` } } })),
+    // A palette with its own opacity also gets every step at that opacity.
+    ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `Colors/${p.name} (alpha)/${stepName(p, i)}`, type: 'color' as const, scopes: ALL, values: { Style: { v: `#${withAlpha(h, p.alpha)}` } } })) : [])
+  ])
+
+  const value = (c: ResolvedCell): ImportedValue => {
+    if (c.palette === 'raw') return { v: c.ref.slice(4) }
+    if (!c.hex) return { v: '#000000' }
+    if (c.alpha < 100) return { v: `#${withAlpha(c.hex, c.alpha)}` }
+    return { v: `#${c.hex}`, a: `_Primitives::Colors/${nameOf(c.palette)}/${c.ref.slice(c.ref.lastIndexOf('-') + 1)}` }
+  }
+  const tokens: ImportedVariable[] = resolved.tokens.filter(isResolved).map((t) => ({
+    name: t.def.path ?? t.def.name, type: 'color' as const, scopes: ALL, values: { 'Light mode': value(t.light), 'Dark mode': value(t.dark) }
+  }))
+  return [
+    { name: '_Primitives', modes: ['Style'], variables: ramps },
+    { name: '1. Color modes', modes: ['Light mode', 'Dark mode'], variables: tokens }
+  ]
+}
+
+/** The imported collections with a schema's colours joined in (the primitives share one collection with the spacing). */
+export function withSchemaColours(set: ImportedSet, s: ExportInput): ImportedSet {
+  const colours = schemaCollections(s)
+  if (!colours.length) return set
+  const rest = set.collections.filter((c) => !colours.some((x) => x.name === c.name))
+  const prim = set.collections.find((c) => c.name === '_Primitives')
+  const merged = colours.map((c) => (c.name === '_Primitives' && prim ? { ...c, variables: [...c.variables, ...prim.variables] } : c))
+  return { collections: [...merged, ...rest] }
 }

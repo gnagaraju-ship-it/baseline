@@ -3,6 +3,7 @@ import { Icon } from '../../components/Icon'
 import type { Palette } from '../../lib/colour'
 import { lcFor, paintFor, pickerChips, refLabel, type Mode, type ResolvedToken } from '../../lib/tokens'
 import { useProject } from '../../store/project'
+import { useSchema } from '../colour/useSchema'
 
 export function cellId(name: string, mode: Mode): string {
   return `tok-${name}-${mode}`
@@ -22,10 +23,15 @@ export function TokenPicker({ token, mode, palettes }: Props) {
   const setTokenOverride = useProject((s) => s.setTokenOverride)
   const setTokenAlpha = useProject((s) => s.setTokenAlpha)
   const closePicker = useProject((s) => s.closePicker)
+  const { tokens: schema } = useSchema()
 
-  const chips = pickerChips(palettes)
+  const chips = pickerChips(palettes, schema.alpha.length > 0, [schema.anchors.neutral, schema.anchors.primary])
   const wanted = pickerPalette ?? cell.palette
   const active = chips.some((c) => c.key === wanted) ? wanted : chips[0].key
+
+  const isAlpha = active === 'blackA' || active === 'whiteA'
+  const activePalette = palettes.find((p) => p.key === active)
+  const stepCount = isAlpha ? schema.alpha.length : activePalette?.steps.length ?? 0
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -58,29 +64,30 @@ export function TokenPicker({ token, mode, palettes }: Props) {
           })}
         </div>
         <div className="grid grid-cols-8 gap-2">
-          {Array.from({ length: 16 }, (_, i) => {
-            const paint = paintFor(active, i, palettes)
-            const lc = paint ? lcFor(def.kind, mode, paint.hex, palettes) : null
+          {Array.from({ length: stepCount }, (_, i) => {
+            const stepName = isAlpha ? String(i + 1) : activePalette?.labels?.[i] ?? schema.steps[i]
+            const paint = paintFor(active, i, palettes, schema.alpha)
+            const lc = paint ? lcFor(def.kind, mode, paint.hex, palettes, schema.anchors) : null
             const selected = active === cell.palette && i === cell.index
             return (
               <button
                 key={i}
                 type="button"
-                aria-label={`${refLabel(`${active}-${i + 1}`)}`}
+                aria-label={`${refLabel(`${active}-${stepName}`, schema.steps)}`}
                 aria-pressed={selected}
-                onClick={() => setTokenOverride(def.name, mode, `${active}-${i + 1}`)}
+                onClick={() => setTokenOverride(def.name, mode, `${active}-${stepName}`)}
                 className="flex flex-col items-center gap-[3px] rounded-[9px] bg-surface p-1"
                 style={{ border: `2px solid ${selected ? 'var(--color-ink)' : 'transparent'}` }}
               >
                 <span className="h-[34px] w-full rounded-md shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]" style={{ background: paint?.css }} />
-                <span className="text-[11px] font-semibold text-ink-2">{i + 1}</span>
+                <span className="text-[11px] font-semibold text-ink-2">{stepName}</span>
                 <span className="font-mono text-[10px] text-muted">{lc === null ? '–' : lc}</span>
               </button>
             )
           })}
         </div>
-        {cell.palette === 'blackA' || cell.palette === 'whiteA' ? (
-          <p className="m-0 text-xs text-muted">Alpha palettes already carry their own opacity.</p>
+        {cell.palette === 'blackA' || cell.palette === 'whiteA' || cell.palette === 'raw' ? (
+          <p className="m-0 text-xs text-muted">{cell.palette === 'raw' ? 'This is a plain colour. Pick a palette step to link it to a palette.' : 'Alpha palettes already carry their own opacity.'}</p>
         ) : (
           <div className="flex items-center gap-2.5">
             <span className="text-xs font-semibold text-ink-2">Opacity</span>

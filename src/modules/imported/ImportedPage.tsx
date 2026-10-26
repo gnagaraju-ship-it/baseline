@@ -9,15 +9,14 @@ import { byModule, cssName, importedCount, importedSections, type ImportedCollec
 import { useProject } from '../../store/project'
 
 const TABS: Record<string, { module: ExportModule; label: string }> = {
-  '/': { module: 'ramps', label: 'Palette' },
-  '/tokens': { module: 'semantic', label: 'Tokens' },
   '/type': { module: 'type', label: 'Type scale' },
   '/grids': { module: 'grids', label: 'Widths and containers' },
   '/spacing': { module: 'spacing', label: 'Spacing and radius' },
   '/elevation': { module: 'elevation', label: 'Elevation' }
 }
 
-export const IMPORTED_ROUTES = [...Object.keys(TABS), '/contrast', '/preview']
+/** The screens an imported set still has to itself: the colour screens use the theme's colour schema. */
+export const IMPORTED_ROUTES = ['/type', '/grids', '/spacing', '/elevation']
 
 function Cell({ value, type }: { value?: ImportedValue; type: string }) {
   if (!value) return <span className="text-muted">-</span>
@@ -66,12 +65,7 @@ export function ImportedPage() {
   const count = (m: ExportModule) => sections.find((s) => s.id === m)!.count
   const tab = TABS[pathname]
 
-  const tabs: ViewTab[] = [
-    { to: '/', label: 'Palette', icon: 'color', count: count('ramps') },
-    { to: '/tokens', label: 'Tokens', icon: 'tokens', count: count('semantic') }
-  ]
-  const colour = pathname === '/' || pathname === '/tokens'
-  const shown: ViewTab[] = colour ? tabs : tab ? [{ to: pathname, label: tab.label, icon: 'tokens', count: count(tab.module) }] : []
+  const shown: ViewTab[] = tab ? [{ to: pathname, label: tab.label, icon: 'tokens', count: count(tab.module) }] : []
   const section = tab ? sections.find((s) => s.id === tab.module)! : null
 
   return (
@@ -84,7 +78,7 @@ export function ImportedPage() {
             <ThemeMenu variant="chip" />
           </div>
           <div className="flex flex-col gap-4 p-5 text-[13px] leading-[1.5] text-ink-3">
-            <p className="m-0">The theme <b className="text-ink">{themeName}</b> holds {importedCount(set)} tokens exactly as they were imported. They are read-only here, and Baseline's generators are not used for this theme.</p>
+            <p className="m-0">The theme <b className="text-ink">{themeName}</b> keeps these {importedCount(set)} tokens exactly as they were imported. They are read-only for now; the colour screens of this theme are fully editable.</p>
             <ul aria-label="Collections" className="m-0 flex list-none flex-col gap-1.5 p-0">
               {set.collections.map((c) => (
                 <li key={c.name} className="flex items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2">
@@ -107,12 +101,12 @@ export function ImportedPage() {
           onExport={() => openExport([tab.module])}
         />
       ) : (
-        <div className="flex min-h-16 items-center border-b border-line-soft px-7 font-semibold">{pathname === '/contrast' ? 'Contrast grid' : 'UI preview'}</div>
+        <div className="flex min-h-16 items-center border-b border-line-soft px-7 font-semibold">Tokens</div>
       )}
       <div className="flex flex-col gap-6 px-7 pb-12 pt-5">
         {!tab ? (
           <p role="status" className="m-0 rounded-[10px] border border-dashed border-edge p-6 text-center text-[13px] text-muted">
-            Not available for an imported theme. Switch to another theme to use it.
+            Not available for this theme.
           </p>
         ) : groups[tab.module].length === 0 ? (
           <p role="status" className="m-0 rounded-[10px] border border-dashed border-edge p-6 text-center text-[13px] text-muted">

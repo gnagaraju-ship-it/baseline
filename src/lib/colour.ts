@@ -5,6 +5,7 @@
  */
 
 import { fitToGamut, hexToOklch, oklchToHex } from './oklch'
+import type { ColourSchema } from './schemas'
 
 export const STEP_COUNT = 16
 
@@ -125,7 +126,8 @@ export const NEUTRAL_PRESETS: Record<NeutralPreset, { label: string; hex: string
 }
 
 export type UtilityKey = `utility-${number}`
-export type PaletteKey = 'primary' | 'secondary' | 'tertiary' | 'neutral' | SemanticKey | UtilityKey
+/** The built-in palettes have fixed keys; a colour schema names its own. */
+export type PaletteKey = string
 
 /** An extra brand colour the user adds, named Utility 1, Utility 2 ... until they rename it. */
 export interface UtilityColour {
@@ -158,7 +160,9 @@ export function nextUtilityId(utility: UtilityColour[]): number {
 export interface Palette {
   key: PaletteKey
   name: string
-  group: 'brand' | 'neutral' | 'semantic'
+  group: 'brand' | 'neutral' | 'semantic' | 'extra'
+  /** Names of the steps when they are not the schema's (for example white and black). */
+  labels?: string[]
   /** 1-based index of the step that equals the input colour. */
   base: number
   /** The input (base) colour. */
@@ -181,6 +185,8 @@ export interface PaletteSettings {
   utility: UtilityColour[]
   neutral: { enabled: boolean; preset: NeutralPreset }
   semanticEnabled: boolean
+  /** Colours typed for the palettes of a colour schema, by palette key. */
+  hex?: Record<string, string>
 }
 
 export function defaultSettings(): PaletteSettings {
@@ -240,8 +246,20 @@ function rampFor(def: Def, s: PaletteSettings): { hex: string; steps: string[] }
   return { hex: h, steps: gen(h, def.base) }
 }
 
+/** The palettes of a colour schema: its ramps as given, regenerated from the typed colour once one is changed. */
+function schemaPalettes(s: PaletteSettings, schema: ColourSchema): Palette[] {
+  return schema.palettes.map((d) => {
+    const start = d.steps[d.base - 1]
+    const typed = d.labels ? null : norm(s.hex?.[d.key])
+    const h = typed ?? start
+    const steps = typed && typed !== start ? gen(typed, d.base, d.steps.length) : [...d.steps]
+    return { key: d.key, name: d.name, group: d.group, base: d.base, hex: h, steps, alpha: alphaFor(s, d.key), ...(d.labels ? { labels: d.labels } : {}) }
+  })
+}
+
 /** The palettes shown for the given settings, in display order. */
-export function buildPalettes(s: PaletteSettings): Palette[] {
+export function buildPalettes(s: PaletteSettings, schema: ColourSchema | null = null): Palette[] {
+  if (schema) return schemaPalettes(s, schema)
   const utilities: Def[] = (s.utility ?? []).map((u) => ({ key: utilityKey(u.id), name: utilityName(u), base: 10, group: 'brand' }))
   const defs = [...DEFS.slice(0, 3), ...utilities, ...DEFS.slice(3)]
   return defs.filter((d) => {
@@ -263,12 +281,14 @@ export interface TokenRow {
 
 /** CSS custom property per step, e.g. --primary-10. `labels` names the steps when they are not 1, 2, 3 ... */
 export function tokenRows(palettes: Palette[], labels?: readonly string[]): TokenRow[] {
-  const label = (i: number) => labels?.[i] ?? String(i + 1)
-  return palettes.flatMap((p) => [
-    ...p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}`, hex: h })),
-    // A colour set below 100% opacity also exports every step with that alpha, as #RRGGBBAA.
-    ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
-  ])
+  return palettes.flatMap((p) => {
+    const label = (i: number) => p.labels?.[i] ?? labels?.[i] ?? String(i + 1)
+    return [
+      ...p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}`, hex: h })),
+      // A colour set below 100% opacity also exports every step with that alpha, as #RRGGBBAA.
+      ...(p.alpha < 100 ? p.steps.map((h, i) => ({ name: `--${p.key}-${label(i)}-alpha`, hex: withAlpha(h, p.alpha) })) : [])
+    ]
+  })
 }
 
 export function toCss(rows: TokenRow[]): string {

@@ -12,7 +12,8 @@ const schema: TokenSchema = {
     { name: 'bg-fill', group: 'bg', kind: 'f', light: 'brand-600', dark: 'brand-500' },
     { name: 'bg-disabled', group: 'bg', kind: 'a', light: 'blackA-2', dark: 'whiteA-2' }
   ] as TokenDef[],
-  anchors: { text: 10, fill: { light: 6, dark: 5 }, page: { light: 0, dark: 9 } }
+  groups: [{ key: 'text', title: 'Text' }],
+  anchors: { neutral: 'neutral', primary: 'brand', text: 10, fill: { light: 6, dark: 5 }, page: { light: 0, dark: 9 } }
 }
 
 const palette = (key: string, base: number, hex: string): Palette => ({ key: key as never, name: key, group: 'brand', base, hex, steps: gen(hex, base, 11), alpha: 100 })

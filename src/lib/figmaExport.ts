@@ -7,7 +7,8 @@ import { buildPalettes, norm, withAlpha } from './colour'
 import { BREAKPOINTS, type BreakpointKey } from './grid'
 import type { ExportInput } from './exportAll'
 import { onValues, scaleSteps, spacingBreakpoints, spacingTokens } from './spacing'
-import { ALPHA, resolveAll, type ResolvedCell } from './tokens'
+import { colourSchema, tokenSchemaOf } from './schemas'
+import { resolveAll, type ResolvedCell } from './tokens'
 import { gridByBreakpoint, typeByBreakpoint, type ByBreakpoint } from './responsive'
 import { isWeb, typeFonts, withGridBreakpoints } from './typeScale'
 
@@ -25,33 +26,39 @@ function hexAlpha(hex: string, alpha: number): string {
 
 /** A token value: an alias to its ramp step, or the literal #RRGGBBAA when the token has its own opacity. */
 function value(c: ResolvedCell): string {
+  if (c.palette === 'raw') return c.ref.slice(4)
   return c.alpha < 100 && c.hex ? `#${withAlpha(c.hex, c.alpha)}` : alias(c)
 }
 
 function alias(c: ResolvedCell): string {
   const p = c.palette === 'blackA' ? 'black-alpha' : c.palette === 'whiteA' ? 'white-alpha' : c.palette
-  return `{Primitives.colour.${p}.${c.index + 1}}`
+  // Ramp steps are named by their label (50, 100 ... or 1, 2 ...); the alpha overlays are numbered.
+  const step = c.palette === 'blackA' || c.palette === 'whiteA' ? String(c.index + 1) : c.ref.slice(c.ref.lastIndexOf('-') + 1)
+  return `{Primitives.colour.${p}.${step}}`
 }
 
 export function buildFigmaTokens(input: ExportInput): Json {
-  const palettes = buildPalettes(input.settings)
-  const resolved = resolveAll(palettes, input.tokenOverrides, input.tokenAlpha)
+  const schema = colourSchema(input.schemaId)
+  const tokenSchema = tokenSchemaOf(schema)
+  const palettes = buildPalettes(input.settings, schema)
+  const resolved = resolveAll(palettes, input.tokenOverrides, input.tokenAlpha, tokenSchema)
+  const label = (p: { labels?: string[] }, i: number) => p.labels?.[i] ?? tokenSchema.steps[i]
 
   const ramps: Json = {}
   for (const p of palettes) {
     const steps: Json = {}
-    p.steps.forEach((h, i) => (steps[String(i + 1)] = color(h)))
+    p.steps.forEach((h, i) => (steps[label(p, i)] = color(h)))
     ramps[p.key] = steps
   }
   for (const p of palettes) {
     if (p.alpha >= 100) continue
     const steps: Json = {}
-    p.steps.forEach((h, i) => (steps[String(i + 1)] = { $type: 'color', $value: `#${withAlpha(h, p.alpha)}` }))
+    p.steps.forEach((h, i) => (steps[label(p, i)] = { $type: 'color', $value: `#${withAlpha(h, p.alpha)}` }))
     ramps[`${p.key}-alpha`] = steps
   }
-  for (const [key, base] of [['black-alpha', '000000'], ['white-alpha', 'FFFFFF']] as const) {
+  for (const [key, base] of tokenSchema.alpha.length ? ([['black-alpha', '000000'], ['white-alpha', 'FFFFFF']] as const) : []) {
     const steps: Json = {}
-    ALPHA.forEach((a, i) => (steps[String(i + 1)] = { $type: 'color', $value: hexAlpha(base, a) }))
+    tokenSchema.alpha.forEach((a, i) => (steps[String(i + 1)] = { $type: 'color', $value: hexAlpha(base, a) }))
     ramps[key] = steps
   }
 

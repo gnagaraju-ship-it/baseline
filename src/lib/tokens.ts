@@ -6,9 +6,10 @@
 import { clampAlpha, withAlpha, type Palette, type PaletteKey } from './colour'
 import { apcaLc } from './contrast'
 
-export type PaletteRef = PaletteKey | 'blackA' | 'whiteA'
+export type PaletteRef = PaletteKey | 'blackA' | 'whiteA' | 'raw'
 export type Mode = 'light' | 'dark'
-export type TokenGroup = 'bg' | 'text' | 'border'
+/** 'bg', 'text' and 'border' in the built-in tokens; a schema names its own. */
+export type TokenGroup = string
 
 /**
  * s = surface, f = fill, t = text, o = text on fill, b = border, a = alpha overlay.
@@ -18,6 +19,8 @@ export type TokenKind = 's' | 'f' | 't' | 'o' | 'b' | 'a'
 
 export interface TokenDef {
   name: string
+  /** The variable's full name in the file it came from (Figma path), when it has one. */
+  path?: string
   group: TokenGroup
   kind: TokenKind
   /** Default refs like "neutral-3" (palette key, 1-based step). */
@@ -27,9 +30,9 @@ export interface TokenDef {
 
 export const ALPHA = [0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.16, 0.2, 0.28, 0.36, 0.44, 0.52, 0.6, 0.7, 0.8, 0.9] as const
 
-export const GROUP_TITLES: Record<TokenGroup, string> = { bg: 'Backgrounds', text: 'Text', border: 'Borders' }
+export const GROUP_TITLES: Record<string, string> = { bg: 'Backgrounds', text: 'Text', border: 'Borders' }
 
-const RAW: Record<TokenGroup, string[]> = {
+const RAW: Record<'bg' | 'text' | 'border', string[]> = {
   bg: [
     'bg|s|neutral-3|neutral-15', 'bg-inverse|s|neutral-15|neutral-3', 'bg-surface|s|neutral-1|neutral-14', 'bg-surface-hover|s|neutral-2|neutral-13',
     'bg-surface-active|s|neutral-3|neutral-12', 'bg-surface-selected|s|neutral-3|neutral-12', 'bg-surface-secondary|s|neutral-2|neutral-13',
@@ -59,7 +62,7 @@ for (const k of SEMANTIC_HUES) {
   )
 }
 
-export const TOKEN_DEFS: TokenDef[] = (Object.keys(RAW) as TokenGroup[]).flatMap((group) =>
+export const TOKEN_DEFS: TokenDef[] = (Object.keys(RAW) as Array<keyof typeof RAW>).flatMap((group) =>
   RAW[group].map((line) => {
     const [name, kind, light, dark] = line.split('|')
     return { name, group, kind: kind as TokenKind, light, dark }
@@ -71,7 +74,12 @@ export interface TokenSchema {
   steps: readonly string[]
   alpha: readonly number[]
   defs: TokenDef[]
+  /** Titles of the token groups, in display order. */
+  groups: ReadonlyArray<{ key: string; title: string }>
   anchors: {
+    /** The palettes contrast is judged with. */
+    neutral: string
+    primary: string
     /** The darkest neutral step: text on a surface or fill. */
     text: number
     /** The fill text sits on. */
@@ -85,20 +93,27 @@ export const DEFAULT_SCHEMA: TokenSchema = {
   steps: Array.from({ length: 16 }, (_, i) => String(i + 1)),
   alpha: ALPHA,
   defs: TOKEN_DEFS,
-  anchors: { text: 15, fill: { light: 9, dark: 8 }, page: { light: 0, dark: 13 } }
+  groups: [{ key: 'bg', title: 'Backgrounds' }, { key: 'text', title: 'Text' }, { key: 'border', title: 'Borders' }],
+  anchors: { neutral: 'neutral', primary: 'primary', text: 15, fill: { light: 9, dark: 8 }, page: { light: 0, dark: 13 } }
 }
 
-/** A ref is "palette-step"; `step` is the 1-based position of the step label in the schema (NaN when it is not one). */
-export function parseRef(ref: string, steps: readonly string[] = DEFAULT_SCHEMA.steps): { palette: PaletteRef; step: number } {
+/**
+ * A ref is "palette-step", or "raw:#RRGGBB[AA]" for a plain colour. `step` is the 1-based position of the step label in
+ * the palette (its own labels, else the schema's); NaN when the palette has no such step.
+ */
+export function parseRef(ref: string, steps: readonly string[] = DEFAULT_SCHEMA.steps, palettes: Palette[] = []): { palette: PaletteRef; step: number } {
+  if (ref.startsWith('raw:')) return { palette: 'raw', step: 1 }
   const i = ref.lastIndexOf('-')
   const palette = ref.slice(0, i) as PaletteRef
   // The black and white alpha overlays are numbered 1, 2, 3 ... whatever the ramp steps are called.
   if (palette === 'blackA' || palette === 'whiteA') return { palette, step: parseInt(ref.slice(i + 1), 10) }
-  const at = steps.indexOf(ref.slice(i + 1))
+  const labels = palettes.find((p) => p.key === palette)?.labels ?? steps
+  const at = labels.indexOf(ref.slice(i + 1))
   return { palette, step: at < 0 ? NaN : at + 1 }
 }
 
 export function refLabel(ref: string, steps: readonly string[] = DEFAULT_SCHEMA.steps): string {
+  if (ref.startsWith('raw:')) return ref.slice(4)
   const { palette } = parseRef(ref, steps)
   const p = palette === 'blackA' ? 'black-alpha' : palette === 'whiteA' ? 'white-alpha' : palette
   return `${p}-${ref.slice(ref.lastIndexOf('-') + 1)}`
@@ -109,6 +124,14 @@ const CHECKER = 'repeating-conic-gradient(#E4E4E7 0 25%, #FFFFFF 0 50%) 0 0 / 8p
 export interface Paint {
   css: string
   hex: string | null
+}
+
+/** A plain colour "#RRGGBB" or "#RRGGBBAA": painted over the checkerboard when it has transparency. */
+function rawPaint(text: string): Paint | null {
+  const m = /^#([0-9A-F]{6})([0-9A-F]{2})?$/i.exec(text)
+  if (!m) return null
+  const solid = !m[2] || m[2].toUpperCase() === 'FF'
+  return solid ? { css: `#${m[1]}`, hex: m[1].toUpperCase() } : { css: `linear-gradient(${text}, ${text}), ${CHECKER}`, hex: null }
 }
 
 /** CSS paint and hex for a palette step (index is 0-based). Alpha palettes have no hex. */
@@ -129,8 +152,8 @@ export function paintFor(palette: PaletteRef, index: number, palettes: Palette[]
  */
 export function lcFor(kind: TokenKind, mode: Mode, hexColour: string | null, palettes: Palette[], anchors: TokenSchema['anchors'] = DEFAULT_SCHEMA.anchors): number | null {
   if (!hexColour) return null
-  const neutral = palettes.find((p) => p.key === 'neutral')?.steps
-  const primary = palettes.find((p) => p.key === 'primary')?.steps
+  const neutral = palettes.find((p) => p.key === anchors.neutral)?.steps
+  const primary = palettes.find((p) => p.key === anchors.primary)?.steps
   if (kind === 's' || kind === 'f') {
     if (!neutral) return null
     return Math.round(Math.max(Math.abs(apcaLc(neutral[anchors.text], hexColour)), Math.abs(apcaLc('FFFFFF', hexColour))))
@@ -172,10 +195,11 @@ export function overrideKey(name: string, mode: Mode): string {
 function resolveCell(def: TokenDef, mode: Mode, overrides: Record<string, string>, palettes: Palette[], alphas: Record<string, number>, schema: TokenSchema): ResolvedCell {
   const overridden = overrides[overrideKey(def.name, mode)] !== undefined
   const ref = overrides[overrideKey(def.name, mode)] ?? def[mode]
-  const { palette, step } = parseRef(ref, schema.steps)
+  const { palette, step } = parseRef(ref, schema.steps, palettes)
   const index = step - 1
-  const found = paintFor(palette, index, palettes, schema.alpha)
-  const intrinsic = palette === 'blackA' || palette === 'whiteA'
+  const raw = palette === 'raw' ? rawPaint(ref.slice(4)) : null
+  const found = raw ?? paintFor(palette, index, palettes, schema.alpha)
+  const intrinsic = palette === 'blackA' || palette === 'whiteA' || palette === 'raw'
   const alpha = intrinsic ? 100 : clampAlpha(alphas[overrideKey(def.name, mode)] ?? 100)
   // A ramp colour with its own opacity is painted over a checkerboard, like the alpha palettes.
   const paint = found && alpha < 100 && found.hex ? { css: `linear-gradient(#${withAlpha(found.hex, alpha)}, #${withAlpha(found.hex, alpha)}), ${CHECKER}`, hex: found.hex } : found
@@ -222,22 +246,23 @@ export function resolveAll(palettes: Palette[], overrides: Record<string, string
   return {
     tokens,
     resolvedCount: tokens.filter(isResolved).length,
-    missing: DISPLAY_ORDER.filter((k) => missing.has(k))
+    missing: [...DISPLAY_ORDER.filter((k) => missing.has(k)), ...[...missing].filter((k) => !DISPLAY_ORDER.includes(k))]
   }
 }
 
 /** Palette chips offered by the picker: palettes that exist, then black and white alpha. */
-export function pickerChips(palettes: Palette[]): Array<{ key: PaletteRef; label: string }> {
-  const first = (['neutral', 'primary'] as PaletteKey[]).map((k) => palettes.find((p) => p.key === k)).filter((p) => p !== undefined)
-  const rest = palettes.filter((p) => p.key !== 'neutral' && p.key !== 'primary')
+export function pickerChips(palettes: Palette[], withAlpha = true, lead: PaletteKey[] = ['neutral', 'primary']): Array<{ key: PaletteRef; label: string }> {
+  const first = lead.map((k) => palettes.find((p) => p.key === k)).filter((p) => p !== undefined)
+  const rest = palettes.filter((p) => !lead.includes(p.key))
   const present = [...first, ...rest].map((p) => ({ key: p.key as PaletteRef, label: p.key.startsWith('utility-') ? p.name : p.key }))
-  return [...present, { key: 'blackA', label: 'black α' }, { key: 'whiteA', label: 'white α' }]
+  return withAlpha ? [...present, { key: 'blackA', label: 'black α' }, { key: 'whiteA', label: 'white α' }] : present
 }
 
 function cssValue(c: ResolvedCell, schema: TokenSchema): string {
   if (c.palette === 'blackA') return `rgb(0 0 0 / ${schema.alpha[c.index]})`
   if (c.palette === 'whiteA') return `rgb(255 255 255 / ${schema.alpha[c.index]})`
-  const ref = `var(--${c.palette}-${schema.steps[c.index]})`
+  if (c.palette === 'raw') return c.ref.slice(4)
+  const ref = `var(--${c.ref})`
   return c.alpha < 100 ? `color-mix(in srgb, ${ref} ${c.alpha}%, transparent)` : ref
 }
 

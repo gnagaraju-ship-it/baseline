@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -12,40 +12,72 @@ function at(path: string) {
   render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
 }
 
-describe('imported theme screens', () => {
+describe('the Untitled theme', () => {
   beforeEach(() => {
     s().reset()
     useProject.setState({ themes: [...s().themes, { id: 'theme-2', name: 'Untitled', data: untitledThemeData() }] })
     s().switchTheme('theme-2')
   })
 
-  it('shows the imported palette instead of the generators', () => {
+  it('palette: Untitled\'s ramps with 11 steps named 50 to 950, from the file\'s colours', () => {
     at('/')
-    expect(screen.getByText('Imported tokens')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '_Primitives' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Brand palette' })).toBeInTheDocument()
-    expect(screen.queryByText('Add secondary')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Palette/ })).toHaveTextContent('322')
-    expect(screen.getByRole('link', { name: /Tokens/ })).toHaveTextContent('273')
-    const list = within(screen.getByRole('list', { name: 'Collections' }))
-    expect(list.getAllByRole('listitem')).toHaveLength(8)
-    expect(list.getByText('Brand palette').closest('li')).toHaveTextContent('11 · 10 modes')
+    const brand = within(screen.getByRole('main')).getByRole('region', { name: 'Brand' })
+    expect(within(brand).getAllByRole('button', { name: /^Brand \d+, #/ })).toHaveLength(11)
+    expect(within(brand).getByRole('button', { name: 'Brand 600, #7F56D9' })).toBeInTheDocument()
+    expect(within(brand).getByRole('button', { name: /^Brand 950/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Palette/ })).toHaveTextContent('28')
+    expect(within(screen.getByRole('main')).getByRole('region', { name: 'Neutral' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Primary' })).not.toBeInTheDocument()
   })
 
-  it('shows Light and Dark columns for the semantic tokens', () => {
+  it('palette: typing a brand colour generates a new ramp around it, other ramps stay', async () => {
+    at('/')
+    fireEvent.change(document.getElementById('f-brand')!, { target: { value: '#0EA5E9' } })
+    const main = within(screen.getByRole('main'))
+    const brand = main.getByRole('region', { name: 'Brand' })
+    expect(within(brand).getByRole('button', { name: 'Brand 600, #0EA5E9' })).toBeInTheDocument()
+    expect(main.getByRole('region', { name: 'Red' }) && within(main.getByRole('region', { name: 'Red' })).getByRole('button', { name: /^Red 600, #DC2626/ })).toBeInTheDocument()
+    expect(s().settings.hex?.brand).toBe('#0EA5E9')
+  })
+
+  it('tokens: the 273 semantic tokens in Untitled\'s groups, with 11-step pickers', async () => {
     at('/tokens')
-    const region = screen.getByRole('region', { name: '1. Color modes' })
-    expect(within(region).getByText('LIGHT MODE')).toBeInTheDocument()
-    expect(within(region).getByText('DARK MODE')).toBeInTheDocument()
-    expect(within(region).getByText('Colors/Background/bg-primary')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Tokens/ })).toHaveTextContent('273')
+    for (const g of ['Background', 'Text', 'Foreground', 'Border', 'Utility', 'Components', 'Alpha', 'Effects']) {
+      expect(screen.getByRole('region', { name: g })).toBeInTheDocument()
+    }
+    const text = within(screen.getByRole('region', { name: 'Text' }))
+    await userEvent.click(text.getByRole('button', { name: /^text-primary, light mode: neutral-900/ }))
+    const dialog = screen.getByRole('dialog', { name: 'text-primary, light mode' })
+    expect(within(dialog).getAllByRole('button', { name: /^neutral-\d+$/ })).toHaveLength(11)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'neutral-800' }))
+    expect(s().tokenOverrides['text-primary|light']).toBe('neutral-800')
   })
 
-  it('shows type, widths, spacing and an empty elevation', () => {
+  it('tokens: a plain-colour token says so in the picker', async () => {
+    at('/tokens')
+    const alpha = within(screen.getByRole('region', { name: 'Alpha' }))
+    await userEvent.click(alpha.getAllByRole('button', { name: /light mode: #/ })[0])
+    expect(screen.getByText(/plain colour/)).toBeInTheDocument()
+  })
+
+  it('contrast and UI preview work from the schema', () => {
+    at('/contrast')
+    // White, 11 steps and Black on each axis, with the steps named 50 to 950
+    expect(screen.getAllByText('950').length).toBeGreaterThan(0)
+  })
+
+  it('UI preview draws its charts from the Untitled palettes', () => {
+    at('/preview')
+    expect(within(screen.getByRole('main')).getByRole('link', { name: /UI preview/ })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('type, widths and spacing keep their imported tokens, read-only', () => {
     at('/type')
     expect(within(screen.getByRole('region', { name: '6. Typography' })).getByText('Font size/text-md')).toBeInTheDocument()
   })
 
-  it('says when there is nothing, or the screen is not available', () => {
+  it('says when there are no elevation tokens', () => {
     at('/elevation')
     expect(screen.getByRole('status')).toHaveTextContent('no elevation tokens')
   })
@@ -59,12 +91,6 @@ describe('imported theme screens', () => {
     expect(within(dialog).getByLabelText('Export preview')).toHaveTextContent('--width-xxs: var(--spacing-80-320px);')
     await userEvent.keyboard('{Escape}')
     act(() => s().switchTheme('theme-1'))
-    expect(screen.getByRole('button', { name: /Export/ })).toBeInTheDocument()
     expect(screen.queryByText('Imported tokens')).not.toBeInTheDocument()
-  })
-
-  it('the contrast grid and UI preview are marked as not available', () => {
-    at('/contrast')
-    expect(screen.getByRole('status')).toHaveTextContent('Not available for an imported theme')
   })
 })

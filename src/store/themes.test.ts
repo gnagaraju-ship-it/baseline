@@ -166,7 +166,7 @@ describe('themes in the store', () => {
     expect(s().themes.map((t) => t.name)).toEqual(['Mine', 'Untitled'])
     expect(s().activeThemeId).toBe('Mine')
     expect(s().settings.text.primary).toBe('#111111')
-    expect(s().themes[1].data.imported?.collections).toHaveLength(8)
+    expect(s().themes[1].data.schemaId).toBe('untitled-ui')
     localStorage.setItem('baseline-project', JSON.stringify({ version: 3, state: { themes: [mk('untitled', '#222222')], activeThemeId: 'untitled' } }))
     await useProject.persist.rehydrate()
     expect(s().themes.map((t) => t.name)).toEqual(['untitled'])
@@ -181,10 +181,19 @@ describe('themes in the store', () => {
     localStorage.setItem('baseline-project', JSON.stringify({ version: 4, state: { themes: [def, mapped('#7F56D9')], activeThemeId: 'theme-1' } }))
     await useProject.persist.rehydrate()
     expect(s().themes[0].data.imported).toBeUndefined()
-    expect(s().themes[1].data.imported?.collections.map((c) => c.name)).toHaveLength(8)
+    expect(s().themes[1].data.schemaId).toBe('untitled-ui')
     localStorage.setItem('baseline-project', JSON.stringify({ version: 4, state: { themes: [def, mapped('#123456')], activeThemeId: 'theme-1' } }))
     await useProject.persist.rehydrate()
     expect(s().themes[1].data.imported).toBeUndefined()
+  })
+
+  it('turns a version 5 Untitled (all files read-only) into the editable colour schema', async () => {
+    const full = { id: 'theme-2', name: 'Untitled', data: { ...pickData(s()), imported: { collections: [{ name: '1. Color modes', modes: ['Light mode'], variables: [] }] } } }
+    const def = { id: 'theme-1', name: 'Default', data: pickData(s()) }
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 5, state: { themes: [def, full], activeThemeId: 'theme-1' } }))
+    await useProject.persist.rehydrate()
+    expect(s().themes[1].data.schemaId).toBe('untitled-ui')
+    expect(s().themes[1].data.imported?.collections).toHaveLength(6)
   })
 
   it('switching to an imported theme carries its tokens, and resetting it restores them', () => {
@@ -194,10 +203,12 @@ describe('themes in the store', () => {
     expect(s().imported).toBe(data.imported)
     s().switchTheme(s().themes[0].id)
     expect(s().imported).toBeUndefined()
+    expect(s().schemaId).toBeUndefined()
     s().switchTheme('theme-9')
     useProject.setState({ imported: { collections: [] } })
     s().resetTheme()
-    expect(s().imported?.collections).toHaveLength(8)
+    expect(s().imported?.collections).toHaveLength(6)
+    expect(s().schemaId).toBe('untitled-ui')
     s().switchTheme(s().themes[0].id)
     s().resetTheme()
     expect(s().imported).toBeUndefined()

@@ -3,7 +3,7 @@
  */
 import { themedSections, type ExportInput, type ExportModule, type NamedTheme } from './exportAll'
 import { buildFigmaTokens } from './figmaExport'
-import { importedDoc } from './importedTokens'
+import { importedDoc, withSchemaColours } from './importedTokens'
 
 export type ExportFormat = 'css' | 'json'
 
@@ -56,7 +56,8 @@ export function buildExport(input: ExportInput | NamedTheme[], format: ExportFor
   } else {
     const keep = new Set(chosen.map((m) => GROUP[m]))
     const pick = (data: ExportInput): Record<string, unknown> => {
-      if (data.imported) return importedDoc(data.imported, chosen)
+      // Colours made from the schema and the collections kept as imported, named like the files they came from.
+      if (data.imported) return importedDoc(withSchemaColours(data.imported, data), chosen)
       const doc = buildFigmaTokens(data) as Record<string, unknown>
       const out: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(doc)) if (k.startsWith('$') || keep.has(k)) out[k] = v
