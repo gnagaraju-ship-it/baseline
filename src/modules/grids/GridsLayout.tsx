@@ -14,19 +14,23 @@ interface Props {
   exportCount: number
   onExport: () => void
   children: ReactNode
+  /** A different settings panel, for a theme whose widths come from a design system. */
+  panel?: ReactNode
+  /** The name of the tab, when it is not "Grid". */
+  tabLabel?: string
 }
 
 /** Frame for the Grids screen: rail + grid settings + Grid tab, unit switch and Export. */
-export function GridsLayout({ css, columns, exportCount, onExport, children }: Props) {
+export function GridsLayout({ css, columns, exportCount, onExport, children, panel, tabLabel = 'Grid' }: Props) {
   const unit = useProject((s) => s.unit)
   const setUnit = useProject((s) => s.setUnit)
   return (
-    <AppShell panel={<GridsSettings />}>
+    <AppShell panel={panel ?? <GridsSettings />}>
       <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-line-soft pl-7 pr-6">
         <nav aria-label="Views" className="flex gap-1">
           <span aria-current="page" className="flex h-16 items-center gap-2 px-3.5 font-semibold text-ink shadow-[inset_0_-2px_0_#E2531B]">
             <Icon name="grid" size={16} strokeWidth={1.7} />
-            Grid
+            {tabLabel}
             <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-accent-tint px-1.5 text-[11px] font-semibold text-accent-text">{columns}</span>
           </span>
         </nav>

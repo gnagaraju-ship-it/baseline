@@ -144,17 +144,51 @@ describe('the Untitled theme', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 
-  it('grids: widths and containers as named tokens, without Baseline\'s grid controls', async () => {
+  it('grids: the Grids screen layout with Untitled\'s widths and containers, and no columns or breakpoints', async () => {
     at('/grids')
     expect(screen.queryByRole('group', { name: 'Breakpoint' })).not.toBeInTheDocument()
-    const widths = within(screen.getByRole('region', { name: '4. Widths' }))
-    expect(widths.getByLabelText('width-xxs name')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '5. Containers' })).toBeInTheDocument()
-    const pad = screen.getByLabelText('container-padding-desktop Value')
-    await userEvent.clear(pad)
-    await userEvent.type(pad, '40')
-    expect(s().imported!.collections.find((c) => c.name === '5. Containers')!.variables.find((v) => v.name === 'container-padding-desktop')!.values.Value).toEqual({ v: 40 })
+    expect(screen.getByRole('group', { name: 'Width' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Container' })).toBeInTheDocument()
+    expect(within(screen.getByRole('group', { name: 'Width' })).getAllByRole('button')).toHaveLength(12)
+    expect(within(screen.getByRole('group', { name: 'Container' })).getAllByRole('button')).toHaveLength(3)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 48rem')
+    expect(screen.getByRole('img', { name: 'width-xl: 48rem' })).toBeInTheDocument()
+    const stats = within(screen.getByRole('main'))
+    expect(stats.getByText('SHARE OF 1920')).toBeInTheDocument()
+    expect(stats.getByText('40%')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Export/ })).toHaveTextContent('15')
+    expect(screen.getByText('Widths and containers')).toBeInTheDocument()
+  })
+
+  it('grids: pick a width or container, edit it, point it at a step, and rename or remove it', async () => {
+    at('/grids')
+    await userEvent.click(within(screen.getByRole('group', { name: 'Width' })).getByRole('button', { name: /^2xl/ }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-2xl')
+    expect((screen.getByLabelText('width-2xl follows') as HTMLSelectElement).value).toBe('_Primitives::Spacing/256 (1,024px)')
+    fireEvent.change(screen.getByLabelText('width-2xl value'), { target: { value: '1100' } })
+    expect((screen.getByLabelText('width-2xl follows') as HTMLSelectElement).value).toBe('')
+    expect(s().imported!.collections.find((c) => c.name === '4. Widths')!.variables.find((v) => v.name === 'width-2xl')!.values['Mode 1']).toEqual({ v: 1100 })
+    fireEvent.blur(screen.getByLabelText('width-2xl value'))
+    await userEvent.selectOptions(screen.getByLabelText('width-2xl follows'), '_Primitives::Spacing/192 (768px)')
+    expect(screen.getByLabelText('width-2xl value')).toHaveValue(768)
+    // a container's padding is drawn as bands at the sides of a frame
+    await userEvent.click(within(screen.getByRole('group', { name: 'Container' })).getByRole('button', { name: /^padding-desktop/ }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('container-padding-desktop · 2rem')
+    expect(screen.getByText('content')).toBeInTheDocument()
+    // add, rename and remove from the list on the left
+    await userEvent.click(screen.getByRole('button', { name: '+ Add width' }))
+    expect(within(screen.getByRole('region', { name: 'Widths list' })).getByRole('button', { name: /^new/ })).toBeInTheDocument()
+    await userEvent.click(within(screen.getByRole('region', { name: 'Widths list' })).getByRole('button', { name: /^new/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove new' }))
+    expect(within(screen.getByRole('region', { name: 'Widths list' })).queryByRole('button', { name: /^new/ })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Reset widths' }))
+    expect(within(screen.getByRole('group', { name: 'Width' })).getAllByRole('button')).toHaveLength(12)
+  })
+
+  it('grids: the unit switch changes how values show', async () => {
+    at('/grids')
+    await userEvent.click(screen.getByRole('button', { name: 'px' }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('width-xl · 768px')
   })
 
   it('type: no responsive scaling, weight variants or letter spacing, which the files do not have', async () => {
