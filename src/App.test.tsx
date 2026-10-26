@@ -262,7 +262,7 @@ describe('persistence', () => {
     useProject.getState().setText('primary', '#0EA5E9')
     useProject.getState().setGridColumns(10)
     const saved = JSON.parse(localStorage.getItem('baseline-project')!)
-    expect(saved.version).toBe(3)
+    expect(saved.version).toBe(4)
     expect(Object.keys(saved.state).sort()).toEqual(['activeThemeId', 'appTheme', 'contrast', 'previewMode', 'themes', 'unit'])
     expect(saved.state.themes).toHaveLength(1)
     expect(saved.state.themes[0].name).toBe('Default')

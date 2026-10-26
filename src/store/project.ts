@@ -9,7 +9,7 @@ import {
 } from '../lib/elevation'
 import type { ExportModule } from '../lib/exportAll'
 import { ALL_MODULES, normaliseSelection, type ExportFormat } from '../lib/exportBuilder'
-import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, type Theme, type ThemeData } from '../lib/themes'
+import { cloneData, completeData, defaultThemeData, MAX_THEMES, nextThemeId, uniqueName, UNTITLED_NAME, untitledThemeData, type Theme, type ThemeData } from '../lib/themes'
 import { defaultSpacingSettings, initOn, type SpacingBase, type SpacingSettings } from '../lib/spacing'
 import {
   BREAKPOINTS, GRID_PRESETS, clampColumns, clampGutter, defaultGridSettings,
@@ -414,16 +414,17 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 3,
+  version: 4,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
-  // project saved before themes becomes one theme named "Default".
+  // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 3 && Array.isArray(p.themes)) return p as never
+    if (version >= 4) return p as never
+    if (version === 3 && Array.isArray(p.themes)) return { ...p, themes: withUntitled(p.themes) } as never
     const data = completeData({
       settings: p.settings, tokenOverrides: p.tokenOverrides, tokenAlpha: p.tokenAlpha, type: p.type, grid: p.grid, spacing: p.spacing, elevation: p.elevation
     })
-    return { contrast: p.contrast, previewMode: p.previewMode, appTheme: p.appTheme, unit: p.unit, themes: [{ id: 'theme-1', name: 'Default', data }], activeThemeId: 'theme-1' } as never
+    return { contrast: p.contrast, previewMode: p.previewMode, appTheme: p.appTheme, unit: p.unit, themes: withUntitled([{ id: 'theme-1', name: 'Default', data }]), activeThemeId: 'theme-1' } as never
   },
   // The saved state keeps the active theme's data inside `themes`; the working copy is rebuilt from it on load.
   merge: (persisted, current) => {
@@ -445,5 +446,11 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     unit: s.unit
   })
 }))
+
+/** Adds the Untitled theme after the saved ones, unless one with that name exists or there is no room. */
+function withUntitled(themes: Theme[]): Theme[] {
+  if (themes.length >= MAX_THEMES || themes.some((t) => t.name.trim().toLowerCase() === UNTITLED_NAME.toLowerCase())) return themes
+  return [...themes, { id: nextThemeId(themes), name: UNTITLED_NAME, data: untitledThemeData() }]
+}
 
 export { DEFAULT_SECONDARY }

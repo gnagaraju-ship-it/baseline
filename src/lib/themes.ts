@@ -97,3 +97,23 @@ export function completeData(partial: Partial<ThemeData> | undefined): ThemeData
     elevation: { ...d.elevation, ...(p.elevation ?? {}) }
   }
 }
+
+export const UNTITLED_NAME = 'Untitled'
+
+/**
+ * The Untitled UI system mapped onto what Baseline holds: its brand (Original, 600), status colours (Blue, Green, Yellow,
+ * Orange and Red 600/500), Inter for headings and body at a 16px base, and its spacing scale (0 to 160). Its 11-step ramps,
+ * radius, widths and containers have no place in Baseline and are not imported.
+ */
+export function untitledThemeData(): ThemeData {
+  const d = defaultThemeData()
+  d.settings.text = { primary: '#7F56D9', info: '#2563EB', success: '#16A34A', caution: '#EAB308', warning: '#EA580C', critical: '#DC2626' }
+  d.settings.neutral = { enabled: true, preset: 'zinc' }
+  d.type.headingFont = 'Inter'
+  d.type.bodyFont = 'Inter'
+  d.type.base = 16
+  const steps = [0, 2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 160]
+  d.spacing.extra = [128, 160]
+  d.spacing.on = { ...Object.fromEntries(Object.keys(d.spacing.on).map((k) => [k, false])), ...Object.fromEntries(steps.map((v) => [v, true])) }
+  return d
+}

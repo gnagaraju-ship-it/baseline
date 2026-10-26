@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_THEMES, cloneData, completeData, defaultThemeData, nextThemeId, slugify, themeSlugs, uniqueName, type Theme } from './themes'
+import { MAX_THEMES, cloneData, completeData, defaultThemeData, nextThemeId, slugify, themeSlugs, uniqueName, untitledThemeData, type Theme } from './themes'
 
 describe('uniqueName', () => {
   it('keeps a free name and numbers a taken one, ignoring case and spacing', () => {
@@ -51,5 +51,17 @@ describe('theme data', () => {
     expect(nextThemeId([t('theme-1'), t('theme-2'), t('theme-3')])).toBe('theme-4')
     expect(nextThemeId([t('theme-2')])).toBe('theme-3')
     expect(MAX_THEMES).toBe(8)
+  })
+})
+
+describe('untitledThemeData', () => {
+  it('maps the Untitled UI brand, status colours, Inter and spacing scale', async () => {
+    const { exportSections } = await import('./exportAll')
+    const d = untitledThemeData()
+    expect(d.settings.text.primary).toBe('#7F56D9')
+    expect([d.type.headingFont, d.type.bodyFont, d.type.base]).toEqual(['Inter', 'Inter', 16])
+    const spacing = exportSections(d).find((x) => x.id === 'spacing')!
+    expect(spacing.count).toBe(17)
+    expect(JSON.stringify(d)).not.toBe(JSON.stringify(defaultThemeData()))
   })
 })

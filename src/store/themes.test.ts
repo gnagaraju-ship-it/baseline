@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MAX_THEMES } from '../lib/themes'
-import { currentThemes, useProject } from './project'
+import { currentThemes, pickData, useProject } from './project'
 
 const s = () => useProject.getState()
 
@@ -143,18 +143,32 @@ describe('themes in the store', () => {
     expect(s().settings.text.primary).toBe('#111111')
   })
 
-  it('migrates a project saved before themes into one theme called Default', async () => {
+  it('migrates a project saved before themes into Default plus Untitled', async () => {
     localStorage.setItem('baseline-project', JSON.stringify({
       version: 2,
       state: { unit: 'px', appTheme: 'dark', settings: { ...s().settings, secondary: '#4852E5' }, grid: { ...s().grid, columns: { xxl: 9, md: 8, xs: 4 } } }
     }))
     await useProject.persist.rehydrate()
-    expect(s().themes.map((t) => t.name)).toEqual(['Default'])
+    expect(s().themes.map((t) => t.name)).toEqual(['Default', 'Untitled'])
+    expect(s().activeThemeId).toBe('theme-1')
     expect(s().unit).toBe('px')
     expect(s().appTheme).toBe('dark')
     expect(s().settings.secondary).toBe('#4852E5')
     expect(s().grid.columns.xxl).toBe(9)
     expect(s().type.base).toBe(14)
     expect(s().settings.utility).toEqual([])
+  })
+
+  it('adds Untitled once to a version 3 save, keeps the user\'s themes, and skips it when the name is taken', async () => {
+    const mk = (name: string, primary: string) => ({ id: name, name, data: { ...pickData(s()), settings: { ...s().settings, text: { ...s().settings.text, primary } } } })
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 3, state: { themes: [mk('Mine', '#111111')], activeThemeId: 'Mine' } }))
+    await useProject.persist.rehydrate()
+    expect(s().themes.map((t) => t.name)).toEqual(['Mine', 'Untitled'])
+    expect(s().activeThemeId).toBe('Mine')
+    expect(s().settings.text.primary).toBe('#111111')
+    expect(s().themes[1].data.settings.text.primary).toBe('#7F56D9')
+    localStorage.setItem('baseline-project', JSON.stringify({ version: 3, state: { themes: [mk('untitled', '#222222')], activeThemeId: 'untitled' } }))
+    await useProject.persist.rehydrate()
+    expect(s().themes.map((t) => t.name)).toEqual(['untitled'])
   })
 })
