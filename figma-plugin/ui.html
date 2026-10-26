@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-  <h1>Import Baseline tokens <small id="version" style="font-weight:400;color:var(--figma-color-text-secondary,#52525b)">plugin v5</small></h1>
+  <h1>Import Baseline tokens <small id="version" style="font-weight:400;color:var(--figma-color-text-secondary,#52525b)">plugin v6</small></h1>
   <p>Choose the <b>baseline-tokens.json</b> you exported from Baseline, then import it as Figma Variables and shadow styles.</p>
 
   <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a tokens JSON file">
@@ -102,7 +102,7 @@
       var found = ORDER.filter(function (g) { return groupCount(parsed, g) > 0; });
       if (!found.length) {
         var top = Object.keys(parsed && typeof parsed === 'object' ? (parsed.Themes && typeof parsed.Themes === 'object' ? parsed.Themes[Object.keys(parsed.Themes)[0]] || {} : parsed) : {}).filter(function (k) { return k[0] !== '$'; });
-        throw new Error('No Baseline token groups were found in this file (plugin v5 knows: ' + ORDER.join(', ') + '). This file has: ' + (top.length ? top.join(', ') : 'nothing readable') + '. Export it from Baseline with the JSON format.');
+        throw new Error('No Baseline token groups were found in this file (plugin v6 knows: ' + ORDER.join(', ') + '). This file has: ' + (top.length ? top.join(', ') : 'nothing readable') + '. Export it from Baseline with the JSON format.');
       }
       doc = parsed;
       $('fileName').textContent = name || 'Pasted JSON';
