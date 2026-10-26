@@ -3,6 +3,8 @@ import { defaultSettings } from './colour'
 import { defaultElevationSettings } from './elevation'
 import type { ExportInput } from './exportAll'
 import { ALL_MODULES, buildExport } from './exportBuilder'
+import { systemJson } from '../v2/export/json'
+import { activeResolved, resetV2, useV2 } from '../v2/store'
 import { cloneData, defaultThemeData, untitledThemeData, type ThemeData } from './themes'
 import { PLUGIN_FILES, PLUGIN_FOLDER, pluginZip } from './figmaPlugin'
 import { defaultGridSettings } from './grid'
@@ -582,5 +584,29 @@ describe('plugin import: Untitled (colour schema and imported collections)', () 
     const msg = document.getElementById('status')!.textContent!
     expect(msg).toContain('plugin v5 knows: Primitives, Semantic')
     expect(msg).toContain('This file has: Colours, Sizes')
+  })
+})
+
+describe('plugin import: a v2 export', () => {
+  it('creates the collections of the active v2 system, with modes and links', async () => {
+    resetV2()
+    useV2.getState().setSystem('untitled')
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
+    expect(p.posted.find((m) => m.type === 'error')).toBeUndefined()
+    expect(p.collections.map((c: any) => c.name)).toEqual(['_Primitives', '1. Color modes'])
+    expect(p.collections[1].modes.map((m: any) => m.name)).toEqual(['Light mode', 'Dark mode'])
+    const tokens = p.variables.filter((v: any) => v.variableCollectionId === p.collections[1].id)
+    expect(tokens).toHaveLength(273)
+    expect(tokens.find((v: any) => v.name === 'Colors/Text/text-primary (900)').valuesByMode[p.collections[1].modes[0].modeId].type).toBe('VARIABLE_ALIAS')
+    resetV2()
+  })
+
+  it('creates Default\'s two collections too', async () => {
+    resetV2()
+    const p = loadPlugin()
+    await p.send({ type: 'import', doc: JSON.parse(systemJson(activeResolved(useV2.getState()))), groups: ['Imported'] })
+    expect(p.collections.map((c: any) => [c.name, c.modes.map((m: any) => m.name)])).toEqual([['Primitives', ['Value']], ['Semantic', ['Light', 'Dark']]])
+    expect(p.variables).toHaveLength(7 * 16 + 32 + 58)
   })
 })
