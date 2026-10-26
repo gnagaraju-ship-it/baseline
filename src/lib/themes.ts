@@ -2,6 +2,7 @@
  * Themes: named, complete sets of token styles and settings. The store keeps the active theme's data as its working
  * copy; this file holds the pure helpers around it.
  */
+import untitledType from '../data/untitled-type.json'
 import untitledUi from '../data/untitled-ui.json'
 import type { ImportedSet } from './importedTokens'
 import { UNTITLED_ID } from './schemas'
@@ -9,7 +10,7 @@ import { defaultSettings, type PaletteSettings } from './colour'
 import { defaultElevationSettings, type ElevationSettings } from './elevation'
 import { defaultGridSettings, type GridSettings } from './grid'
 import { defaultSpacingSettings, type SpacingSettings } from './spacing'
-import { defaultTypeSettings, type TypeSettings } from './typeScale'
+import { defaultTypeSettings, type FixedStep, type TypeSettings } from './typeScale'
 
 export const MAX_THEMES = 8
 
@@ -116,9 +117,18 @@ export const UNTITLED_NAME = 'Untitled'
 export function untitledThemeData(): ThemeData {
   const set = cloneImported(untitledUi as ImportedSet)
   set.collections = set.collections
-    .filter((c) => c.name !== 'Brand palette' && c.name !== '1. Color modes')
+    .filter((c) => c.name !== 'Brand palette' && c.name !== '1. Color modes' && c.name !== '6. Typography')
     .map((c) => (c.name === '_Primitives' ? { ...c, variables: c.variables.filter((v) => v.name.startsWith('Spacing/')) } : c))
-  return { ...defaultThemeData(), imported: set, schemaId: UNTITLED_ID }
+  const type: TypeSettings = {
+    ...defaultTypeSettings(),
+    headingFont: untitledType.fonts.heading,
+    bodyFont: untitledType.fonts.body,
+    // Untitled has one size per step; scaling the headings down on smaller screens is left off until asked for.
+    tablet: { on: false, pct: -8 },
+    mobile: { on: false, pct: -15 },
+    fixed: untitledType.steps as FixedStep[]
+  }
+  return { ...defaultThemeData(), type, imported: set, schemaId: UNTITLED_ID }
 }
 
 const cloneImported = (set: ImportedSet): ImportedSet => JSON.parse(JSON.stringify(set))

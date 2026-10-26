@@ -20,7 +20,7 @@ import {
   WEB_PRESETS, defaultTypeSettings, isWeb,
   type AppleStyle, type PlatformIndex, type PresetKey, type TypeSettings, type Unit, type ViewKey
 } from '../lib/typeScale'
-import { colourSchema, tokenSchemaOf } from '../lib/schemas'
+import { UNTITLED_ID, colourSchema, tokenSchemaOf } from '../lib/schemas'
 import { overrideKey, type Mode, type PaletteRef } from '../lib/tokens'
 import {
   DEFAULT_SECONDARY,
@@ -90,7 +90,7 @@ interface ProjectState {
   setResponsive: (which: 'tablet' | 'mobile', patch: Partial<{ on: boolean; pct: number }>) => void
   setTypeView: (view: ViewKey) => void
   toggleVariant: (name: string, weight: number) => void
-  setTypeOverride: (name: string, patch: { lh?: number; tr?: number }) => void
+  setTypeOverride: (name: string, patch: { lh?: number; tr?: number; size?: number }) => void
   resetTypeOverride: (name: string) => void
   grid: GridSettings
   setGridPlatform: (platform: number) => void
@@ -253,7 +253,7 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     set((s) => {
       const merged = { ...s.type.overrides[name], ...patch }
       const overrides = { ...s.type.overrides }
-      if (merged.lh === undefined && merged.tr === undefined) delete overrides[name]
+      if (merged.lh === undefined && merged.tr === undefined && merged.size === undefined) delete overrides[name]
       else overrides[name] = merged
       return { type: { ...s.type, overrides } }
     }),
@@ -428,12 +428,13 @@ export const useProject = create<ProjectState>()(persist((set) => ({
     })
 }), {
   name: 'baseline-project',
-  version: 6,
+  version: 7,
   // Version 2 added tertiary and utility colours and version 3 themes: older saves are completed with defaults, and a
   // project saved before themes becomes one theme named "Default". Version 4 adds the Untitled theme next to it.
   migrate: (persisted, version) => {
     const p = (persisted ?? {}) as Record<string, any>
-    if (version >= 6) return p as never
+    if (version >= 7) return p as never
+    if (version === 6 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(upgradeUntitled) } as never
     if (version === 5 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
     if (version === 4 && Array.isArray(p.themes)) return { ...p, themes: p.themes.map(importUntitled) } as never
     if (version === 3 && Array.isArray(p.themes)) return { ...p, themes: withUntitled(p.themes) } as never
@@ -470,6 +471,13 @@ function importUntitled(t: Theme): Theme {
   // Version 5 kept all 8 files as read-only imported tokens; the colours are now an editable schema.
   const readOnly = !!d.imported && !d.schemaId && d.imported.collections.some((c) => c.name === '1. Color modes')
   return t.name === UNTITLED_NAME && (mapped || readOnly) ? { ...t, data: untitledThemeData() } : t
+}
+
+/** Version 6 Untitled has no named type steps: add them (and the trimmed imported set) and keep everything the user edited. */
+function upgradeUntitled(t: Theme): Theme {
+  if (t.data?.schemaId !== UNTITLED_ID || t.data.type?.fixed) return t
+  const fresh = untitledThemeData()
+  return { ...t, data: { ...t.data, type: fresh.type, imported: fresh.imported } }
 }
 
 /** Adds the Untitled theme after the saved ones, unless one with that name exists or there is no room. */

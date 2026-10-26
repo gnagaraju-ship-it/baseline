@@ -9,14 +9,12 @@ import { byModule, cssName, importedCount, importedSections, type ImportedCollec
 import { useProject } from '../../store/project'
 
 const TABS: Record<string, { module: ExportModule; label: string }> = {
-  '/type': { module: 'type', label: 'Type scale' },
   '/grids': { module: 'grids', label: 'Widths and containers' },
-  '/spacing': { module: 'spacing', label: 'Spacing and radius' },
-  '/elevation': { module: 'elevation', label: 'Elevation' }
+  '/spacing': { module: 'spacing', label: 'Spacing and radius' }
 }
 
 /** The screens an imported set still has to itself: the colour screens use the theme's colour schema. */
-export const IMPORTED_ROUTES = ['/type', '/grids', '/spacing', '/elevation']
+export const IMPORTED_ROUTES = ['/grids', '/spacing']
 
 function Cell({ value, type }: { value?: ImportedValue; type: string }) {
   if (!value) return <span className="text-muted">-</span>

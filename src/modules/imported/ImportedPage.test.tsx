@@ -72,14 +72,37 @@ describe('the Untitled theme', () => {
     expect(within(screen.getByRole('main')).getByRole('link', { name: /UI preview/ })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('type, widths and spacing keep their imported tokens, read-only', () => {
+  it('type: Untitled\'s named steps with their exact sizes, Inter, no ratio or platform controls', async () => {
     at('/type')
-    expect(within(screen.getByRole('region', { name: '6. Typography' })).getByText('Font size/text-md')).toBeInTheDocument()
+    const text = within(screen.getByRole('region', { name: 'TEXT' }))
+    const display = within(screen.getByRole('region', { name: 'DISPLAY' }))
+    expect(text.getAllByRole('button').filter((b) => b.hasAttribute('aria-expanded'))).toHaveLength(5)
+    expect(display.getByText('display-2xl')).toBeInTheDocument()
+    expect(screen.getByText('72px')).toBeInTheDocument() // display-2xl size
+    expect(screen.queryByLabelText('Scale ratio')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Platform' })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Inter').length).toBeGreaterThan(0)
   })
 
-  it('says when there are no elevation tokens', () => {
+  it('type: a step\'s size can be changed, and its line height follows in proportion', async () => {
+    at('/type')
+    await userEvent.click(within(screen.getByRole('region', { name: 'TEXT' })).getByText('text-md'))
+    const size = screen.getByLabelText('SIZE (PX)')
+    await userEvent.clear(size)
+    await userEvent.type(size, '18{Enter}')
+    expect(s().type.overrides['text-md']).toEqual({ size: 18 })
+    const rows = (await import('../../lib/typeScale')).computeGroups(s().type).flatMap((g) => g.rows)
+    expect(rows.find((r) => r.name === 'text-md')).toMatchObject({ size: 18, lh: 27 })
+  })
+
+  it('widths and spacing keep their imported tokens, read-only', () => {
+    at('/grids')
+    expect(within(screen.getByRole('region', { name: '4. Widths' })).getByText('width-xxs')).toBeInTheDocument()
+  })
+
+  it('elevation is Baseline\'s own', () => {
     at('/elevation')
-    expect(screen.getByRole('status')).toHaveTextContent('no elevation tokens')
+    expect(screen.getByRole('button', { name: '+ Add level' })).toBeInTheDocument()
   })
 
   it('export opens with only the screen\'s module, and Default still uses the generators', async () => {

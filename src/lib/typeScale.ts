@@ -54,6 +54,17 @@ function modern(list: AppleStep[]): AppleStep[] {
   return list.map(([n, size, lh, , w]) => [n, size, lh + 2, 0, n === 'headline' || n.startsWith('title') ? 600 : w] as const)
 }
 
+/** A named step with its own size, as in a design system that fixes its sizes (Untitled UI) instead of deriving them. */
+export interface FixedStep {
+  name: string
+  group: string
+  font: 'heading' | 'body'
+  size: number
+  lh: number
+  tr: number
+  weight: number
+}
+
 export interface TypeSettings {
   platform: PlatformIndex
   base: number
@@ -69,7 +80,9 @@ export interface TypeSettings {
   /** Extra weights per step name. */
   variants: Record<string, number[]>
   /** Line-height (px) and tracking (em) overrides per step name. */
-  overrides: Record<string, { lh?: number; tr?: number }>
+  overrides: Record<string, { lh?: number; tr?: number; size?: number }>
+  /** Named steps with fixed sizes; when set they replace the scale made from the base size and ratio. */
+  fixed?: FixedStep[]
 }
 
 export function defaultTypeSettings(): TypeSettings {
@@ -119,10 +132,30 @@ function makeRow(s: TypeSettings, name: string, size: number, lhBase: number, tr
   const lh = ov.lh ?? lhBase
   const tr = ov.tr ?? trBase
   const variants = (s.variants[name] ?? []).map((w) => ({ name: `${name}-${WEIGHTS.find((x) => x[1] === w)?.[0] ?? w}`, weight: w }))
-  return { name, size, lh, tr, weight, font, overridden: ov.lh !== undefined || ov.tr !== undefined, variants }
+  return { name, size, lh, tr, weight, font, overridden: ov.lh !== undefined || ov.tr !== undefined || ov.size !== undefined, variants }
+}
+
+/** Fixed steps in their groups. A size can be edited per step; headings still shrink on the smaller breakpoints. */
+function fixedGroups(s: TypeSettings, steps: FixedStep[]): TypeGroup[] {
+  const f = shrinkFactor(s)
+  const titles = [...new Set(steps.map((x) => x.group))]
+  return titles.map((title) => {
+    const list = steps.filter((x) => x.group === title)
+    return {
+      title,
+      font: list[0].font === 'heading' ? s.headingFont : s.bodyFont,
+      rows: list.map((x) => {
+        const base = s.overrides[x.name]?.size ?? x.size
+        const k = x.font === 'heading' ? f : 1
+        const size = Math.round(base * k)
+        return makeRow(s, x.name, size, Math.round(x.lh * (size / x.size)), x.tr, x.weight, x.font)
+      })
+    }
+  })
 }
 
 export function computeGroups(s: TypeSettings): TypeGroup[] {
+  if (s.fixed) return fixedGroups(s, s.fixed)
   if (isWeb(s.platform)) {
     const f = shrinkFactor(s)
     return WEB.map((g) => ({
@@ -222,9 +255,11 @@ const SPECIMEN = {
   watch: { label: 'footnote', h1: 'large-title', lead: 'callout', h2: 'title-3', body: 'body', small: 'caption' }
 }
 
+const FIXED_SPECIMEN = { label: 'text-sm', h1: 'display-lg', lead: 'text-xl', h2: 'display-xs', body: 'text-md', small: 'text-sm' }
+
 /** Rows used by the Preview tab, keyed by role. */
 export function specimenRows(s: TypeSettings, groups: TypeGroup[]): Record<keyof typeof SPECIMEN.web, TypeRow> {
-  const map = SPECIMEN[isWeb(s.platform) ? 'web' : s.platform === 2 ? 'ios' : 'watch']
+  const map = s.fixed ? FIXED_SPECIMEN : SPECIMEN[isWeb(s.platform) ? 'web' : s.platform === 2 ? 'ios' : 'watch']
   const all = groups.flatMap((g) => g.rows)
   const find = (n: string) => all.find((r) => r.name === n) ?? all[0]
   return { label: find(map.label), h1: find(map.h1), lead: find(map.lead), h2: find(map.h2), body: find(map.body), small: find(map.small) }

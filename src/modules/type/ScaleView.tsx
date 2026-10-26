@@ -47,6 +47,12 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
           </div>
           <div className="text-[10.5px] font-bold tracking-[.08em] text-muted">OVERRIDES</div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+            {settings.fixed && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={`sz-${row.name}`} className={label10}>SIZE (PX)</label>
+                <NumberField id={`sz-${row.name}`} value={settings.overrides[row.name]?.size ?? settings.fixed.find((x) => x.name === row.name)?.size ?? row.size} min={8} onCommit={(n) => setTypeOverride(row.name, { size: n ?? undefined })} />
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor={`lh-${row.name}`} className={label10}>LINE HEIGHT (PX)</label>
               <NumberField id={`lh-${row.name}`} value={row.lh} min={8} onCommit={(n) => setTypeOverride(row.name, { lh: n ?? undefined })} />
@@ -77,7 +83,7 @@ function Row({ row, settings, open, onToggle }: { row: TypeRow; settings: TypeSe
 export function ScaleView({ groups, settings }: { groups: TypeGroup[]; settings: TypeSettings }) {
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const o: Record<string, boolean> = {}
-    if (isWeb(settings.platform)) o['heading-xl'] = true
+    if (isWeb(settings.platform) && !settings.fixed) o['heading-xl'] = true
     return o
   })
   return (

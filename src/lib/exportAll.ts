@@ -37,21 +37,13 @@ export function exportSections(s: ExportInput): ExportSection[] {
   const palettes = buildPalettes(s.settings, colour)
   const rows = tokenRows(palettes, colour?.steps)
   const resolved = resolveAll(palettes, s.tokenOverrides, s.tokenAlpha, tokenSchema)
-  if (s.imported) {
-    // Collections kept as imported, with the colours made from the schema.
-    return importedSections(s.imported).map((sec) =>
-      sec.id === 'ramps' ? { ...sec, css: toCss(rows), count: rows.length }
-      : sec.id === 'semantic' ? { ...sec, css: toTokenCss(resolved.tokens, tokenSchema), count: resolved.resolvedCount }
-      : sec
-    )
-  }
   const type = withGridBreakpoints(s.type, s.grid.on.md, s.grid.on.xs)
   const typeGroups = computeGroups(type)
   const steps = scaleSteps(s.spacing.base, s.spacing.extra)
   const enabled = onValues(steps, s.spacing.on)
   const spaceGroups = spacingTokens(s.grid, spacingBreakpoints(s.spacing, s.grid), enabled)
 
-  return [
+  const sections: ExportSection[] = [
     { id: 'ramps', title: 'Colour: palette ramps', css: toCss(rows), count: rows.length },
     { id: 'semantic', title: 'Colour: semantic tokens (light and dark)', css: toTokenCss(resolved.tokens, tokenSchema), count: resolved.resolvedCount },
     { id: 'type', title: 'Type scale', css: toTypeCss(typeGroups, isWeb(type.platform), typeFonts(type), typeByBreakpoint(s.type, s.grid)), count: countRows(typeGroups) },
@@ -59,6 +51,10 @@ export function exportSections(s: ExportInput): ExportSection[] {
     { id: 'spacing', title: 'Spacing', css: toSpacingCss(enabled, spaceGroups), count: enabled.length },
     { id: 'elevation', title: 'Elevation', css: toElevationCss(s.elevation.tokens, s.elevation.shadow), count: s.elevation.tokens.length }
   ]
+  // Grids and spacing kept as imported replace the generated ones; colours, type and elevation always come from the settings.
+  if (!s.imported) return sections
+  const kept = importedSections(s.imported)
+  return sections.map((sec) => (sec.id === 'grids' || sec.id === 'spacing' ? kept.find((k) => k.id === sec.id)! : sec))
 }
 
 export function exportAll(s: ExportInput): { css: string; count: number } {

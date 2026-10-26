@@ -31,6 +31,7 @@ export function TypeSettingsPanel() {
   const s = useProject()
   const t = s.type
   const web = isWeb(t.platform)
+  const fixed = !!t.fixed
 
   return (
     <>
@@ -41,7 +42,11 @@ export function TypeSettingsPanel() {
       </div>
 
       <div className="flex flex-col gap-[22px] p-5">
-        <section className="flex flex-col gap-2.5">
+        {fixed && (
+          <p className="m-0 text-xs leading-[1.55] text-muted">This theme has named steps with their own sizes. Open a step in the list to change its size, line height, letter spacing and weights.</p>
+        )}
+
+        {!fixed && <section className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
             <h3 className={h3}>Platform</h3>
             <span className="rounded border border-line px-1.5 py-0.5 text-[10px] font-semibold tracking-[.06em] text-muted">PROJECT</span>
@@ -64,9 +69,9 @@ export function TypeSettingsPanel() {
               )
             })}
           </div>
-        </section>
+        </section>}
 
-        {web && (
+        {web && !fixed && (
           <section className="flex flex-col gap-3">
             <h3 className={h3}>Scale</h3>
             <div className="flex justify-between text-[13px] font-medium"><label htmlFor="base-range">Base size</label><span className="font-mono font-semibold">{t.base}px</span></div>
@@ -86,14 +91,14 @@ export function TypeSettingsPanel() {
           </section>
         )}
 
-        <section className="flex flex-col gap-2.5">
+        {!fixed && <section className="flex flex-col gap-2.5">
           <h3 className={h3}>Presets</h3>
           <div role="group" aria-label="Preset" className="flex flex-wrap gap-1.5">
             {web
               ? (Object.keys(WEB_PRESETS) as PresetKey[]).map((k) => <button key={k} type="button" aria-pressed={t.preset === k} onClick={() => s.applyTypePreset(k)} className={pill(t.preset === k)}>{WEB_PRESETS[k].label}</button>)
               : ([['hig', 'Default HIG'], ['modern', 'Modern']] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={t.apple === k} onClick={() => s.setAppleStyle(k)} className={pill(t.apple === k)}>{label}</button>)}
           </div>
-        </section>
+        </section>}
 
         <section className="flex flex-col gap-2.5">
           <h3 className={h3}>Fonts</h3>

@@ -2,9 +2,11 @@
  * An imported token set: tokens kept exactly as they were in the files they came from (Figma variable collections),
  * instead of being made by Baseline's generators. Built by scripts/build-untitled.mjs.
  */
+import untitledType from '../data/untitled-type.json'
 import { buildPalettes, withAlpha } from './colour'
 import type { ExportInput, ExportModule, ExportSection } from './exportAll'
-import { colourSchema, tokenSchemaOf } from './schemas'
+import { typeByBreakpoint } from './responsive'
+import { UNTITLED_ID, colourSchema, tokenSchemaOf } from './schemas'
 import { isResolved, resolveAll, type ResolvedCell } from './tokens'
 
 export type ImportedType = 'color' | 'number' | 'string'
@@ -155,8 +157,27 @@ export function schemaCollections(s: ExportInput): ImportedCollection[] {
   }))
   return [
     { name: '_Primitives', modes: ['Style'], variables: ramps },
-    { name: '1. Color modes', modes: ['Light mode', 'Dark mode'], variables: tokens }
+    { name: '1. Color modes', modes: ['Light mode', 'Dark mode'], variables: tokens },
+    ...(schema.id === UNTITLED_ID ? [typographyCollection(s)] : [])
   ]
+}
+
+/** "6. Typography": fonts, the weights of the file, and the size and line height of every step at the largest breakpoint. */
+function typographyCollection(s: ExportInput): ImportedCollection {
+  const rows = typeByBreakpoint(s.type, s.grid).xxl.flatMap((g) => g.rows)
+  const str = (name: string, v: string) => ({ name, type: 'string' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
+  const num = (name: string, v: number) => ({ name, type: 'number' as const, scopes: ['ALL_SCOPES'], values: { Value: { v } } })
+  return {
+    name: '6. Typography',
+    modes: ['Value'],
+    variables: [
+      str('Font family/font-family-display', s.type.headingFont),
+      str('Font family/font-family-body', s.type.bodyFont),
+      ...untitledType.weights.map((w) => str(w.name, String(w.value))),
+      ...rows.map((r) => num(`Font size/${r.name}`, r.size)),
+      ...rows.map((r) => num(`Line height/${r.name}`, r.lh))
+    ]
+  }
 }
 
 /** The imported collections with a schema's colours joined in (the primitives share one collection with the spacing). */
