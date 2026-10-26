@@ -110,3 +110,13 @@ export function importedDoc(set: ImportedSet, modules: ExportModule[]): Json {
   }
   return { Imported: out }
 }
+
+/** A colour to stand for the set: the middle step of its brand palette, else its first colour. */
+export function importedAccent(set: ImportedSet): string {
+  const brand = set.collections.find((c) => c.name === 'Brand palette')
+  const step = brand?.variables.find((v) => /\/600$/.test(v.name))
+  const own = step && (step.values.Original ?? Object.values(step.values)[0])
+  if (own) return String(own.v)
+  const first = set.collections.flatMap((c) => c.variables).find((v) => v.type === 'color')
+  return first ? String(Object.values(first.values)[0].v) : '#9d00d6'
+}

@@ -12,10 +12,12 @@ import { SpacingPage } from './modules/spacing/SpacingPage'
 import { ElevationPage } from './modules/elevation/ElevationPage'
 import { NotFoundPage } from './modules/NotFoundPage'
 import { TokensPage } from './modules/tokens/TokensPage'
+import { IMPORTED_ROUTES, ImportedPage } from './modules/imported/ImportedPage'
 
 export default function App() {
   const { pathname } = useLocation()
   const appTheme = useProject((s) => s.appTheme)
+  const imported = useProject((s) => !!s.imported)
   useEffect(() => {
     document.documentElement.dataset.theme = appTheme
   }, [appTheme])
@@ -25,6 +27,7 @@ export default function App() {
 
   return (
     <>
+    {imported && IMPORTED_ROUTES.includes(pathname) ? <ImportedPage /> : (
     <Routes>
       <Route path="/" element={<PalettePage />} />
       <Route path="/tokens" element={<TokensPage />} />
@@ -36,6 +39,7 @@ export default function App() {
       <Route path="/elevation" element={<ElevationPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    )}
     <ExportDialog />
     </>
   )
