@@ -12,6 +12,7 @@ import { SpacingPage } from './modules/spacing/SpacingPage'
 import { ElevationPage } from './modules/elevation/ElevationPage'
 import { NotFoundPage } from './modules/NotFoundPage'
 import { TokensPage } from './modules/tokens/TokensPage'
+import { V2App } from './v2/ui/V2App'
 import { IMPORTED_ROUTES, ImportedPage } from './modules/imported/ImportedPage'
 import { ImportedSpacingPage } from './modules/spacing/ImportedSpacingPage'
 
@@ -23,8 +24,10 @@ export default function App() {
     document.documentElement.dataset.theme = appTheme
   }, [appTheme])
   useEffect(() => {
-    document.title = titleFor(pathname)
+    if (!pathname.startsWith('/v2')) document.title = titleFor(pathname)
   }, [pathname])
+
+  if (pathname.startsWith('/v2')) return <V2App />
 
   return (
     <>

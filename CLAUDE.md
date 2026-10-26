@@ -48,3 +48,7 @@ Baseline is a browser tool that turns brand inputs into an export-ready design-t
 - Build one module at a time; propose a plan before writing code for a new module.
 - Keep calculations pure and unit-tested in `src/lib/` (colour, contrast, typeScale, grid, spacing, elevation).
 - Do not invent features beyond the brief; items in "Out of scope for v1" stay out.
+
+## v2 (token engine, next to v1)
+
+`/v2` is a separate build in `src/v2/` with its own store (`baseline-v2` in localStorage); v1 is untouched apart from a route in `App.tsx` and a "v2" link in the rail. A design system is data (`src/v2/model.ts`: collections, variables with modes and links, ramp recipes, a naming policy, themes); `src/v2/systems/` holds Default and Untitled as two definitions of the same model, `resolve.ts` applies a theme, `export/` writes CSS and the JSON the Figma plugin imports. First slice: colour (ramps and semantic tokens). Later: type, dimensions, an in-app Figma importer, themes as Figma modes.

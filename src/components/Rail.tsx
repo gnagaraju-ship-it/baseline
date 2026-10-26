@@ -59,6 +59,7 @@ export function Rail() {
       <RailLink to="/preview" label="UI preview" icon="monitor" active={pathname === '/preview'} />
       <RailStub label="Documentation" icon="docs" />
       <div className="flex-1" />
+      <NavLink to="/v2" aria-label="Open v2" title="Baseline v2 (new token engine)" className={`${base} font-mono text-xs font-semibold`}>v2</NavLink>
       <RailButton label="All modules export settings" icon="download" title="Export settings — choose format and modules" onClick={() => project.openExport()} />
       <RailButton label="Reset theme" icon="reset" onClick={resetTheme} />
       <button
